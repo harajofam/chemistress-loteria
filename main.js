@@ -190,6 +190,7 @@ async function main() {
 
       // naive polling to render your own board (room state schema mirrors)
       setInterval(() => {
+        setStatus('Connected. Players: ' + room.state.players.size);
         const me = room.state.players.get(room.sessionId);
         if (me && me.board && me.board.tiles) {
           renderBoard(me.board.tiles);
