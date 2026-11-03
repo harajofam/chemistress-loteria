@@ -34,6 +34,7 @@ const CLIENT_ROOT = path.join(__dirname, '..');
 const CLIENT_FILES = [
   'index.html',
   'main.js',
+  'colyseus.js',
   'styles.css',
   'chemistress_loteria_card_set_full_55_enhanced.json',
 ];
