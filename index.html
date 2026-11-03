@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chemistress Lotería — Web Client (MVP)</title>
+  <!-- A-Frame for quick 3D scaffolding (optional, used here for VR-ish feel) -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <!-- Colyseus.js client -->
+  <script src="https://unpkg.com/colyseus.js@^0.15.0/dist/colyseus.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="ui">
+    <h1>Chemistress Lotería — MVP Client</h1>
+    <div class="row">
+      <label>Server WS URL</label>
+      <input id="wsUrl" value="ws://localhost:2567" />
+    </div>
+    <div class="row">
+      <label>Room Name</label>
+      <input id="roomName" value="chemistress_loteria" />
+    </div>
+    <div class="row">
+      <label>Your Name</label>
+      <input id="playerName" value="Jay" />
+      <button id="btnJoin">Join</button>
+    </div>
+    <div class="row">
+      <button id="btnReady" disabled>Ready</button>
+      <button id="btnNextCard" disabled>Next Card (host)</button>
+      <button id="btnClaim" disabled>Claim Win</button>
+    </div>
+    <div id="status">Status: Not connected.</div>
+    <div id="called">Called: —</div>
+    <div id="calledCard">
+      <img id="calledArt" alt="" hidden>
+      <div id="calledName">No card called yet</div>
+    </div>
+
+    <div id="board"></div>
+    <div id="ritual">
+      <h2>Ritual Prompt</h2>
+      <div id="ritualText">—</div>
+    </div>
+  </div>
+
+  <!-- Optional: a tiny A-Frame scene as a backdrop -->
+  <a-scene embedded>
+    <a-entity position="0 1.6 -2">
+      <a-plane width="3" height="1.5" color="#111"></a-plane>
+    </a-entity>
+    <a-sky color="#151026"></a-sky>
+  </a-scene>
+
+  <script src="main.js"></script>
+</body>
+</html>

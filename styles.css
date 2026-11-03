@@ -1,0 +1,31 @@
+body{margin:0;font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;background:#0b0815;color:#f5f0ff}
+#ui{position:relative;z-index:10;max-width:920px;margin:16px auto;padding:16px;background:#120d22;border:1px solid #2a2146;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+h1{margin-top:0;color:#FF3FA4}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0}
+label{min-width:120px;color:#FFE066}
+input{flex:1;padding:8px 10px;border-radius:8px;border:1px solid #2a2146;background:#1a1330;color:#fff}
+button{padding:8px 12px;border-radius:8px;border:1px solid #7A3EF0;background:#7A3EF0;color:#fff;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+#status,#called{margin:10px 0;color:#00B3B8}
+#calledCard{margin:10px 0 4px;text-align:center}
+#calledArt{width:min(240px,70vw);aspect-ratio:1376/1824;object-fit:cover;border-radius:12px;border:2px solid #7A3EF0;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#calledName{margin-top:6px;font-size:20px;font-weight:600;color:#FFE066}
+#board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px auto 0;max-width:600px}
+.tile{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:1376/1824;padding:0;overflow:hidden;background:#1a1330;border:1px solid #2a2146;border-radius:8px;color:#fff;font-size:14px}
+.tile-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.tile-name{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;background:rgba(10,6,24,.72);color:#fff;font-size:10px;line-height:1.15;text-align:center;pointer-events:none}
+.tile-marker{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(20,8,0,.55);box-shadow:0 0 0 2px rgba(255,211,102,.9);display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;pointer-events:none}
+.tile.marked{outline:2px solid #FF7A00}
+#ritual{margin-top:16px;padding:10px;border-radius:10px;background:#0f0b1d;border:1px solid #2a2146}
+#ritual h2{margin:0 0 8px 0;color:#00C853}
+a-scene{height:260px;border-radius:12px;overflow:hidden;border:1px solid #2a2146;margin-top:16px}
+@media (max-width:520px){
+  #ui{margin:8px;padding:10px}
+  .row{flex-wrap:wrap}
+  label{min-width:96px}
+  #board{gap:4px}
+  .tile{border-radius:6px;font-size:11px}
+  .tile-name{font-size:8.5px;padding:1px 2px}
+  .tile-marker{width:24px;height:24px;font-size:14px}
+  #calledName{font-size:17px}
+}
