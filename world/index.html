@@ -10,9 +10,9 @@
   ?v= token. Her phone once kept serving a cached build after a new
   deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
   DEPLOY: increment the token on ALL of these URLs in the same edit.
-  Current token: 2026-11-04-5 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5).
+  Current token: 2026-11-04-6 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6).
 -->
-<link rel="stylesheet" href="css/world.css?v=2026-11-04-5">
+<link rel="stylesheet" href="css/world.css?v=2026-11-04-6">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
@@ -74,6 +74,7 @@ window.setTimeout(function () {
 <nav class="hud hud-controls" aria-label="World controls">
   <button id="btn-parlor" type="button" class="btn btn-parlor">🁢 Enter the Game Parlor</button>
   <button id="btn-magic" type="button" class="btn">📱 Look around with your phone</button>
+  <button id="btn-viewer" type="button" class="btn" hidden>🥽 Viewer Mode</button>
   <button id="btn-walk" type="button" class="btn">🚶 Walking mode</button>
   <button id="btn-reset" type="button" class="btn">🧭 Reset view</button>
 </nav>
@@ -162,17 +163,33 @@ window.setTimeout(function () {
 </div>
 
 <!--
+  Viewer Mode tap-catcher (2026-11-04): shown by cameras.js
+  createViewerMode while the stereo split-screen mode is on.
+  It covers the screen above the canvas and the HUD and owns
+  every pointer press in the mode: a drag steers the fallback
+  look when no gyroscope drives the eyes, and ANY tap (a press
+  that never becomes a drag) steps back out to the regular
+  single view — which is what the hint promises. The button
+  that opens the mode (#btn-viewer, in the controls above)
+  starts hidden and is revealed by main.js only on a touch
+  device with the feature toggled on (CCW.VIEWER_MODE).
+-->
+<div id="viewer-tap" class="viewer-tap" hidden>
+  <p class="viewer-hint">👓 Viewer Mode — look around. Tap anytime to step out.</p>
+</div>
+
+<!--
   Babylon.js is SELF-HOSTED (Jay's decision, 2026-11-03): the pinned
   9.33.2 UMD build lives at vendor/babylon.js and the world never
   loads a CDN at runtime (the colyseus.js lesson — borrowed streams
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js?v=2026-11-04-5"></script>
-<script src="js/palette.js?v=2026-11-04-5"></script>
-<script src="js/plaza.js?v=2026-11-04-5"></script>
-<script src="js/cameras.js?v=2026-11-04-5"></script>
-<script src="js/main.js?v=2026-11-04-5"></script>
+<script src="vendor/babylon.js?v=2026-11-04-6"></script>
+<script src="js/palette.js?v=2026-11-04-6"></script>
+<script src="js/plaza.js?v=2026-11-04-6"></script>
+<script src="js/cameras.js?v=2026-11-04-6"></script>
+<script src="js/main.js?v=2026-11-04-6"></script>
 <script>
 /* If the library itself failed to load or parse (the old-Safari
    failure shape), say so in plain language instead of sitting blank. */
