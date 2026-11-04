@@ -407,6 +407,87 @@ html, body {
   z-index: 31;
 }
 
+/* Pen-Pal Post note card (M2b interior 3 of 5, 2026-11-04):
+   bound by cameras.js wirePenpal. The card is a letter on the
+   house's plum: the letter itself sits on a CREAM panel (the
+   room's cream, carried into the chrome), plum ink, serif hand.
+   The write side is a small form — username + note — with the
+   Post's rules and the filter's gentle answers in gold-soft.
+   [hidden] on the inner views must win over their block flow. */
+.penpal-card-box {
+  max-width: 26rem;
+  width: 100%;
+}
+
+#penpal-read[hidden], #penpal-write[hidden] { display: none; }
+
+.penpal-from {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.penpal-from span {
+  color: var(--gold-soft);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 1rem;
+}
+
+.penpal-note-text {
+  margin: 0 0 1rem;
+  padding: 0.95rem 1rem;
+  background: var(--cream);
+  color: #3d1247;
+  border-radius: 10px;
+  font-style: italic;
+  line-height: 1.55;
+  text-align: left;
+  box-shadow: inset 0 0 0 1px rgba(122, 16, 66, 0.25);
+}
+
+.penpal-label {
+  display: block;
+  margin: 0.7rem 0 0.3rem;
+  text-align: left;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.penpal-input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--gold);
+  background: rgba(253, 243, 227, 0.96);
+  color: #2a0a33;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+textarea.penpal-input { resize: vertical; }
+
+.penpal-rules {
+  margin: 0.7rem 0 0;
+  text-align: left;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  opacity: 0.88;
+}
+
+.penpal-msg {
+  min-height: 1.3em;
+  margin: 0.5rem 0 0.2rem;
+  text-align: left;
+  color: var(--gold-soft);
+  line-height: 1.4;
+}
+
 /* Viewer Mode tap-catcher (2026-11-04): bound by cameras.js
    createViewerMode. While the stereo mode is on it covers the
    screen ABOVE the canvas (z 0) and the HUD (z 10) and BELOW
