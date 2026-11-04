@@ -135,14 +135,31 @@
    * is sensor-driven (DeviceOrientationCamera owns its own rotation).
    *
    * Usage: var glider = CCW.createGlider(B);
-   *        glider.start(cam, posArray, targetArray);
+   *        glider.start(cam, posArray, targetArray, ms, onDone);
    *        // each frame: glider.update(cam, deltaMs); true while moving
+   *
+   * Completion guarantee (world fix pass, 2026-11-03): a glide can
+   * never be left hanging. Frame deltas are sanitized (NaN/negative
+   * count as 0, one frame can contribute at most 1000 ms), progress
+   * is plain elapsed time against the duration, and the update that
+   * reaches the end snaps the camera EXACTLY onto the destination,
+   * clears the glide state, and fires onDone exactly once — which is
+   * what lets main.js post the "you have arrived" status line the
+   * moment a ride lands instead of leaving "Gliding to…" up forever.
+   * cancel() drops the glide WITHOUT firing onDone.
    */
   CCW.createGlider = function (B) {
     var state = null;
     function ease(t) { return t * t * (3 - 2 * t); } // smoothstep
+    function finish(cam) {
+      var s = state;
+      state = null;
+      cam.position = s.toPos.clone();
+      if (s.toTg && !s.sensor && cam.setTarget) cam.setTarget(s.toTg);
+      if (s.onDone) s.onDone();
+    }
     return {
-      start: function (cam, pos, target, durationMs) {
+      start: function (cam, pos, target, durationMs, onDone) {
         state = {
           t: 0,
           dur: durationMs || 1400,
@@ -150,7 +167,8 @@
           toPos: new B.Vector3(pos[0], pos[1], pos[2]),
           fromTg: null,
           toTg: target ? new B.Vector3(target[0], target[1], target[2]) : null,
-          sensor: cam.getClassName && cam.getClassName() === 'DeviceOrientationCamera'
+          sensor: cam.getClassName && cam.getClassName() === 'DeviceOrientationCamera',
+          onDone: typeof onDone === 'function' ? onDone : null
         };
         if (state.toTg && !state.sensor && cam.getTarget) {
           state.fromTg = cam.getTarget().clone();
@@ -158,22 +176,62 @@
       },
       update: function (cam, deltaMs) {
         if (!state) return false;
-        state.t += deltaMs;
+        var dt = +deltaMs;
+        if (!(dt > 0)) dt = 0;              // NaN / negative / zero
+        if (dt > 1000) dt = 1000;           // one frame can't teleport
+        state.t += dt;
         var k = Math.min(1, state.t / state.dur);
         var e = ease(k);
         cam.position = B.Vector3.Lerp(state.fromPos, state.toPos, e);
         if (state.fromTg && state.toTg) {
           cam.setTarget(B.Vector3.Lerp(state.fromTg, state.toTg, e));
         }
-        if (k >= 1) {
-          if (state.toTg && !state.sensor && cam.setTarget) cam.setTarget(state.toTg);
-          state = null;
-          return false;
-        }
+        if (k >= 1) { finish(cam); return false; }
         return true;
       },
       active: function () { return !!state; },
       cancel: function () { state = null; }
+    };
+  };
+
+  /*
+   * Step-on pad trigger (world fix pass, 2026-11-03). main.js polls
+   * this EVERY frame with the camera position; it returns a teleport
+   * only on the frame the camera ENTERS that pad's radius while
+   * `armed` — never merely for standing inside one.
+   *
+   * Why: every pad landing sets the visitor down within the return
+   * pad's radius (thresholds land 0.2 m from their return pads). The
+   * old level-triggered check ("inside + cooldown over → ride")
+   * therefore fired the return ride ~0.8 s after EVERY landing —
+   * no threshold visit ever stuck; the visitor was carried straight
+   * back to spawn, which in a real browser read as the glide
+   * stalling (worst at the Creator Studio, whose threshold is also
+   * the chapel wall's back face). Polling while unarmed (mid-glide,
+   * cooldown, other camera modes) keeps the inside/outside sense
+   * current, so a landing is never an "entry"; stepping off a pad
+   * and back on rides it again, and pad clicks always ride directly.
+   */
+  CCW.createPadTrigger = function (teleports) {
+    var inside = [];
+    for (var i = 0; i < teleports.length; i++) inside.push(false);
+    return {
+      poll: function (pos, armed) {
+        var hit = null;
+        for (var i = 0; i < teleports.length; i++) {
+          var tele = teleports[i];
+          if (!tele.padPos) { inside[i] = false; continue; }
+          var dx = pos.x - tele.padPos.x;
+          var dz = pos.z - tele.padPos.z;
+          var isIn = dx * dx + dz * dz < 1.7 * 1.7;
+          if (armed && isIn && !inside[i] && !hit) hit = tele;
+          inside[i] = isIn;
+        }
+        return hit;
+      },
+      reset: function () {
+        for (var i = 0; i < inside.length; i++) inside[i] = false;
+      }
     };
   };
 
