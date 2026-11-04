@@ -5,10 +5,10 @@
  *
  * M0 built the shells; M1 dresses the Plaza so a first-time visitor
  * can read it from one screenshot: where they are, what the six doors
- * are, where the game is. Dressing follows the interiors addendum —
+ * are, where the games are. Dressing follows the interiors addendum —
  * the entrance is the pink chapel with the great cosmic stained-glass
  * window; every zone facade carries its signature surface as a
- * procedural canvas texture (market stripes for the Arcade, floral
+ * procedural canvas texture (awning stripes for the Game Parlor, floral
  * stained glass for the Theater, greenhouse vines for the Garden,
  * book spines for the Library, the redrawn letter-box wall for the
  * Pen-Pal Post, apothecary jars for the Creator Studio). Zone
@@ -33,9 +33,9 @@
   CCW.SPAWN = { position: [0, 1.7, 15], target: [0, 2.2, 0] };
 
   // angleDeg: compass position around the Plaza (0 at +Z, behind
-  // spawn; the Arcade at 180 faces the arriving visitor).
+  // spawn; the Game Parlor at 180 faces the arriving visitor).
   CCW.ZONES = [
-    { id: 'arcade',  name: 'Lotería Arcade',      angleDeg: 180, accent: 'pinkHot',       blurb: 'Game night lives here' },
+    { id: 'arcade',  name: 'The Game Parlor',      angleDeg: 180, accent: 'pinkHot',       blurb: 'Classic games, face to face' },
     { id: 'theater', name: 'Theater',             angleDeg: 120, accent: 'gold',          blurb: 'Trailers & teachings' },
     { id: 'garden',  name: 'Therapeutics Garden', angleDeg: 240, accent: 'teal',          blurb: 'The Wellness Garden — breathe' },
     { id: 'library', name: 'Library',             angleDeg: 60,  accent: 'velvetLavender', blurb: 'Books, charts & the numerology nook' },
@@ -134,7 +134,7 @@
       return;
     }
     var tex, matName = zone.id + '-panel-mat';
-    if (zone.id === 'arcade') tex = CCW.stripesTexture(scene, B, 'arcade-stripes');
+    if (zone.id === 'arcade') tex = CCW.stripesTexture(scene, B, 'arcade-stripes'); // the parlor's awning stripes
     else if (zone.id === 'garden') tex = CCW.gardenTexture(scene, B, 'garden-vines');
     else if (zone.id === 'library') tex = CCW.bookSpinesTexture(scene, B, 'library-spines');
     else if (zone.id === 'penpal') tex = CCW.mailboxTexture(scene, B, 'penpal-boxes');
@@ -147,16 +147,30 @@
   }
 
   /*
-   * M2a — the Lotería Arcade INTERIOR (the first dressed room).
+   * The Game Parlor INTERIOR (M2a room, re-dressed 2026-11-03).
    *
-   * An enclosed hall behind the Arcade facade, in the group's local
-   * space: the facade's back face is z = -0.6 and the room runs to
-   * the back wall at z = -14.4, x in [-6.5, 6.5], ceiling at y = 7.
-   * Treatment follows the Arcade's established exterior: market
-   * stripes (canopy ceiling + the deck stack), hot pink/coral +
-   * plum + gold, checkerboard market floor. The dressed game table
-   * at the room's heart is the M3 centerpiece — geometry only here,
-   * the playable wiring arrives with the spectator mirror.
+   * Jay's design decision (2026-11-03 evening): NO ARCADE. The room
+   * behind this Plaza door is The Game Parlor — classic public-
+   * domain board games people play WITH EACH OTHER; Lotería is not
+   * in the room and stays on its own page, untouched. The single
+   * Lotería centerpiece (caller stand, deck stack, bean bowl,
+   * featured card) and the Original-48 card-art walls are gone.
+   *
+   * What the room holds now: FOUR game tables in house style (plum
+   * tops, gold trim) arranged for face-to-face play, each with its
+   * game's tabletop signature — domino tiles laid out mid-game, a
+   * checkers board with its discs, a chess board with simple piece
+   * forms, and a fourth table dressed generically (a closed game
+   * box + cups) for the games still to come (Mancala/Backgammon).
+   * The tables are dressed geometry; the playable wiring is a later
+   * milestone (Play v1 presents the board at the table). Kept from
+   * M2a: the checkerboard floor, the striped-canopy ceiling, the
+   * plum walls + gold wainscot, the pendant globes, the room light,
+   * and the entrance/return pads.
+   *
+   * Room space (zone-group local): the facade's back face is
+   * z = -0.6 and the room runs to the back wall at z = -14.4,
+   * x in [-6.5, 6.5], ceiling at y = 7.
    *
    * ORIENTATION: interior planes obey the makeLabel contract — a
    * plane's readable face is its local -Z side. On the front wall
@@ -164,258 +178,337 @@
    * back wall (viewer in the +Z direction) they take rotation.y =
    * PI; on the side walls they take rotation.y = -/+ PI/2 so the
    * readable face points at the room's center. The smoke audit
-   * verifies every art plane's world -Z against the room.
+   * verifies every motif plane's world -Z against the room.
    *
-   * Card art: compressed derivatives of the Original-48 deck live in
-   * world/assets/arcade/ (the world stays self-contained); originals
-   * are never touched. 15 unique cards are shown: 14 on the walls +
-   * El Soul Sovereign featured on the table's caller stand.
+   * Wall dressing is procedural canvas work (palette.js
+   * gameMotifTexture): framed vintage-style game boards and motifs
+   * — domino, checkers, backgammon, chess, dice, mancala. No
+   * photos, no card art, nothing borrowed.
    */
-  var ARCADE_ART = {
-    back: [
-      '01-el-gluten-gremlin', '08-la-coffee-prophet', '13-la-empathy-elixir',
-      '20-la-meditation-muse', '32-la-kale-queen',
-      '03-el-mitochondria', '10-la-pantry-priestess', '16-la-gratitude-gangster',
-      '22-la-forgiveness-flame', '29-el-quantum-joker'
-    ],
-    left: ['28-la-intuition-inventor', '33-el-market-magician'],
-    right: ['05-el-fiber-fiend', '46-la-heart-hacker'],
-    feature: '25-el-soul-sovereign'
-  };
 
-  function cardArtMat(scene, B, file) {
-    var tex = new B.Texture('assets/arcade/' + file + '.webp', scene, false, true);
-    tex.hasAlpha = false;
-    return CCW.texMat(scene, B, 'arcade-int-art-mat-' + file, tex, { emissive: true });
-  }
-
-  // One framed card: gold frame box + art plane, placed by the caller
-  // (position/rotation set on BOTH so they travel together).
-  function framedCard(scene, B, add, file, w, h) {
-    var tag = file.slice(0, 2);
-    var frame = add(B.MeshBuilder.CreateBox('arcade-int-art-' + tag + '-frame',
+  // One framed motif: gold frame box + motif plane, placed by the
+  // caller (position/rotation set on BOTH so they travel together).
+  function framedMotif(scene, B, add, kind, idx, w, h) {
+    var frame = add(B.MeshBuilder.CreateBox('parlor-int-motif-' + idx + '-frame',
       { width: w + 0.16, height: h + 0.16, depth: 0.09 }, scene));
-    frame.material = CCW.mat(scene, B, 'arcade-int-art-frame-mat-' + tag, CCW.PALETTE.gold);
-    var art = add(B.MeshBuilder.CreatePlane('arcade-int-art-' + tag,
+    frame.material = CCW.mat(scene, B, 'parlor-int-motif-frame-mat-' + idx, CCW.PALETTE.gold);
+    var art = add(B.MeshBuilder.CreatePlane('parlor-int-motif-' + idx,
       { width: w, height: h }, scene));
-    art.material = cardArtMat(scene, B, file);
+    art.material = CCW.texMat(scene, B, 'parlor-int-motif-mat-' + idx,
+      CCW.gameMotifTexture(scene, B, 'parlor-motif-' + idx + '-' + kind, kind),
+      { emissive: true });
     return { frame: frame, art: art };
   }
 
-  function buildArcadeInterior(scene, B, zone, add) {
+  // A square parlor table: plum top, gold under-trim, pedestal,
+  // round base. Top surface sits at y = 1.07.
+  function gameTable(scene, B, add, cx, cz, tag) {
+    var P = CCW.PALETTE;
+    var top = add(B.MeshBuilder.CreateBox('parlor-int-table-' + tag + '-top',
+      { width: 2.3, height: 0.14, depth: 2.3 }, scene));
+    top.position.set(cx, 1.0, cz);
+    top.material = CCW.mat(scene, B, 'parlor-int-table-' + tag + '-top-mat', P.plumHouse);
+    var trim = add(B.MeshBuilder.CreateBox('parlor-int-table-' + tag + '-trim',
+      { width: 2.5, height: 0.06, depth: 2.5 }, scene));
+    trim.position.set(cx, 0.92, cz);
+    trim.material = CCW.mat(scene, B, 'parlor-int-table-' + tag + '-trim-mat', P.gold);
+    var ped = add(B.MeshBuilder.CreateBox('parlor-int-table-' + tag + '-pedestal',
+      { width: 0.55, height: 0.86, depth: 0.55 }, scene));
+    ped.position.set(cx, 0.45, cz);
+    ped.material = CCW.mat(scene, B, 'parlor-int-table-' + tag + '-pedestal-mat', P.plumWall);
+    var base = add(B.MeshBuilder.CreateCylinder('parlor-int-table-' + tag + '-base',
+      { diameter: 1.3, height: 0.08, tessellation: 20 }, scene));
+    base.position.set(cx, 0.04, cz);
+    base.material = CCW.mat(scene, B, 'parlor-int-table-' + tag + '-base-mat', P.plumHouse);
+  }
+
+  // A velvet stool: round seat on a slim leg.
+  function parlorStool(scene, B, add, x, z, velvet, tag) {
+    var P = CCW.PALETTE;
+    var seat = add(B.MeshBuilder.CreateCylinder('parlor-int-stool-' + tag + '-seat',
+      { diameter: 0.8, height: 0.13, tessellation: 18 }, scene));
+    seat.position.set(x, 0.66, z);
+    seat.material = CCW.mat(scene, B, 'parlor-int-stool-' + tag + '-seat-mat', velvet);
+    var leg = add(B.MeshBuilder.CreateCylinder('parlor-int-stool-' + tag + '-leg',
+      { diameter: 0.12, height: 0.6, tessellation: 10 }, scene));
+    leg.position.set(x, 0.3, z);
+    leg.material = CCW.mat(scene, B, 'parlor-int-stool-' + tag + '-leg-mat', P.plumHouse);
+  }
+
+  function buildParlorInterior(scene, B, zone, add) {
     var P = CCW.PALETTE;
     var uv = outward(zone);
 
-    // ---- Room shell -------------------------------------------------
-    var floor = add(B.MeshBuilder.CreateBox('arcade-int-floor',
+    // ---- Room shell (kept from M2a) --------------------------------
+    var floor = add(B.MeshBuilder.CreateBox('parlor-int-floor',
       { width: 13.4, height: 0.12, depth: 14.2 }, scene));
     floor.position.set(0, -0.06, -7.5);
-    floor.material = CCW.texMat(scene, B, 'arcade-int-floor-mat',
-      CCW.checkerTexture(scene, B, 'arcade-int-floor-tex'), {});
+    floor.material = CCW.texMat(scene, B, 'parlor-int-floor-mat',
+      CCW.checkerTexture(scene, B, 'parlor-int-floor-tex'), {});
     floor.receiveShadows = true;
 
-    // Ceiling treatment: the market-stripe canopy (decision noted in
-    // the M2a deploy notes — stripes over star-chart, echoing the
-    // facade panel so the hall reads as one market room).
-    var ceiling = add(B.MeshBuilder.CreateBox('arcade-int-ceiling',
+    // Ceiling treatment: the striped canopy (M2a decision — stripes
+    // echo the facade panel so the hall reads as one room).
+    var ceiling = add(B.MeshBuilder.CreateBox('parlor-int-ceiling',
       { width: 13.6, height: 0.25, depth: 14.4 }, scene));
     ceiling.position.set(0, 7.12, -7.5);
-    ceiling.material = CCW.texMat(scene, B, 'arcade-int-ceiling-mat',
-      CCW.stripesTexture(scene, B, 'arcade-int-canopy'), {});
+    ceiling.material = CCW.texMat(scene, B, 'parlor-int-ceiling-mat',
+      CCW.stripesTexture(scene, B, 'parlor-int-canopy'), {});
 
-    var backWall = add(B.MeshBuilder.CreateBox('arcade-int-wall-back',
+    var backWall = add(B.MeshBuilder.CreateBox('parlor-int-wall-back',
       { width: 14, height: 7, depth: 0.5 }, scene));
     backWall.position.set(0, 3.5, -14.65);
-    backWall.material = CCW.mat(scene, B, 'arcade-int-wall-back-mat', P.plumHouse);
+    backWall.material = CCW.mat(scene, B, 'parlor-int-wall-back-mat', P.plumHouse);
     [-6.75, 6.75].forEach(function (x, i) {
-      var side = add(B.MeshBuilder.CreateBox('arcade-int-wall-' + (i ? 'right' : 'left'),
+      var side = add(B.MeshBuilder.CreateBox('parlor-int-wall-' + (i ? 'right' : 'left'),
         { width: 0.5, height: 7, depth: 14.3 }, scene));
       side.position.set(x, 3.5, -7.5);
-      side.material = CCW.mat(scene, B, 'arcade-int-wall-side-mat-' + i, P.plumHouse);
+      side.material = CCW.mat(scene, B, 'parlor-int-wall-side-mat-' + i, P.plumHouse);
     });
 
     // Interior face of the front wall + the door, seen from inside.
-    var front = add(B.MeshBuilder.CreateBox('arcade-int-front-panel',
+    var front = add(B.MeshBuilder.CreateBox('parlor-int-front-panel',
       { width: 13, height: 7, depth: 0.15 }, scene));
     front.position.set(0, 3.5, -0.68);
-    front.material = CCW.mat(scene, B, 'arcade-int-front-mat', P.plumWall);
-    var doorFrameIn = add(B.MeshBuilder.CreateBox('arcade-int-door-frame',
+    front.material = CCW.mat(scene, B, 'parlor-int-front-mat', P.plumWall);
+    var doorFrameIn = add(B.MeshBuilder.CreateBox('parlor-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
-    doorFrameIn.material = CCW.mat(scene, B, 'arcade-int-door-frame-mat', P.gold);
-    var doorGlowIn = add(B.MeshBuilder.CreatePlane('arcade-int-door-glow',
+    doorFrameIn.material = CCW.mat(scene, B, 'parlor-int-door-frame-mat', P.gold);
+    var doorGlowIn = add(B.MeshBuilder.CreatePlane('parlor-int-door-glow',
       { width: 3.4, height: 4.6 }, scene));
     // No half-turn: the readable -Z face points into the room (the
     // viewer stands in the -Z direction from this wall). See header.
     doorGlowIn.position.set(0, 2.3, -0.86);
-    doorGlowIn.material = CCW.mat(scene, B, 'arcade-int-door-glow-mat', P.pinkHot,
+    doorGlowIn.material = CCW.mat(scene, B, 'parlor-int-door-glow-mat', P.pinkHot,
       { emissive: P.pinkHot });
 
     // Gold wainscot line around the room.
-    var wainsBack = add(B.MeshBuilder.CreateBox('arcade-int-wainscot-back',
+    var wainsBack = add(B.MeshBuilder.CreateBox('parlor-int-wainscot-back',
       { width: 12.9, height: 0.14, depth: 0.08 }, scene));
     wainsBack.position.set(0, 1.02, -14.36);
-    wainsBack.material = CCW.mat(scene, B, 'arcade-int-wainscot-back-mat', P.gold);
+    wainsBack.material = CCW.mat(scene, B, 'parlor-int-wainscot-back-mat', P.gold);
     [-6.46, 6.46].forEach(function (x, i) {
-      var wains = add(B.MeshBuilder.CreateBox('arcade-int-wainscot-' + (i ? 'right' : 'left'),
+      var wains = add(B.MeshBuilder.CreateBox('parlor-int-wainscot-' + (i ? 'right' : 'left'),
         { width: 0.08, height: 0.14, depth: 13.7 }, scene));
       wains.position.set(x, 1.02, -7.5);
-      wains.material = CCW.mat(scene, B, 'arcade-int-wainscot-side-mat-' + i, P.gold);
+      wains.material = CCW.mat(scene, B, 'parlor-int-wainscot-side-mat-' + i, P.gold);
     });
 
-    // Warm pendant globes over the hall.
+    // Warm pendant globes — they hang over the four tables.
     [[-3.4, -5], [3.4, -5], [-3.4, -11], [3.4, -11]].forEach(function (pos, i) {
-      var rod = add(B.MeshBuilder.CreateCylinder('arcade-int-pendant-rod-' + i,
+      var rod = add(B.MeshBuilder.CreateCylinder('parlor-int-pendant-rod-' + i,
         { diameter: 0.06, height: 1.3, tessellation: 6 }, scene));
       rod.position.set(pos[0], 6.35, pos[1]);
-      rod.material = CCW.mat(scene, B, 'arcade-int-pendant-rod-mat-' + i, P.gold);
-      var globe = add(B.MeshBuilder.CreateSphere('arcade-int-pendant-globe-' + i,
+      rod.material = CCW.mat(scene, B, 'parlor-int-pendant-rod-mat-' + i, P.gold);
+      var globe = add(B.MeshBuilder.CreateSphere('parlor-int-pendant-globe-' + i,
         { diameter: 0.8, segments: 12 }, scene));
       globe.position.set(pos[0], 5.55, pos[1]);
-      globe.material = CCW.glowMat(scene, B, 'arcade-int-pendant-globe-mat-' + i, P.goldSoft);
+      globe.material = CCW.glowMat(scene, B, 'parlor-int-pendant-globe-mat-' + i, P.goldSoft);
     });
     // The room's warm heart-light. Lights are not parented to the
     // zone group, so this one is placed in world space directly.
-    var roomLight = new B.PointLight('arcade-int-light',
+    var roomLight = new B.PointLight('parlor-int-light',
       new B.Vector3(uv[0] * (CCW.ZONE_RADIUS + 8), 5.4, uv[1] * (CCW.ZONE_RADIUS + 8)), scene);
     roomLight.intensity = 0.9;
     roomLight.diffuse = new B.Color3(1.0, 0.72, 0.5);
     roomLight.range = 26;
 
-    // ---- The game table (dressed centerpiece; wiring is M3) --------
-    var tableZ = -8;
-    var top = add(B.MeshBuilder.CreateBox('arcade-int-table-top',
-      { width: 5.6, height: 0.16, depth: 2.8 }, scene));
-    top.position.set(0, 1.02, tableZ);
-    top.material = CCW.mat(scene, B, 'arcade-int-table-top-mat', P.plumHouse);
-    var trim = add(B.MeshBuilder.CreateBox('arcade-int-table-trim',
-      { width: 5.85, height: 0.07, depth: 3.05 }, scene));
-    trim.position.set(0, 0.93, tableZ);
-    trim.material = CCW.mat(scene, B, 'arcade-int-table-trim-mat', P.gold);
-    [-2.2, 2.2].forEach(function (x, i) {
-      var ped = add(B.MeshBuilder.CreateBox('arcade-int-table-pedestal-' + i,
-        { width: 0.5, height: 0.9, depth: 2.2 }, scene));
-      ped.position.set(x, 0.45, tableZ);
-      ped.material = CCW.mat(scene, B, 'arcade-int-table-pedestal-mat-' + i, P.plumWall);
+    // ---- Four game tables -------------------------------------------
+    // Front pair near the door, back pair under the gallery wall.
+    var T_DOM = { x: -3.1, z: -5.4 }, T_CHK = { x: 3.1, z: -5.4 };
+    var T_CHS = { x: -3.1, z: -10.6 }, T_MAN = { x: 3.1, z: -10.6 };
+    gameTable(scene, B, add, T_DOM.x, T_DOM.z, 'dominoes');
+    gameTable(scene, B, add, T_CHK.x, T_CHK.z, 'checkers');
+    gameTable(scene, B, add, T_CHS.x, T_CHS.z, 'chess');
+    gameTable(scene, B, add, T_MAN.x, T_MAN.z, 'mancala');
+
+    // Seating: four stools around the dominoes table (2–4 players),
+    // two facing stools at each two-player table.
+    [[0, -1.75], [0, 1.75], [-1.75, 0], [1.75, 0]].forEach(function (o, i) {
+      parlorStool(scene, B, add, T_DOM.x + o[0], T_DOM.z + o[1],
+        [P.velvetMagenta, P.velvetTeal, P.velvetLavender, P.velvetOrange][i], 'dominoes-' + i);
     });
-    var runner = add(B.MeshBuilder.CreateBox('arcade-int-table-runner',
-      { width: 5.0, height: 0.03, depth: 1.1 }, scene));
-    runner.position.set(0, 1.115, tableZ);
-    runner.material = CCW.mat(scene, B, 'arcade-int-table-runner-mat', P.velvetMagenta);
-    var stand = add(B.MeshBuilder.CreateCylinder('arcade-int-caller-stand',
-      { diameter: 0.7, height: 0.1, tessellation: 20 }, scene));
-    stand.position.set(0, 1.16, tableZ);
-    stand.material = CCW.glowMat(scene, B, 'arcade-int-caller-stand-mat', P.gold);
-
-    // The featured card on the caller stand, leaning back toward the
-    // entrance: readable face aims +Z (and a touch up) in group space.
-    var featFrame = add(B.MeshBuilder.CreateBox('arcade-int-feature-frame',
-      { width: 0.74, height: 1.16, depth: 0.05 }, scene));
-    featFrame.position.set(0, 1.66, tableZ);
-    featFrame.rotation.x = 0.28;
-    featFrame.material = CCW.mat(scene, B, 'arcade-int-feature-frame-mat', P.gold);
-    var featArt = add(B.MeshBuilder.CreatePlane('arcade-int-feature-art',
-      { width: 0.64, height: 1.07 }, scene));
-    featArt.position.set(0, 1.675, tableZ + 0.048);
-    featArt.rotation.y = Math.PI; // readable face toward the entrance
-    featArt.rotation.x = 0.28;
-    featArt.material = cardArtMat(scene, B, ARCADE_ART.feature);
-
-    var deckStack = add(B.MeshBuilder.CreateBox('arcade-int-deck-stack',
-      { width: 0.52, height: 0.16, depth: 0.8 }, scene));
-    deckStack.position.set(1.9, 1.18, tableZ - 0.3);
-    deckStack.rotation.y = 0.35;
-    deckStack.material = CCW.texMat(scene, B, 'arcade-int-deck-stack-mat',
-      CCW.stripesTexture(scene, B, 'arcade-int-deck-stripes'), {});
-    var beanBowl = add(B.MeshBuilder.CreateCylinder('arcade-int-bean-bowl',
-      { diameterTop: 0.55, diameterBottom: 0.4, height: 0.18, tessellation: 16 }, scene));
-    beanBowl.position.set(-1.9, 1.19, tableZ + 0.3);
-    beanBowl.material = CCW.mat(scene, B, 'arcade-int-bean-bowl-mat', P.coral);
-
-    // ---- Seating: velvet benches on the long sides, stools at the ends
-    [[-5.55, P.velvetMagenta, 'a'], [-10.45, P.velvetTeal, 'b']].forEach(function (cfg) {
-      var z = cfg[0], velvet = cfg[1], tag = cfg[2];
-      var seat = add(B.MeshBuilder.CreateBox('arcade-int-bench-' + tag + '-seat',
-        { width: 5.2, height: 0.16, depth: 0.7 }, scene));
-      seat.position.set(0, 0.6, z);
-      seat.material = CCW.mat(scene, B, 'arcade-int-bench-' + tag + '-seat-mat', velvet);
-      var dir = z > tableZ ? 1 : -1; // backrest on the side away from the table
-      var back = add(B.MeshBuilder.CreateBox('arcade-int-bench-' + tag + '-back',
-        { width: 5.2, height: 0.75, depth: 0.13 }, scene));
-      back.position.set(0, 1.12, z + dir * 0.36);
-      back.material = CCW.mat(scene, B, 'arcade-int-bench-' + tag + '-back-mat', velvet);
-      var ped = add(B.MeshBuilder.CreateBox('arcade-int-bench-' + tag + '-pedestal',
-        { width: 4.6, height: 0.52, depth: 0.5 }, scene));
-      ped.position.set(0, 0.26, z);
-      ped.material = CCW.mat(scene, B, 'arcade-int-bench-' + tag + '-pedestal-mat', P.plumWall);
-    });
-    [[-3.55, P.velvetLavender, 'a'], [3.55, P.velvetOrange, 'b']].forEach(function (cfg) {
-      var x = cfg[0], velvet = cfg[1], tag = cfg[2];
-      var seat = add(B.MeshBuilder.CreateCylinder('arcade-int-stool-' + tag + '-seat',
-        { diameter: 0.85, height: 0.13, tessellation: 18 }, scene));
-      seat.position.set(x, 0.68, tableZ);
-      seat.material = CCW.mat(scene, B, 'arcade-int-stool-' + tag + '-seat-mat', velvet);
-      var leg = add(B.MeshBuilder.CreateCylinder('arcade-int-stool-' + tag + '-leg',
-        { diameter: 0.12, height: 0.62, tessellation: 10 }, scene));
-      leg.position.set(x, 0.31, tableZ);
-      leg.material = CCW.mat(scene, B, 'arcade-int-stool-' + tag + '-leg-mat', P.plumHouse);
+    [[T_CHK, 'checkers', P.velvetTeal], [T_CHS, 'chess', P.velvetLavender],
+     [T_MAN, 'mancala', P.velvetOrange]].forEach(function (cfg) {
+      var t = cfg[0], tag = cfg[1], velvet = cfg[2];
+      parlorStool(scene, B, add, t.x, t.z - 1.75, velvet, tag + '-a');
+      parlorStool(scene, B, add, t.x, t.z + 1.75, velvet, tag + '-b');
     });
 
-    // ---- Card-art wall ----------------------------------------------
-    // Back wall: a 5 x 2 grid the entering visitor reads at once.
-    var artW = 1.17, artH = 1.95;
-    ARCADE_ART.back.forEach(function (file, i) {
-      var col = i % 5, row = Math.floor(i / 5);
-      var x = -4.8 + col * 2.4, y = row === 0 ? 4.75 : 2.45;
-      var piece = framedCard(scene, B, add, file, artW, artH);
-      piece.frame.position.set(x, y, -14.33);
-      piece.art.position.set(x, y, -14.26);
+    // ---- Dominoes: tiles laid out mid-game ---------------------------
+    // A cross of four, a two-tile branch, and a small stack aside.
+    // Each tile: a cream box + a slim plum divider across its middle.
+    var domTiles = [
+      { dx: -0.63, dz: 0, a: 0 }, { dx: -0.21, dz: 0, a: 0 },
+      { dx: 0.21, dz: 0, a: 0 }, { dx: 0.63, dz: 0, a: 0 },
+      { dx: 0.21, dz: -0.32, a: Math.PI / 2 }, { dx: 0.21, dz: -0.64, a: Math.PI / 2 },
+      { dx: -0.72, dz: 0.6, a: 0.3, y: 0 }, { dx: -0.72, dz: 0.6, a: 0.55, y: 0.05 }
+    ];
+    domTiles.forEach(function (t, i) {
+      var y = 1.0925 + (t.y || 0);
+      var tile = add(B.MeshBuilder.CreateBox('parlor-int-domino-' + i,
+        { width: 0.42, height: 0.045, depth: 0.21 }, scene));
+      tile.position.set(T_DOM.x + t.dx, y, T_DOM.z + t.dz);
+      tile.rotation.y = t.a;
+      tile.material = CCW.mat(scene, B, 'parlor-int-domino-mat-' + i, P.cream);
+      var div = add(B.MeshBuilder.CreateBox('parlor-int-domino-' + i + '-divider',
+        { width: 0.03, height: 0.052, depth: 0.19 }, scene));
+      div.position.set(T_DOM.x + t.dx, y + 0.002, T_DOM.z + t.dz);
+      div.rotation.y = t.a;
+      div.material = CCW.mat(scene, B, 'parlor-int-domino-divider-mat-' + i, P.plumHouse);
+    });
+
+    // ---- Checkers: board + discs, set for a game ----------------------
+    var chkBoard = add(B.MeshBuilder.CreateBox('parlor-int-checkers-board',
+      { width: 1.9, height: 0.05, depth: 1.9 }, scene));
+    chkBoard.position.set(T_CHK.x, 1.095, T_CHK.z);
+    chkBoard.material = CCW.texMat(scene, B, 'parlor-int-checkers-board-mat',
+      CCW.boardTexture(scene, B, 'parlor-checkers-board'), {});
+    var cell = 1.9 / 8;
+    function squareOffset(i) { return -0.95 + (i + 0.5) * cell; }
+    var discIdx = 0;
+    [[0, 1, P.coral, 'coral'], [7, 6, P.teal, 'teal']].forEach(function (side) {
+      var placed = 0;
+      for (var rI = 0; rI < 2 && placed < 6; rI++) {
+        var r = rI === 0 ? side[0] : side[1];
+        for (var c = 0; c < 8 && placed < 6; c++) {
+          if ((r + c) % 2 !== 1) continue;
+          var disc = add(B.MeshBuilder.CreateCylinder('parlor-int-checkers-disc-' + discIdx,
+            { diameter: 0.17, height: 0.045, tessellation: 16 }, scene));
+          disc.position.set(T_CHK.x + squareOffset(c), 1.1425, T_CHK.z + squareOffset(r));
+          disc.material = CCW.mat(scene, B, 'parlor-int-checkers-disc-mat-' + discIdx, side[2]);
+          discIdx++; placed++;
+        }
+      }
+    });
+
+    // ---- Chess: board + simple piece forms ----------------------------
+    var chsBoard = add(B.MeshBuilder.CreateBox('parlor-int-chess-board',
+      { width: 1.9, height: 0.05, depth: 1.9 }, scene));
+    chsBoard.position.set(T_CHS.x, 1.095, T_CHS.z);
+    chsBoard.material = CCW.texMat(scene, B, 'parlor-int-chess-board-mat',
+      CCW.boardTexture(scene, B, 'parlor-chess-board'), {});
+    function chessPawn(x, z, color, tag) {
+      var base = add(B.MeshBuilder.CreateCylinder('parlor-int-chess-' + tag + '-base',
+        { diameter: 0.15, height: 0.05, tessellation: 12 }, scene));
+      base.position.set(x, 1.145, z);
+      base.material = CCW.mat(scene, B, 'parlor-int-chess-' + tag + '-base-mat', color);
+      var head = add(B.MeshBuilder.CreateSphere('parlor-int-chess-' + tag + '-head',
+        { diameter: 0.13, segments: 10 }, scene));
+      head.position.set(x, 1.225, z);
+      head.material = CCW.mat(scene, B, 'parlor-int-chess-' + tag + '-head-mat', color);
+    }
+    function chessRook(x, z, color, tag) {
+      var body = add(B.MeshBuilder.CreateCylinder('parlor-int-chess-' + tag + '-body',
+        { diameter: 0.14, height: 0.16, tessellation: 12 }, scene));
+      body.position.set(x, 1.2, z);
+      body.material = CCW.mat(scene, B, 'parlor-int-chess-' + tag + '-body-mat', color);
+      var top = add(B.MeshBuilder.CreateCylinder('parlor-int-chess-' + tag + '-top',
+        { diameter: 0.19, height: 0.06, tessellation: 12 }, scene));
+      top.position.set(x, 1.31, z);
+      top.material = CCW.mat(scene, B, 'parlor-int-chess-' + tag + '-top-mat', color);
+    }
+    function chessKing(x, z, color, tag) {
+      var body = add(B.MeshBuilder.CreateCylinder('parlor-int-chess-' + tag + '-body',
+        { diameter: 0.15, height: 0.2, tessellation: 12 }, scene));
+      body.position.set(x, 1.22, z);
+      body.material = CCW.mat(scene, B, 'parlor-int-chess-' + tag + '-body-mat', color);
+      var finial = add(B.MeshBuilder.CreateSphere('parlor-int-chess-' + tag + '-finial',
+        { diameter: 0.11, segments: 10 }, scene));
+      finial.position.set(x, 1.37, z);
+      finial.material = CCW.glowMat(scene, B, 'parlor-int-chess-' + tag + '-finial-mat', P.gold);
+    }
+    [[P.cream, -1, 'cream'], [P.plumDeep, 1, 'plum']].forEach(function (side) {
+      var color = side[0], s = side[1], tag = side[2];
+      chessKing(T_CHS.x + 0.11875, T_CHS.z + s * 0.83125, color, tag + '-king');
+      chessRook(T_CHS.x - 0.59375, T_CHS.z + s * 0.83125, color, tag + '-rook');
+      chessPawn(T_CHS.x - 0.11875, T_CHS.z + s * 0.59375, color, tag + '-pawn-a');
+      chessPawn(T_CHS.x + 0.35625, T_CHS.z + s * 0.59375, color, tag + '-pawn-b');
+    });
+
+    // ---- Fourth table: the games still to come -------------------------
+    // A closed game box in awning stripes + two velvet cups and a
+    // scatter of stones — Mancala/Backgammon dress this table next.
+    var gameBox = add(B.MeshBuilder.CreateBox('parlor-int-gamebox',
+      { width: 1.3, height: 0.2, depth: 0.52 }, scene));
+    gameBox.position.set(T_MAN.x - 0.1, 1.17, T_MAN.z);
+    gameBox.rotation.y = 0.15;
+    gameBox.material = CCW.texMat(scene, B, 'parlor-int-gamebox-mat',
+      CCW.stripesTexture(scene, B, 'parlor-gamebox-stripes'), {});
+    var gameBoxTrim = add(B.MeshBuilder.CreateBox('parlor-int-gamebox-trim',
+      { width: 1.38, height: 0.05, depth: 0.58 }, scene));
+    gameBoxTrim.position.set(T_MAN.x - 0.1, 1.095, T_MAN.z);
+    gameBoxTrim.rotation.y = 0.15;
+    gameBoxTrim.material = CCW.mat(scene, B, 'parlor-int-gamebox-trim-mat', P.gold);
+    [[0.68, -0.55, P.velvetTeal, 'a'], [-0.7, 0.58, P.velvetMagenta, 'b']].forEach(function (cfg) {
+      var cup = add(B.MeshBuilder.CreateCylinder('parlor-int-cup-' + cfg[3],
+        { diameterTop: 0.3, diameterBottom: 0.2, height: 0.26, tessellation: 14 }, scene));
+      cup.position.set(T_MAN.x + cfg[0], 1.2, T_MAN.z + cfg[1]);
+      cup.material = CCW.mat(scene, B, 'parlor-int-cup-mat-' + cfg[3], cfg[2]);
+    });
+    [[0.45, 0.62, P.gold], [0.58, 0.5, P.coral], [-0.5, -0.62, P.teal], [-0.38, -0.5, P.cream]]
+      .forEach(function (cfg, i) {
+        var stone = add(B.MeshBuilder.CreateSphere('parlor-int-stone-' + i,
+          { diameter: 0.09, segments: 8 }, scene));
+        stone.position.set(T_MAN.x + cfg[0], 1.115, T_MAN.z + cfg[1]);
+        stone.material = CCW.mat(scene, B, 'parlor-int-stone-mat-' + i, cfg[2]);
+      });
+
+    // ---- Wall dressing: framed vintage game motifs ---------------------
+    var motifW = 1.9, motifH = 1.9, motifIdx = 0;
+    // Back wall: domino, checkers, backgammon under the plaque.
+    ['domino', 'checkers', 'backgammon'].forEach(function (kind, i) {
+      var piece = framedMotif(scene, B, add, kind, motifIdx++, motifW, motifH);
+      var x = -4.3 + i * 4.3;
+      piece.frame.position.set(x, 3.5, -14.33);
+      piece.art.position.set(x, 3.5, -14.26);
       piece.art.rotation.y = Math.PI; // viewer stands in +Z of the plane
     });
     // Side walls: two pieces each, facing the room's center.
-    ARCADE_ART.left.forEach(function (file, i) {
-      var z = i === 0 ? -5.5 : -10.5;
-      var piece = framedCard(scene, B, add, file, artW, artH);
+    ['chess', 'dice'].forEach(function (kind, i) {
+      var piece = framedMotif(scene, B, add, kind, motifIdx++, motifW, motifH);
+      var z = i === 0 ? -5.4 : -10.6;
       piece.frame.rotation.y = -Math.PI / 2;
-      piece.frame.position.set(-6.44, 3.55, z);
+      piece.frame.position.set(-6.44, 3.6, z);
       piece.art.rotation.y = -Math.PI / 2; // readable face toward +X
-      piece.art.position.set(-6.37, 3.55, z);
+      piece.art.position.set(-6.37, 3.6, z);
     });
-    ARCADE_ART.right.forEach(function (file, i) {
-      var z = i === 0 ? -5.5 : -10.5;
-      var piece = framedCard(scene, B, add, file, artW, artH);
+    ['mancala', 'domino'].forEach(function (kind, i) {
+      var piece = framedMotif(scene, B, add, kind, motifIdx++, motifW, motifH);
+      var z = i === 0 ? -5.4 : -10.6;
       piece.frame.rotation.y = Math.PI / 2;
-      piece.frame.position.set(6.44, 3.55, z);
+      piece.frame.position.set(6.44, 3.6, z);
       piece.art.rotation.y = Math.PI / 2; // readable face toward -X
-      piece.art.position.set(6.37, 3.55, z);
+      piece.art.position.set(6.37, 3.6, z);
     });
     // Header plaque over the gallery wall.
-    var plaqueTrim = add(B.MeshBuilder.CreateBox('arcade-int-plaque-trim',
+    var plaqueTrim = add(B.MeshBuilder.CreateBox('parlor-int-plaque-trim',
       { width: 7.4, height: 1.0, depth: 0.1 }, scene));
     plaqueTrim.position.set(0, 6.3, -14.34);
-    plaqueTrim.material = CCW.mat(scene, B, 'arcade-int-plaque-trim-mat', P.gold);
-    var plaque = add(CCW.makeLabel(scene, B, 'arcade-int-plaque',
-      ['Lotería Arcade', 'The Original Deck, on the wall'], 7.0, 0.85, { fg: P.goldSoft }));
+    plaqueTrim.material = CCW.mat(scene, B, 'parlor-int-plaque-trim-mat', P.gold);
+    var plaque = add(CCW.makeLabel(scene, B, 'parlor-int-plaque',
+      ['The Game Parlor', 'Classic games, played together'], 7.0, 0.85, { fg: P.goldSoft }));
     plaque.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
     plaque.position.set(0, 6.3, -14.27);
 
     // ---- Return pad, inside by the door ------------------------------
-    var padTex = CCW.padTexture(scene, B, 'arcade-int-pad-tex', P.pinkHot);
-    var returnPad = add(B.MeshBuilder.CreateDisc('arcade-int-return-pad',
+    var padTex = CCW.padTexture(scene, B, 'parlor-int-pad-tex', P.pinkHot);
+    var returnPad = add(B.MeshBuilder.CreateDisc('parlor-int-return-pad',
       { radius: 1.5, tessellation: 28 }, scene));
     returnPad.rotation.x = Math.PI / 2;
     returnPad.position.set(4.7, 0.04, -2.3);
-    returnPad.material = CCW.texMat(scene, B, 'arcade-int-return-pad-mat', padTex,
+    returnPad.material = CCW.texMat(scene, B, 'parlor-int-return-pad-mat', padTex,
       { alpha: true, emissive: true });
-    var returnRing = add(B.MeshBuilder.CreateTorus('arcade-int-return-ring',
+    var returnRing = add(B.MeshBuilder.CreateTorus('parlor-int-return-ring',
       { diameter: 3.0, thickness: 0.07, tessellation: 32 }, scene));
     returnRing.rotation.x = Math.PI / 2;
     returnRing.position.set(4.7, 0.05, -2.3);
-    returnRing.material = CCW.glowMat(scene, B, 'arcade-int-return-ring-mat', P.gold);
-    var returnSign = add(CCW.makeLabel(scene, B, 'arcade-int-return-sign',
+    returnRing.material = CCW.glowMat(scene, B, 'parlor-int-return-ring-mat', P.gold);
+    var returnSign = add(CCW.makeLabel(scene, B, 'parlor-int-return-sign',
       ['↩ The Plaza'], 2.2, 0.55, { fg: P.goldSoft }));
     // No half-turn: the sign's readable -Z face looks into the room,
-    // toward a visitor coming from the table. See header contract.
+    // toward a visitor coming from the tables. See header contract.
     returnSign.position.set(4.7, 2.7, -2.35);
 
     return {
@@ -537,10 +630,10 @@
         { alpha: 0.35, emissive: P.pinkHot });
       result.portalMeshes = [ring, glow];
 
-      // M2a: the dressed interior behind this door. The Plaza pad
-      // now lands INSIDE the room's entrance (facing the table), and
-      // the room gains its own return pad by the door.
-      var interior = buildArcadeInterior(scene, B, zone, add);
+      // The Game Parlor: the dressed interior behind this door.
+      // The Plaza pad lands INSIDE the room's entrance (facing the
+      // tables), and the room has its own return pad by the door.
+      var interior = buildParlorInterior(scene, B, zone, add);
       result.threshold = interior.entrance;
       result.interiorReturn = { mesh: interior.returnPad, ringMesh: interior.returnRing };
     }
@@ -777,7 +870,7 @@
         destPos: CCW.SPAWN.position.slice(), destTarget: CCW.SPAWN.target.slice(),
         label: 'the Plaza'
       });
-      // M2a: rooms with an interior (the Arcade) register their
+      // Rooms with an interior (the Game Parlor) register their
       // inside return pad as an additional ride back to the Plaza.
       if (built.interiorReturn) {
         teleports.push({
