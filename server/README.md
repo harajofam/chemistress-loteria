@@ -121,3 +121,32 @@ A public deploy needs:
 5. Still separate from hosting: the Hub-account + 18+ door in front of the
    room (identity/attestation) is Lounge wiring, not a server feature —
    see `../BUILD-STATUS.md`.
+
+## Dominoes — The Game Parlor's first table (`chemistress_dominoes`)
+
+The same process also hosts the Dominoes room and serves its flat
+client at `/dominoes/` (files in `../dominoes/`; it loads the same
+self-hosted `../colyseus.js` bundle). Classic draw dominoes,
+double-six set, 2–4 players; full rules as implemented live in
+`../DOMINOES-BUILD-NOTES.md`.
+
+- **State is public table info only** — seats, tile COUNTS, scores,
+  the played chain, the open ends, whose turn. Hands are never in
+  state: the server keeps them privately and sends each player their
+  own tiles in a `hand` message. A client's decoded state cannot
+  contain another player's tiles (proven by the test suite).
+- **Messages in:** `ready`, `play { tile: "a-b", end: "L"|"R" }`,
+  `draw`, `pass`. Illegal moves get a private `rejected { action,
+  reason }` and change nothing.
+- **Messages out:** `welcome`, `set_hash` (sha256 of the round's
+  seeded tile order, broadcast before play — the deck-hash pattern),
+  `hand` (owner only), `played`, `drew`, `passed`, `round_result`,
+  `match_result`. First to 100 points takes the match.
+- **Env knobs:** `DOMINOES_SEED` (reproducible table; a `{ seed }`
+  join option wins), `DOMINOES_ROUND_DELAY_MS` (pause between rounds,
+  default 3500), `DOMINOES_TEST_HOOKS=1` (enables `reveal_set`,
+  `reveal_hands`, and the lobby-only `setup_round` staging message —
+  **never in production**).
+- **Tests:** `npm test` runs the Lotería suite, then
+  `test/run-dominoes-tests.js` (unit + staged scoring rounds + the
+  privacy audit + full bot matches at 2/3/4 players + static checks).

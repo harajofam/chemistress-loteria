@@ -24,6 +24,7 @@ const express = require('express');
 const { Server } = require('colyseus');
 const { WebSocketTransport } = require('@colyseus/ws-transport');
 const { ChemistressLoteriaRoom } = require('./room');
+const { ChemistressDominoesRoom } = require('./dominoes-room');
 
 const PORT = Number(process.env.PORT) || 2567;
 
@@ -52,6 +53,12 @@ app.use('/assets', express.static(path.join(CLIENT_ROOT, 'assets')));
 // the room definition are untouched by this mount.
 app.use('/world', express.static(path.join(CLIENT_ROOT, 'world')));
 
+// --- Dominoes (The Game Parlor, first playable table) -----------------------
+// The flat Dominoes client lives in its own tree (dominoes/) and is
+// served at /dominoes/, mirroring the /world mount. It loads the same
+// self-hosted colyseus.js bundle from the client root (../colyseus.js).
+app.use('/dominoes', express.static(path.join(CLIENT_ROOT, 'dominoes')));
+
 // --- Game server on the same HTTP server -----------------------------------
 // Colyseus's matchmaking routes wrap this server's request handler and
 // delegate everything else (the static client above) untouched; the
@@ -61,6 +68,7 @@ const gameServer = new Server({
   transport: new WebSocketTransport({ server: httpServer }),
 });
 gameServer.define('chemistress_loteria', ChemistressLoteriaRoom);
+gameServer.define('chemistress_dominoes', ChemistressDominoesRoom);
 
 gameServer
   .listen(PORT)
