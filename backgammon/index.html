@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chemistress Backgammon — The Game Parlor</title>
+  <!-- Colyseus.js client: the SELF-HOSTED esbuild bundle from the client
+       root (the stock UMD evaluates to an empty namespace in browsers —
+       see BUILD-STATUS.md). No CDN scripts anywhere on this page. -->
+  <script src="../colyseus.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="ui">
+    <h1>🎲 Chemistress Backgammon</h1>
+    <p class="sub">The Game Parlor · standard backgammon, face to face · the opening roll decides who starts · doubles play four · gammon counts double, backgammon triple</p>
+
+    <div class="row">
+      <label>Your Name</label>
+      <input id="playerName" value="Jay" />
+      <button id="btnJoin">Join Table</button>
+      <button id="btnReady" disabled>Ready</button>
+    </div>
+    <div id="status">Status: Not connected.</div>
+
+    <div id="table">
+      <div class="panel">
+        <h2>At the table</h2>
+        <div id="players"></div>
+        <div id="dicePanel">
+          <div class="dice-label">Dice</div>
+          <div id="dice"></div>
+          <div id="diceNote"></div>
+        </div>
+        <div class="row actions">
+          <button id="btnResign" disabled>Resign</button>
+        </div>
+      </div>
+
+      <div class="panel grow">
+        <h2>The board</h2>
+        <div id="board"><span class="empty">Join the table to see the board.</span></div>
+        <div id="diePicker" hidden>
+          <span id="diePickerText">That checker can bear off with either die:</span>
+          <span id="diePickerBtns"></span>
+          <button id="dieCancel" type="button">Cancel</button>
+        </div>
+        <div id="hint"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Table talk</h2>
+      <ul id="log"></ul>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
