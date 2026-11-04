@@ -406,3 +406,45 @@ html, body {
   right: 0.8rem;
   z-index: 31;
 }
+
+/* Viewer Mode tap-catcher (2026-11-04): bound by cameras.js
+   createViewerMode. While the stereo mode is on it covers the
+   screen ABOVE the canvas (z 0) and the HUD (z 10) and BELOW
+   the offer card (20), the watch bar (21), the film viewer
+   (30) and the loading overlay (40) — so in Viewer Mode every
+   tap reaches it and steps out, while the house's own dialogs
+   still sit on top. The view itself stays clear: the catcher
+   is transparent and its only furniture is the hint pill,
+   styled in the house emblem language (deep plum-black field,
+   cream serif text, a teal rule) at the bottom edge, where a
+   visitor reads it before the phone goes into the viewer.
+   [hidden] must win — the element sets no display of its own,
+   but the rule is stated anyway, as with its siblings. */
+.viewer-tap {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.viewer-tap[hidden] { display: none; }
+
+.viewer-hint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 1rem;
+  width: max-content;
+  max-width: 92vw;
+  margin: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  color: var(--cream);
+  background: rgba(26, 5, 31, 0.88);
+  border: 1px solid var(--teal);
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+}
