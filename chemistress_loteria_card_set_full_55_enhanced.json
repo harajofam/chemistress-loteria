@@ -1,1405 +1,1405 @@
 {
-  "version": "1.0.0",
-  "cards": [
-    {
-      "id": "MYS_01",
-      "name": "El Sol",
-      "suit": "Mysticism",
-      "number": 1,
-      "art": "assets/cards/MYS_01.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Astrology",
-          "Psychology"
-        ],
-        "durationSec": 16
-      },
-      "house": 11,
-      "style": {
-        "base": "#000000",
-        "primary": "#7A3EF0",
-        "accents": [
-          "#FF3FA4",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MYS_02",
-      "name": "La Luna",
-      "suit": "Mysticism",
-      "number": 2,
-      "art": "assets/cards/MYS_02.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery mysticism energy wrapping your spine.",
-        "lens": [
-          "Biochemistry",
-          "Numerology"
-        ],
-        "durationSec": 22
-      },
-      "house": 11,
-      "style": {
-        "base": "#000000",
-        "primary": "#7A3EF0",
-        "accents": [
-          "#FF3FA4",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "DNA_03",
-      "name": "El DNA",
-      "suit": "DNA",
-      "number": 3,
-      "art": "assets/cards/DNA_03.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Values",
-          "Optics"
-        ],
-        "durationSec": 14
-      },
-      "house": 10,
-      "style": {
-        "base": "#000000",
-        "primary": "#00B3B8",
-        "accents": [
-          "#7A3EF0",
-          "#00C853"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "RAD_04",
-      "name": "El Corazón",
-      "suit": "Radical Love",
-      "number": 4,
-      "art": "assets/cards/RAD_04.png",
-      "ritual": {
-        "prompt": "Take one breath like you mean it. El Corazón says your nervous system is not a suggestion box.",
-        "lens": [
-          "Numerology",
-          "Neuro"
-        ],
-        "durationSec": 16
-      },
-      "house": 5,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF3FA4",
-        "accents": [
-          "#7A3EF0",
-          "#FFD400"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "SHA_05",
-      "name": "La Sombra",
-      "suit": "Shadow Work",
-      "number": 5,
-      "art": "assets/cards/SHA_05.png",
-      "ritual": {
-        "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
-        "lens": [
-          "Values",
-          "Astrology"
-        ],
-        "durationSec": 22
-      },
-      "house": 9,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF7A00",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MED_06",
-      "name": "El Respiro",
-      "suit": "Meditation/Hertz",
-      "number": 6,
-      "art": "assets/cards/MED_06.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery meditation/hertz energy wrapping your spine.",
-        "lens": [
-          "Outlook",
-          "Learning"
-        ],
-        "durationSec": 22
-      },
-      "house": 12,
-      "style": {
-        "base": "#000000",
-        "primary": "#00C853",
-        "accents": [
-          "#33CFCF",
-          "#7A3EF0"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "VAL_07",
-      "name": "La Abundancia",
-      "suit": "Values/Money",
-      "number": 7,
-      "art": "assets/cards/VAL_07.png",
-      "ritual": {
-        "prompt": "Straighten spine, lift crown. Imagine pink/purple light spiraling like a double helix.",
-        "lens": [
-          "Neuro",
-          "Biblical"
-        ],
-        "durationSec": 22
-      },
-      "house": 2,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFD400",
-        "accents": [
-          "#FF7A00",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "LEA_08",
-      "name": "El Mentor",
-      "suit": "Learning",
-      "number": 8,
-      "art": "assets/cards/LEA_08.png",
-      "ritual": {
-        "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
-        "lens": [
-          "Astrology",
-          "Biochemistry"
-        ],
-        "durationSec": 20
-      },
-      "house": 3,
-      "style": {
-        "base": "#000000",
-        "primary": "#33CFCF",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "REB_09",
-      "name": "La Tormenta",
-      "suit": "Rebirth",
-      "number": 9,
-      "art": "assets/cards/REB_09.png",
-      "ritual": {
-        "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
-        "lens": [
-          "Psychology",
-          "Biochemistry"
-        ],
-        "durationSec": 16
-      },
-      "house": 8,
-      "style": {
-        "base": "#000000",
-        "primary": "#00A86B",
-        "accents": [
-          "#FF7A00",
-          "#FF3FA4"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "OUT_10",
-      "name": "El Espejo",
-      "suit": "Outlook",
-      "number": 10,
-      "art": "assets/cards/OUT_10.png",
-      "ritual": {
-        "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
-        "lens": [
-          "Numerology",
-          "Outlook"
-        ],
-        "durationSec": 20
-      },
-      "house": 1,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFE066",
-        "accents": [
-          "#7A3EF0",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MYS_11",
-      "name": "El Portal",
-      "suit": "Mysticism",
-      "number": 11,
-      "art": "assets/cards/MYS_11.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Chakra",
-          "Outlook"
-        ],
-        "durationSec": 22
-      },
-      "house": 11,
-      "style": {
-        "base": "#000000",
-        "primary": "#7A3EF0",
-        "accents": [
-          "#FF3FA4",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MYS_12",
-      "name": "La Estrella",
-      "suit": "Mysticism",
-      "number": 12,
-      "art": "assets/cards/MYS_12.png",
-      "ritual": {
-        "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
-        "lens": [
-          "Astrology",
-          "Biblical"
-        ],
-        "durationSec": 22
-      },
-      "house": 11,
-      "style": {
-        "base": "#000000",
-        "primary": "#7A3EF0",
-        "accents": [
-          "#FF3FA4",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MYS_13",
-      "name": "El Cometa",
-      "suit": "Mysticism",
-      "number": 13,
-      "art": "assets/cards/MYS_13.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Optics",
-          "Numerology"
-        ],
-        "durationSec": 22
-      },
-      "house": 11,
-      "style": {
-        "base": "#000000",
-        "primary": "#7A3EF0",
-        "accents": [
-          "#FF3FA4",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MYS_14",
-      "name": "El Eclipse",
-      "suit": "Mysticism",
-      "number": 14,
-      "art": "assets/cards/MYS_14.png",
-      "ritual": {
-        "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
-        "lens": [
-          "Learning",
-          "Values"
-        ],
-        "durationSec": 18
-      },
-      "house": 11,
-      "style": {
-        "base": "#000000",
-        "primary": "#7A3EF0",
-        "accents": [
-          "#FF3FA4",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MYS_15",
-      "name": "La Alquimia",
-      "suit": "Mysticism",
-      "number": 15,
-      "art": "assets/cards/MYS_15.png",
-      "ritual": {
-        "prompt": "Inhale 4, hold 4, exhale 6. Release the drama like last season’s storyline.",
-        "lens": [
-          "Neuro",
-          "Numerology"
-        ],
-        "durationSec": 14
-      },
-      "house": 11,
-      "style": {
-        "base": "#000000",
-        "primary": "#7A3EF0",
-        "accents": [
-          "#FF3FA4",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "RAD_16",
-      "name": "El Límite",
-      "suit": "Radical Love",
-      "number": 16,
-      "art": "assets/cards/RAD_16.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery radical love energy wrapping your spine.",
-        "lens": [
-          "Psychology",
-          "Numerology"
-        ],
-        "durationSec": 16
-      },
-      "house": 5,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF3FA4",
-        "accents": [
-          "#7A3EF0",
-          "#FFD400"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "RAD_17",
-      "name": "La Ternura",
-      "suit": "Radical Love",
-      "number": 17,
-      "art": "assets/cards/RAD_17.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Optics",
-          "Psychology"
-        ],
-        "durationSec": 20
-      },
-      "house": 5,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF3FA4",
-        "accents": [
-          "#7A3EF0",
-          "#FFD400"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "RAD_18",
-      "name": "El Abrazo",
-      "suit": "Radical Love",
-      "number": 18,
-      "art": "assets/cards/RAD_18.png",
-      "ritual": {
-        "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
-        "lens": [
-          "Biochemistry",
-          "Chakra"
-        ],
-        "durationSec": 18
-      },
-      "house": 5,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF3FA4",
-        "accents": [
-          "#7A3EF0",
-          "#FFD400"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "RAD_19",
-      "name": "La Honestidad",
-      "suit": "Radical Love",
-      "number": 19,
-      "art": "assets/cards/RAD_19.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery radical love energy wrapping your spine.",
-        "lens": [
-          "Learning",
-          "Psychology"
-        ],
-        "durationSec": 14
-      },
-      "house": 5,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF3FA4",
-        "accents": [
-          "#7A3EF0",
-          "#FFD400"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "RAD_20",
-      "name": "La Devoción",
-      "suit": "Radical Love",
-      "number": 20,
-      "art": "assets/cards/RAD_20.png",
-      "ritual": {
-        "prompt": "Inhale 4, hold 4, exhale 6. Release the drama like last season’s storyline.",
-        "lens": [
-          "Learning",
-          "Biochemistry"
-        ],
-        "durationSec": 22
-      },
-      "house": 5,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF3FA4",
-        "accents": [
-          "#7A3EF0",
-          "#FFD400"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "DNA_21",
-      "name": "La Helix",
-      "suit": "DNA",
-      "number": 21,
-      "art": "assets/cards/DNA_21.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery dna energy wrapping your spine.",
-        "lens": [
-          "Biochemistry",
-          "Biblical"
-        ],
-        "durationSec": 20
-      },
-      "house": 10,
-      "style": {
-        "base": "#000000",
-        "primary": "#00B3B8",
-        "accents": [
-          "#7A3EF0",
-          "#00C853"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "DNA_22",
-      "name": "El Núcleo",
-      "suit": "DNA",
-      "number": 22,
-      "art": "assets/cards/DNA_22.png",
-      "ritual": {
-        "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
-        "lens": [
-          "Learning",
-          "Meditation/Hertz"
-        ],
-        "durationSec": 16
-      },
-      "house": 10,
-      "style": {
-        "base": "#000000",
-        "primary": "#00B3B8",
-        "accents": [
-          "#7A3EF0",
-          "#00C853"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "DNA_23",
-      "name": "La Mitocondria",
-      "suit": "DNA",
-      "number": 23,
-      "art": "assets/cards/DNA_23.png",
-      "ritual": {
-        "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
-        "lens": [
-          "Astrology",
-          "Neuro"
-        ],
-        "durationSec": 14
-      },
-      "house": 10,
-      "style": {
-        "base": "#000000",
-        "primary": "#00B3B8",
-        "accents": [
-          "#7A3EF0",
-          "#00C853"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "DNA_24",
-      "name": "El Código 369",
-      "suit": "DNA",
-      "number": 24,
-      "art": "assets/cards/DNA_24.png",
-      "ritual": {
-        "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
-        "lens": [
-          "Optics",
-          "Psychology"
-        ],
-        "durationSec": 14
-      },
-      "house": 10,
-      "style": {
-        "base": "#000000",
-        "primary": "#00B3B8",
-        "accents": [
-          "#7A3EF0",
-          "#00C853"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "DNA_25",
-      "name": "La Reparación",
-      "suit": "DNA",
-      "number": 25,
-      "art": "assets/cards/DNA_25.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery dna energy wrapping your spine.",
-        "lens": [
-          "Values",
-          "Chakra"
-        ],
-        "durationSec": 16
-      },
-      "house": 10,
-      "style": {
-        "base": "#000000",
-        "primary": "#00B3B8",
-        "accents": [
-          "#7A3EF0",
-          "#00C853"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "SHA_26",
-      "name": "El Escondite",
-      "suit": "Shadow Work",
-      "number": 26,
-      "art": "assets/cards/SHA_26.png",
-      "ritual": {
-        "prompt": "Say: ‘I can update my story mid-chapter.’ Then do one micro-thing to prove it.",
-        "lens": [
-          "Optics",
-          "Learning"
-        ],
-        "durationSec": 20
-      },
-      "house": 9,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF7A00",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "SHA_27",
-      "name": "La Proyección",
-      "suit": "Shadow Work",
-      "number": 27,
-      "art": "assets/cards/SHA_27.png",
-      "ritual": {
-        "prompt": "Hand-over-heart: say one thing you’re proud of—even if it’s ‘I hydrated.’",
-        "lens": [
-          "Psychology",
-          "Biochemistry"
-        ],
-        "durationSec": 16
-      },
-      "house": 9,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF7A00",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "SHA_28",
-      "name": "El Juicio",
-      "suit": "Shadow Work",
-      "number": 28,
-      "art": "assets/cards/SHA_28.png",
-      "ritual": {
-        "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
-        "lens": [
-          "Meditation/Hertz",
-          "Psychology"
-        ],
-        "durationSec": 22
-      },
-      "house": 9,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF7A00",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "SHA_29",
-      "name": "La Vergüenza",
-      "suit": "Shadow Work",
-      "number": 29,
-      "art": "assets/cards/SHA_29.png",
-      "ritual": {
-        "prompt": "Straighten spine, lift crown. Imagine pink/purple light spiraling like a double helix.",
-        "lens": [
-          "Values",
-          "Optics"
-        ],
-        "durationSec": 18
-      },
-      "house": 9,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF7A00",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "SHA_30",
-      "name": "El Perdón",
-      "suit": "Shadow Work",
-      "number": 30,
-      "art": "assets/cards/SHA_30.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery shadow work energy wrapping your spine.",
-        "lens": [
-          "Biochemistry",
-          "Meditation/Hertz"
-        ],
-        "durationSec": 20
-      },
-      "house": 9,
-      "style": {
-        "base": "#000000",
-        "primary": "#FF7A00",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MED_31",
-      "name": "El Mantra",
-      "suit": "Meditation/Hertz",
-      "number": 31,
-      "art": "assets/cards/MED_31.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Astrology",
-          "Numerology"
-        ],
-        "durationSec": 16
-      },
-      "house": 12,
-      "style": {
-        "base": "#000000",
-        "primary": "#00C853",
-        "accents": [
-          "#33CFCF",
-          "#7A3EF0"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MED_32",
-      "name": "La Coherencia",
-      "suit": "Meditation/Hertz",
-      "number": 32,
-      "art": "assets/cards/MED_32.png",
-      "ritual": {
-        "prompt": "Hand-over-heart: say one thing you’re proud of—even if it’s ‘I hydrated.’",
-        "lens": [
-          "Learning",
-          "Optics"
-        ],
-        "durationSec": 22
-      },
-      "house": 12,
-      "style": {
-        "base": "#000000",
-        "primary": "#00C853",
-        "accents": [
-          "#33CFCF",
-          "#7A3EF0"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MED_33",
-      "name": "El 432Hz",
-      "suit": "Meditation/Hertz",
-      "number": 33,
-      "art": "assets/cards/MED_33.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Optics",
-          "Outlook"
-        ],
-        "durationSec": 22
-      },
-      "house": 12,
-      "style": {
-        "base": "#000000",
-        "primary": "#00C853",
-        "accents": [
-          "#33CFCF",
-          "#7A3EF0"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MED_34",
-      "name": "La Quietud",
-      "suit": "Meditation/Hertz",
-      "number": 34,
-      "art": "assets/cards/MED_34.png",
-      "ritual": {
-        "prompt": "Say: ‘I can update my story mid-chapter.’ Then do one micro-thing to prove it.",
-        "lens": [
-          "Meditation/Hertz",
-          "Psychology"
-        ],
-        "durationSec": 22
-      },
-      "house": 12,
-      "style": {
-        "base": "#000000",
-        "primary": "#00C853",
-        "accents": [
-          "#33CFCF",
-          "#7A3EF0"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "MED_35",
-      "name": "El Om",
-      "suit": "Meditation/Hertz",
-      "number": 35,
-      "art": "assets/cards/MED_35.png",
-      "ritual": {
-        "prompt": "Take one breath like you mean it. El Om says your nervous system is not a suggestion box.",
-        "lens": [
-          "Learning",
-          "Numerology"
-        ],
-        "durationSec": 22
-      },
-      "house": 12,
-      "style": {
-        "base": "#000000",
-        "primary": "#00C853",
-        "accents": [
-          "#33CFCF",
-          "#7A3EF0"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "VAL_36",
-      "name": "El Ahorro",
-      "suit": "Values/Money",
-      "number": 36,
-      "art": "assets/cards/VAL_36.png",
-      "ritual": {
-        "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
-        "lens": [
-          "Learning",
-          "Chakra"
-        ],
-        "durationSec": 14
-      },
-      "house": 2,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFD400",
-        "accents": [
-          "#FF7A00",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "VAL_37",
-      "name": "La Generosidad",
-      "suit": "Values/Money",
-      "number": 37,
-      "art": "assets/cards/VAL_37.png",
-      "ritual": {
-        "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
-        "lens": [
-          "Optics",
-          "Biochemistry"
-        ],
-        "durationSec": 20
-      },
-      "house": 2,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFD400",
-        "accents": [
-          "#FF7A00",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "VAL_38",
-      "name": "El Intercambio",
-      "suit": "Values/Money",
-      "number": 38,
-      "art": "assets/cards/VAL_38.png",
-      "ritual": {
-        "prompt": "Take one breath like you mean it. El Intercambio says your nervous system is not a suggestion box.",
-        "lens": [
-          "Outlook",
-          "Psychology"
-        ],
-        "durationSec": 22
-      },
-      "house": 2,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFD400",
-        "accents": [
-          "#FF7A00",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "VAL_39",
-      "name": "La Abundancia Real",
-      "suit": "Values/Money",
-      "number": 39,
-      "art": "assets/cards/VAL_39.png",
-      "ritual": {
-        "prompt": "Hand-over-heart: say one thing you’re proud of—even if it’s ‘I hydrated.’",
-        "lens": [
-          "Meditation/Hertz",
-          "Numerology"
-        ],
-        "durationSec": 18
-      },
-      "house": 2,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFD400",
-        "accents": [
-          "#FF7A00",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "VAL_40",
-      "name": "El Diezmo",
-      "suit": "Values/Money",
-      "number": 40,
-      "art": "assets/cards/VAL_40.png",
-      "ritual": {
-        "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
-        "lens": [
-          "Values",
-          "Neuro"
-        ],
-        "durationSec": 16
-      },
-      "house": 2,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFD400",
-        "accents": [
-          "#FF7A00",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "LEA_41",
-      "name": "La Lección",
-      "suit": "Learning",
-      "number": 41,
-      "art": "assets/cards/LEA_41.png",
-      "ritual": {
-        "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
-        "lens": [
-          "Biochemistry",
-          "Meditation/Hertz"
-        ],
-        "durationSec": 22
-      },
-      "house": 3,
-      "style": {
-        "base": "#000000",
-        "primary": "#33CFCF",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "LEA_42",
-      "name": "El Libro",
-      "suit": "Learning",
-      "number": 42,
-      "art": "assets/cards/LEA_42.png",
-      "ritual": {
-        "prompt": "Take one breath like you mean it. El Libro says your nervous system is not a suggestion box.",
-        "lens": [
-          "Values",
-          "Chakra"
-        ],
-        "durationSec": 20
-      },
-      "house": 3,
-      "style": {
-        "base": "#000000",
-        "primary": "#33CFCF",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "LEA_43",
-      "name": "La Práctica",
-      "suit": "Learning",
-      "number": 43,
-      "art": "assets/cards/LEA_43.png",
-      "ritual": {
-        "prompt": "Take one breath like you mean it. La Práctica says your nervous system is not a suggestion box.",
-        "lens": [
-          "Numerology",
-          "Chakra"
-        ],
-        "durationSec": 18
-      },
-      "house": 3,
-      "style": {
-        "base": "#000000",
-        "primary": "#33CFCF",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "LEA_44",
-      "name": "El Maestro Interior",
-      "suit": "Learning",
-      "number": 44,
-      "art": "assets/cards/LEA_44.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery learning energy wrapping your spine.",
-        "lens": [
-          "Astrology",
-          "Neuro"
-        ],
-        "durationSec": 22
-      },
-      "house": 3,
-      "style": {
-        "base": "#000000",
-        "primary": "#33CFCF",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "LEA_45",
-      "name": "La Curiosidad",
-      "suit": "Learning",
-      "number": 45,
-      "art": "assets/cards/LEA_45.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Numerology",
-          "Biblical"
-        ],
-        "durationSec": 14
-      },
-      "house": 3,
-      "style": {
-        "base": "#000000",
-        "primary": "#33CFCF",
-        "accents": [
-          "#7A3EF0",
-          "#FFE066"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "REB_46",
-      "name": "El Fénix",
-      "suit": "Rebirth",
-      "number": 46,
-      "art": "assets/cards/REB_46.png",
-      "ritual": {
-        "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
-        "lens": [
-          "Biochemistry",
-          "Outlook"
-        ],
-        "durationSec": 20
-      },
-      "house": 8,
-      "style": {
-        "base": "#000000",
-        "primary": "#00A86B",
-        "accents": [
-          "#FF7A00",
-          "#FF3FA4"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "REB_47",
-      "name": "La Lluvia",
-      "suit": "Rebirth",
-      "number": 47,
-      "art": "assets/cards/REB_47.png",
-      "ritual": {
-        "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
-        "lens": [
-          "Biochemistry",
-          "Psychology"
-        ],
-        "durationSec": 22
-      },
-      "house": 8,
-      "style": {
-        "base": "#000000",
-        "primary": "#00A86B",
-        "accents": [
-          "#FF7A00",
-          "#FF3FA4"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "REB_48",
-      "name": "El Relámpago",
-      "suit": "Rebirth",
-      "number": 48,
-      "art": "assets/cards/REB_48.png",
-      "ritual": {
-        "prompt": "Inhale 4, hold 4, exhale 6. Release the drama like last season’s storyline.",
-        "lens": [
-          "Optics",
-          "Neuro"
-        ],
-        "durationSec": 22
-      },
-      "house": 8,
-      "style": {
-        "base": "#000000",
-        "primary": "#00A86B",
-        "accents": [
-          "#FF7A00",
-          "#FF3FA4"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "REB_49",
-      "name": "La Semilla",
-      "suit": "Rebirth",
-      "number": 49,
-      "art": "assets/cards/REB_49.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery rebirth energy wrapping your spine.",
-        "lens": [
-          "Outlook",
-          "Psychology"
-        ],
-        "durationSec": 20
-      },
-      "house": 8,
-      "style": {
-        "base": "#000000",
-        "primary": "#00A86B",
-        "accents": [
-          "#FF7A00",
-          "#FF3FA4"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "REB_50",
-      "name": "El Despertar",
-      "suit": "Rebirth",
-      "number": 50,
-      "art": "assets/cards/REB_50.png",
-      "ritual": {
-        "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
-        "lens": [
-          "Biblical",
-          "Meditation/Hertz"
-        ],
-        "durationSec": 20
-      },
-      "house": 8,
-      "style": {
-        "base": "#000000",
-        "primary": "#00A86B",
-        "accents": [
-          "#FF7A00",
-          "#FF3FA4"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "OUT_51",
-      "name": "La Perspectiva",
-      "suit": "Outlook",
-      "number": 51,
-      "art": "assets/cards/OUT_51.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Neuro",
-          "Outlook"
-        ],
-        "durationSec": 14
-      },
-      "house": 1,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFE066",
-        "accents": [
-          "#7A3EF0",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "OUT_52",
-      "name": "El Filtro",
-      "suit": "Outlook",
-      "number": 52,
-      "art": "assets/cards/OUT_52.png",
-      "ritual": {
-        "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
-        "lens": [
-          "Astrology",
-          "Values"
-        ],
-        "durationSec": 22
-      },
-      "house": 1,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFE066",
-        "accents": [
-          "#7A3EF0",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "OUT_53",
-      "name": "La Narrativa",
-      "suit": "Outlook",
-      "number": 53,
-      "art": "assets/cards/OUT_53.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery outlook energy wrapping your spine.",
-        "lens": [
-          "Values",
-          "Neuro"
-        ],
-        "durationSec": 14
-      },
-      "house": 1,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFE066",
-        "accents": [
-          "#7A3EF0",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "OUT_54",
-      "name": "El Espejismo",
-      "suit": "Outlook",
-      "number": 54,
-      "art": "assets/cards/OUT_54.png",
-      "ritual": {
-        "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
-        "lens": [
-          "Outlook",
-          "Learning"
-        ],
-        "durationSec": 14
-      },
-      "house": 1,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFE066",
-        "accents": [
-          "#7A3EF0",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "OUT_55",
-      "name": "La Decisión",
-      "suit": "Outlook",
-      "number": 55,
-      "art": "assets/cards/OUT_55.png",
-      "ritual": {
-        "prompt": "Box breathe 4-4-4-4 while picturing glittery outlook energy wrapping your spine.",
-        "lens": [
-          "Numerology",
-          "Astrology"
-        ],
-        "durationSec": 18
-      },
-      "house": 1,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFE066",
-        "accents": [
-          "#7A3EF0",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    },
-    {
-      "id": "WILD_SOBERANA",
-      "name": "La Soberana",
-      "suit": "Wild",
-      "number": null,
-      "art": "assets/cards/WILD_SOBERANA.png",
-      "ritual": {
-        "prompt": "Sit up like the room is yours — because it is. Whisper one decree for your life today, just one, like a queen signing it into law. Then keep it before dinner.",
-        "lens": [
-          "Astrology",
-          "Psychology"
-        ],
-        "durationSec": 24
-      },
-      "house": null,
-      "style": {
-        "base": "#000000",
-        "primary": "#FFD400",
-        "accents": [
-          "#7A3EF0",
-          "#00B3B8"
-        ],
-        "font": "Bodoni, Birch, serif"
-      }
-    }
-  ]
+ "version": "1.0.0",
+ "cards": [
+  {
+   "id": "MYS_01",
+   "name": "El Sol",
+   "suit": "Mysticism",
+   "number": 1,
+   "art": "assets/cards/web/MYS_01.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Astrology",
+     "Psychology"
+    ],
+    "durationSec": 16
+   },
+   "house": 11,
+   "style": {
+    "base": "#000000",
+    "primary": "#7A3EF0",
+    "accents": [
+     "#FF3FA4",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MYS_02",
+   "name": "La Luna",
+   "suit": "Mysticism",
+   "number": 2,
+   "art": "assets/cards/web/MYS_02.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery mysticism energy wrapping your spine.",
+    "lens": [
+     "Biochemistry",
+     "Numerology"
+    ],
+    "durationSec": 22
+   },
+   "house": 11,
+   "style": {
+    "base": "#000000",
+    "primary": "#7A3EF0",
+    "accents": [
+     "#FF3FA4",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "DNA_03",
+   "name": "El DNA",
+   "suit": "DNA",
+   "number": 3,
+   "art": "assets/cards/web/DNA_03.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Values",
+     "Optics"
+    ],
+    "durationSec": 14
+   },
+   "house": 10,
+   "style": {
+    "base": "#000000",
+    "primary": "#00B3B8",
+    "accents": [
+     "#7A3EF0",
+     "#00C853"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "RAD_04",
+   "name": "El Corazón",
+   "suit": "Radical Love",
+   "number": 4,
+   "art": "assets/cards/web/RAD_04.webp",
+   "ritual": {
+    "prompt": "Take one breath like you mean it. El Corazón says your nervous system is not a suggestion box.",
+    "lens": [
+     "Numerology",
+     "Neuro"
+    ],
+    "durationSec": 16
+   },
+   "house": 5,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF3FA4",
+    "accents": [
+     "#7A3EF0",
+     "#FFD400"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "SHA_05",
+   "name": "La Sombra",
+   "suit": "Shadow Work",
+   "number": 5,
+   "art": "assets/cards/web/SHA_05.webp",
+   "ritual": {
+    "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
+    "lens": [
+     "Values",
+     "Astrology"
+    ],
+    "durationSec": 22
+   },
+   "house": 9,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF7A00",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MED_06",
+   "name": "El Respiro",
+   "suit": "Meditation/Hertz",
+   "number": 6,
+   "art": "assets/cards/web/MED_06.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery meditation/hertz energy wrapping your spine.",
+    "lens": [
+     "Outlook",
+     "Learning"
+    ],
+    "durationSec": 22
+   },
+   "house": 12,
+   "style": {
+    "base": "#000000",
+    "primary": "#00C853",
+    "accents": [
+     "#33CFCF",
+     "#7A3EF0"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "VAL_07",
+   "name": "La Abundancia",
+   "suit": "Values/Money",
+   "number": 7,
+   "art": "assets/cards/web/VAL_07.webp",
+   "ritual": {
+    "prompt": "Straighten spine, lift crown. Imagine pink/purple light spiraling like a double helix.",
+    "lens": [
+     "Neuro",
+     "Biblical"
+    ],
+    "durationSec": 22
+   },
+   "house": 2,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFD400",
+    "accents": [
+     "#FF7A00",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "LEA_08",
+   "name": "El Mentor",
+   "suit": "Learning",
+   "number": 8,
+   "art": "assets/cards/web/LEA_08.webp",
+   "ritual": {
+    "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
+    "lens": [
+     "Astrology",
+     "Biochemistry"
+    ],
+    "durationSec": 20
+   },
+   "house": 3,
+   "style": {
+    "base": "#000000",
+    "primary": "#33CFCF",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "REB_09",
+   "name": "La Tormenta",
+   "suit": "Rebirth",
+   "number": 9,
+   "art": "assets/cards/web/REB_09.webp",
+   "ritual": {
+    "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
+    "lens": [
+     "Psychology",
+     "Biochemistry"
+    ],
+    "durationSec": 16
+   },
+   "house": 8,
+   "style": {
+    "base": "#000000",
+    "primary": "#00A86B",
+    "accents": [
+     "#FF7A00",
+     "#FF3FA4"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "OUT_10",
+   "name": "El Espejo",
+   "suit": "Outlook",
+   "number": 10,
+   "art": "assets/cards/web/OUT_10.webp",
+   "ritual": {
+    "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
+    "lens": [
+     "Numerology",
+     "Outlook"
+    ],
+    "durationSec": 20
+   },
+   "house": 1,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFE066",
+    "accents": [
+     "#7A3EF0",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MYS_11",
+   "name": "El Portal",
+   "suit": "Mysticism",
+   "number": 11,
+   "art": "assets/cards/web/MYS_11.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Chakra",
+     "Outlook"
+    ],
+    "durationSec": 22
+   },
+   "house": 11,
+   "style": {
+    "base": "#000000",
+    "primary": "#7A3EF0",
+    "accents": [
+     "#FF3FA4",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MYS_12",
+   "name": "La Estrella",
+   "suit": "Mysticism",
+   "number": 12,
+   "art": "assets/cards/web/MYS_12.webp",
+   "ritual": {
+    "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
+    "lens": [
+     "Astrology",
+     "Biblical"
+    ],
+    "durationSec": 22
+   },
+   "house": 11,
+   "style": {
+    "base": "#000000",
+    "primary": "#7A3EF0",
+    "accents": [
+     "#FF3FA4",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MYS_13",
+   "name": "El Cometa",
+   "suit": "Mysticism",
+   "number": 13,
+   "art": "assets/cards/web/MYS_13.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Optics",
+     "Numerology"
+    ],
+    "durationSec": 22
+   },
+   "house": 11,
+   "style": {
+    "base": "#000000",
+    "primary": "#7A3EF0",
+    "accents": [
+     "#FF3FA4",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MYS_14",
+   "name": "El Eclipse",
+   "suit": "Mysticism",
+   "number": 14,
+   "art": "assets/cards/web/MYS_14.webp",
+   "ritual": {
+    "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
+    "lens": [
+     "Learning",
+     "Values"
+    ],
+    "durationSec": 18
+   },
+   "house": 11,
+   "style": {
+    "base": "#000000",
+    "primary": "#7A3EF0",
+    "accents": [
+     "#FF3FA4",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MYS_15",
+   "name": "La Alquimia",
+   "suit": "Mysticism",
+   "number": 15,
+   "art": "assets/cards/web/MYS_15.webp",
+   "ritual": {
+    "prompt": "Inhale 4, hold 4, exhale 6. Release the drama like last season’s storyline.",
+    "lens": [
+     "Neuro",
+     "Numerology"
+    ],
+    "durationSec": 14
+   },
+   "house": 11,
+   "style": {
+    "base": "#000000",
+    "primary": "#7A3EF0",
+    "accents": [
+     "#FF3FA4",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "RAD_16",
+   "name": "El Límite",
+   "suit": "Radical Love",
+   "number": 16,
+   "art": "assets/cards/web/RAD_16.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery radical love energy wrapping your spine.",
+    "lens": [
+     "Psychology",
+     "Numerology"
+    ],
+    "durationSec": 16
+   },
+   "house": 5,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF3FA4",
+    "accents": [
+     "#7A3EF0",
+     "#FFD400"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "RAD_17",
+   "name": "La Ternura",
+   "suit": "Radical Love",
+   "number": 17,
+   "art": "assets/cards/web/RAD_17.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Optics",
+     "Psychology"
+    ],
+    "durationSec": 20
+   },
+   "house": 5,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF3FA4",
+    "accents": [
+     "#7A3EF0",
+     "#FFD400"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "RAD_18",
+   "name": "El Abrazo",
+   "suit": "Radical Love",
+   "number": 18,
+   "art": "assets/cards/web/RAD_18.webp",
+   "ritual": {
+    "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
+    "lens": [
+     "Biochemistry",
+     "Chakra"
+    ],
+    "durationSec": 18
+   },
+   "house": 5,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF3FA4",
+    "accents": [
+     "#7A3EF0",
+     "#FFD400"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "RAD_19",
+   "name": "La Honestidad",
+   "suit": "Radical Love",
+   "number": 19,
+   "art": "assets/cards/web/RAD_19.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery radical love energy wrapping your spine.",
+    "lens": [
+     "Learning",
+     "Psychology"
+    ],
+    "durationSec": 14
+   },
+   "house": 5,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF3FA4",
+    "accents": [
+     "#7A3EF0",
+     "#FFD400"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "RAD_20",
+   "name": "La Devoción",
+   "suit": "Radical Love",
+   "number": 20,
+   "art": "assets/cards/web/RAD_20.webp",
+   "ritual": {
+    "prompt": "Inhale 4, hold 4, exhale 6. Release the drama like last season’s storyline.",
+    "lens": [
+     "Learning",
+     "Biochemistry"
+    ],
+    "durationSec": 22
+   },
+   "house": 5,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF3FA4",
+    "accents": [
+     "#7A3EF0",
+     "#FFD400"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "DNA_21",
+   "name": "La Helix",
+   "suit": "DNA",
+   "number": 21,
+   "art": "assets/cards/web/DNA_21.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery dna energy wrapping your spine.",
+    "lens": [
+     "Biochemistry",
+     "Biblical"
+    ],
+    "durationSec": 20
+   },
+   "house": 10,
+   "style": {
+    "base": "#000000",
+    "primary": "#00B3B8",
+    "accents": [
+     "#7A3EF0",
+     "#00C853"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "DNA_22",
+   "name": "El Núcleo",
+   "suit": "DNA",
+   "number": 22,
+   "art": "assets/cards/web/DNA_22.webp",
+   "ritual": {
+    "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
+    "lens": [
+     "Learning",
+     "Meditation/Hertz"
+    ],
+    "durationSec": 16
+   },
+   "house": 10,
+   "style": {
+    "base": "#000000",
+    "primary": "#00B3B8",
+    "accents": [
+     "#7A3EF0",
+     "#00C853"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "DNA_23",
+   "name": "La Mitocondria",
+   "suit": "DNA",
+   "number": 23,
+   "art": "assets/cards/web/DNA_23.webp",
+   "ritual": {
+    "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
+    "lens": [
+     "Astrology",
+     "Neuro"
+    ],
+    "durationSec": 14
+   },
+   "house": 10,
+   "style": {
+    "base": "#000000",
+    "primary": "#00B3B8",
+    "accents": [
+     "#7A3EF0",
+     "#00C853"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "DNA_24",
+   "name": "El Código 369",
+   "suit": "DNA",
+   "number": 24,
+   "art": "assets/cards/web/DNA_24.webp",
+   "ritual": {
+    "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
+    "lens": [
+     "Optics",
+     "Psychology"
+    ],
+    "durationSec": 14
+   },
+   "house": 10,
+   "style": {
+    "base": "#000000",
+    "primary": "#00B3B8",
+    "accents": [
+     "#7A3EF0",
+     "#00C853"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "DNA_25",
+   "name": "La Reparación",
+   "suit": "DNA",
+   "number": 25,
+   "art": "assets/cards/web/DNA_25.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery dna energy wrapping your spine.",
+    "lens": [
+     "Values",
+     "Chakra"
+    ],
+    "durationSec": 16
+   },
+   "house": 10,
+   "style": {
+    "base": "#000000",
+    "primary": "#00B3B8",
+    "accents": [
+     "#7A3EF0",
+     "#00C853"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "SHA_26",
+   "name": "El Escondite",
+   "suit": "Shadow Work",
+   "number": 26,
+   "art": "assets/cards/web/SHA_26.webp",
+   "ritual": {
+    "prompt": "Say: ‘I can update my story mid-chapter.’ Then do one micro-thing to prove it.",
+    "lens": [
+     "Optics",
+     "Learning"
+    ],
+    "durationSec": 20
+   },
+   "house": 9,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF7A00",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "SHA_27",
+   "name": "La Proyección",
+   "suit": "Shadow Work",
+   "number": 27,
+   "art": "assets/cards/web/SHA_27.webp",
+   "ritual": {
+    "prompt": "Hand-over-heart: say one thing you’re proud of—even if it’s ‘I hydrated.’",
+    "lens": [
+     "Psychology",
+     "Biochemistry"
+    ],
+    "durationSec": 16
+   },
+   "house": 9,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF7A00",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "SHA_28",
+   "name": "El Juicio",
+   "suit": "Shadow Work",
+   "number": 28,
+   "art": "assets/cards/web/SHA_28.webp",
+   "ritual": {
+    "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
+    "lens": [
+     "Meditation/Hertz",
+     "Psychology"
+    ],
+    "durationSec": 22
+   },
+   "house": 9,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF7A00",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "SHA_29",
+   "name": "La Vergüenza",
+   "suit": "Shadow Work",
+   "number": 29,
+   "art": "assets/cards/web/SHA_29.webp",
+   "ritual": {
+    "prompt": "Straighten spine, lift crown. Imagine pink/purple light spiraling like a double helix.",
+    "lens": [
+     "Values",
+     "Optics"
+    ],
+    "durationSec": 18
+   },
+   "house": 9,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF7A00",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "SHA_30",
+   "name": "El Perdón",
+   "suit": "Shadow Work",
+   "number": 30,
+   "art": "assets/cards/web/SHA_30.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery shadow work energy wrapping your spine.",
+    "lens": [
+     "Biochemistry",
+     "Meditation/Hertz"
+    ],
+    "durationSec": 20
+   },
+   "house": 9,
+   "style": {
+    "base": "#000000",
+    "primary": "#FF7A00",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MED_31",
+   "name": "El Mantra",
+   "suit": "Meditation/Hertz",
+   "number": 31,
+   "art": "assets/cards/web/MED_31.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Astrology",
+     "Numerology"
+    ],
+    "durationSec": 16
+   },
+   "house": 12,
+   "style": {
+    "base": "#000000",
+    "primary": "#00C853",
+    "accents": [
+     "#33CFCF",
+     "#7A3EF0"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MED_32",
+   "name": "La Coherencia",
+   "suit": "Meditation/Hertz",
+   "number": 32,
+   "art": "assets/cards/web/MED_32.webp",
+   "ritual": {
+    "prompt": "Hand-over-heart: say one thing you’re proud of—even if it’s ‘I hydrated.’",
+    "lens": [
+     "Learning",
+     "Optics"
+    ],
+    "durationSec": 22
+   },
+   "house": 12,
+   "style": {
+    "base": "#000000",
+    "primary": "#00C853",
+    "accents": [
+     "#33CFCF",
+     "#7A3EF0"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MED_33",
+   "name": "El 432Hz",
+   "suit": "Meditation/Hertz",
+   "number": 33,
+   "art": "assets/cards/web/MED_33.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Optics",
+     "Outlook"
+    ],
+    "durationSec": 22
+   },
+   "house": 12,
+   "style": {
+    "base": "#000000",
+    "primary": "#00C853",
+    "accents": [
+     "#33CFCF",
+     "#7A3EF0"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MED_34",
+   "name": "La Quietud",
+   "suit": "Meditation/Hertz",
+   "number": 34,
+   "art": "assets/cards/web/MED_34.webp",
+   "ritual": {
+    "prompt": "Say: ‘I can update my story mid-chapter.’ Then do one micro-thing to prove it.",
+    "lens": [
+     "Meditation/Hertz",
+     "Psychology"
+    ],
+    "durationSec": 22
+   },
+   "house": 12,
+   "style": {
+    "base": "#000000",
+    "primary": "#00C853",
+    "accents": [
+     "#33CFCF",
+     "#7A3EF0"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "MED_35",
+   "name": "El Om",
+   "suit": "Meditation/Hertz",
+   "number": 35,
+   "art": "assets/cards/web/MED_35.webp",
+   "ritual": {
+    "prompt": "Take one breath like you mean it. El Om says your nervous system is not a suggestion box.",
+    "lens": [
+     "Learning",
+     "Numerology"
+    ],
+    "durationSec": 22
+   },
+   "house": 12,
+   "style": {
+    "base": "#000000",
+    "primary": "#00C853",
+    "accents": [
+     "#33CFCF",
+     "#7A3EF0"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "VAL_36",
+   "name": "El Ahorro",
+   "suit": "Values/Money",
+   "number": 36,
+   "art": "assets/cards/web/VAL_36.webp",
+   "ritual": {
+    "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
+    "lens": [
+     "Learning",
+     "Chakra"
+    ],
+    "durationSec": 14
+   },
+   "house": 2,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFD400",
+    "accents": [
+     "#FF7A00",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "VAL_37",
+   "name": "La Generosidad",
+   "suit": "Values/Money",
+   "number": 37,
+   "art": "assets/cards/web/VAL_37.webp",
+   "ritual": {
+    "prompt": "Whisper the fear. Now whisper the boundary. Repeat until your inner hater gets bored.",
+    "lens": [
+     "Optics",
+     "Biochemistry"
+    ],
+    "durationSec": 20
+   },
+   "house": 2,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFD400",
+    "accents": [
+     "#FF7A00",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "VAL_38",
+   "name": "El Intercambio",
+   "suit": "Values/Money",
+   "number": 38,
+   "art": "assets/cards/web/VAL_38.webp",
+   "ritual": {
+    "prompt": "Take one breath like you mean it. El Intercambio says your nervous system is not a suggestion box.",
+    "lens": [
+     "Outlook",
+     "Psychology"
+    ],
+    "durationSec": 22
+   },
+   "house": 2,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFD400",
+    "accents": [
+     "#FF7A00",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "VAL_39",
+   "name": "La Abundancia Real",
+   "suit": "Values/Money",
+   "number": 39,
+   "art": "assets/cards/web/VAL_39.webp",
+   "ritual": {
+    "prompt": "Hand-over-heart: say one thing you’re proud of—even if it’s ‘I hydrated.’",
+    "lens": [
+     "Meditation/Hertz",
+     "Numerology"
+    ],
+    "durationSec": 18
+   },
+   "house": 2,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFD400",
+    "accents": [
+     "#FF7A00",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "VAL_40",
+   "name": "El Diezmo",
+   "suit": "Values/Money",
+   "number": 40,
+   "art": "assets/cards/web/VAL_40.webp",
+   "ritual": {
+    "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
+    "lens": [
+     "Values",
+     "Neuro"
+    ],
+    "durationSec": 16
+   },
+   "house": 2,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFD400",
+    "accents": [
+     "#FF7A00",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "LEA_41",
+   "name": "La Lección",
+   "suit": "Learning",
+   "number": 41,
+   "art": "assets/cards/web/LEA_41.webp",
+   "ritual": {
+    "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
+    "lens": [
+     "Biochemistry",
+     "Meditation/Hertz"
+    ],
+    "durationSec": 22
+   },
+   "house": 3,
+   "style": {
+    "base": "#000000",
+    "primary": "#33CFCF",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "LEA_42",
+   "name": "El Libro",
+   "suit": "Learning",
+   "number": 42,
+   "art": "assets/cards/web/LEA_42.webp",
+   "ritual": {
+    "prompt": "Take one breath like you mean it. El Libro says your nervous system is not a suggestion box.",
+    "lens": [
+     "Values",
+     "Chakra"
+    ],
+    "durationSec": 20
+   },
+   "house": 3,
+   "style": {
+    "base": "#000000",
+    "primary": "#33CFCF",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "LEA_43",
+   "name": "La Práctica",
+   "suit": "Learning",
+   "number": 43,
+   "art": "assets/cards/web/LEA_43.webp",
+   "ritual": {
+    "prompt": "Take one breath like you mean it. La Práctica says your nervous system is not a suggestion box.",
+    "lens": [
+     "Numerology",
+     "Chakra"
+    ],
+    "durationSec": 18
+   },
+   "house": 3,
+   "style": {
+    "base": "#000000",
+    "primary": "#33CFCF",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "LEA_44",
+   "name": "El Maestro Interior",
+   "suit": "Learning",
+   "number": 44,
+   "art": "assets/cards/web/LEA_44.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery learning energy wrapping your spine.",
+    "lens": [
+     "Astrology",
+     "Neuro"
+    ],
+    "durationSec": 22
+   },
+   "house": 3,
+   "style": {
+    "base": "#000000",
+    "primary": "#33CFCF",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "LEA_45",
+   "name": "La Curiosidad",
+   "suit": "Learning",
+   "number": 45,
+   "art": "assets/cards/web/LEA_45.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Numerology",
+     "Biblical"
+    ],
+    "durationSec": 14
+   },
+   "house": 3,
+   "style": {
+    "base": "#000000",
+    "primary": "#33CFCF",
+    "accents": [
+     "#7A3EF0",
+     "#FFE066"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "REB_46",
+   "name": "El Fénix",
+   "suit": "Rebirth",
+   "number": 46,
+   "art": "assets/cards/web/REB_46.webp",
+   "ritual": {
+    "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
+    "lens": [
+     "Biochemistry",
+     "Outlook"
+    ],
+    "durationSec": 20
+   },
+   "house": 8,
+   "style": {
+    "base": "#000000",
+    "primary": "#00A86B",
+    "accents": [
+     "#FF7A00",
+     "#FF3FA4"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "REB_47",
+   "name": "La Lluvia",
+   "suit": "Rebirth",
+   "number": 47,
+   "art": "assets/cards/web/REB_47.webp",
+   "ritual": {
+    "prompt": "Count 5 things you can see, 4 you can touch, 3 you can hear. Yes, your thoughts are loud.",
+    "lens": [
+     "Biochemistry",
+     "Psychology"
+    ],
+    "durationSec": 22
+   },
+   "house": 8,
+   "style": {
+    "base": "#000000",
+    "primary": "#00A86B",
+    "accents": [
+     "#FF7A00",
+     "#FF3FA4"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "REB_48",
+   "name": "El Relámpago",
+   "suit": "Rebirth",
+   "number": 48,
+   "art": "assets/cards/web/REB_48.webp",
+   "ritual": {
+    "prompt": "Inhale 4, hold 4, exhale 6. Release the drama like last season’s storyline.",
+    "lens": [
+     "Optics",
+     "Neuro"
+    ],
+    "durationSec": 22
+   },
+   "house": 8,
+   "style": {
+    "base": "#000000",
+    "primary": "#00A86B",
+    "accents": [
+     "#FF7A00",
+     "#FF3FA4"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "REB_49",
+   "name": "La Semilla",
+   "suit": "Rebirth",
+   "number": 49,
+   "art": "assets/cards/web/REB_49.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery rebirth energy wrapping your spine.",
+    "lens": [
+     "Outlook",
+     "Psychology"
+    ],
+    "durationSec": 20
+   },
+   "house": 8,
+   "style": {
+    "base": "#000000",
+    "primary": "#00A86B",
+    "accents": [
+     "#FF7A00",
+     "#FF3FA4"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "REB_50",
+   "name": "El Despertar",
+   "suit": "Rebirth",
+   "number": 50,
+   "art": "assets/cards/web/REB_50.webp",
+   "ritual": {
+    "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
+    "lens": [
+     "Biblical",
+     "Meditation/Hertz"
+    ],
+    "durationSec": 20
+   },
+   "house": 8,
+   "style": {
+    "base": "#000000",
+    "primary": "#00A86B",
+    "accents": [
+     "#FF7A00",
+     "#FF3FA4"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "OUT_51",
+   "name": "La Perspectiva",
+   "suit": "Outlook",
+   "number": 51,
+   "art": "assets/cards/web/OUT_51.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Neuro",
+     "Outlook"
+    ],
+    "durationSec": 14
+   },
+   "house": 1,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFE066",
+    "accents": [
+     "#7A3EF0",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "OUT_52",
+   "name": "El Filtro",
+   "suit": "Outlook",
+   "number": 52,
+   "art": "assets/cards/web/OUT_52.webp",
+   "ritual": {
+    "prompt": "Relax jaw, drop shoulders. Your mitochondria are filing HR complaints about your stress.",
+    "lens": [
+     "Astrology",
+     "Values"
+    ],
+    "durationSec": 22
+   },
+   "house": 1,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFE066",
+    "accents": [
+     "#7A3EF0",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "OUT_53",
+   "name": "La Narrativa",
+   "suit": "Outlook",
+   "number": 53,
+   "art": "assets/cards/web/OUT_53.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery outlook energy wrapping your spine.",
+    "lens": [
+     "Values",
+     "Neuro"
+    ],
+    "durationSec": 14
+   },
+   "house": 1,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFE066",
+    "accents": [
+     "#7A3EF0",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "OUT_54",
+   "name": "El Espejismo",
+   "suit": "Outlook",
+   "number": 54,
+   "art": "assets/cards/web/OUT_54.webp",
+   "ritual": {
+    "prompt": "Name one tiny action that matches your values today. No, scrolling doesn’t count.",
+    "lens": [
+     "Outlook",
+     "Learning"
+    ],
+    "durationSec": 14
+   },
+   "house": 1,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFE066",
+    "accents": [
+     "#7A3EF0",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "OUT_55",
+   "name": "La Decisión",
+   "suit": "Outlook",
+   "number": 55,
+   "art": "assets/cards/web/OUT_55.webp",
+   "ritual": {
+    "prompt": "Box breathe 4-4-4-4 while picturing glittery outlook energy wrapping your spine.",
+    "lens": [
+     "Numerology",
+     "Astrology"
+    ],
+    "durationSec": 18
+   },
+   "house": 1,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFE066",
+    "accents": [
+     "#7A3EF0",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  },
+  {
+   "id": "WILD_SOBERANA",
+   "name": "La Soberana",
+   "suit": "Wild",
+   "number": null,
+   "art": "assets/cards/web/WILD_SOBERANA.webp",
+   "ritual": {
+    "prompt": "Sit up like the room is yours — because it is. Whisper one decree for your life today, just one, like a queen signing it into law. Then keep it before dinner.",
+    "lens": [
+     "Astrology",
+     "Psychology"
+    ],
+    "durationSec": 24
+   },
+   "house": null,
+   "style": {
+    "base": "#000000",
+    "primary": "#FFD400",
+    "accents": [
+     "#7A3EF0",
+     "#00B3B8"
+    ],
+    "font": "Bodoni, Birch, serif"
+   }
+  }
+ ]
 }
