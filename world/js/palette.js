@@ -442,6 +442,36 @@
     });
   };
 
+  // Checkerboard floor for the Arcade interior (M2a): deep plum checks
+  // with gold grout — the market-hall floor under the game table.
+  CCW.checkerTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
+      var n = 8, cell = w / n;
+      for (var r = 0; r < n; r++) {
+        for (var c = 0; c < n; c++) {
+          ctx.fillStyle = (r + c) % 2 ? '#33153f' : '#1f0726';
+          ctx.fillRect(c * cell, r * cell, cell, cell);
+        }
+      }
+      var rnd = prand(2024);
+      for (var i = 0; i < 700; i++) {
+        ctx.fillStyle = rnd() > 0.5 ? P.goldSoft : P.cream;
+        ctx.globalAlpha = 0.04 + rnd() * 0.08;
+        ctx.beginPath(); ctx.arc(rnd() * w, rnd() * h, 1 + rnd() * 2, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.55;
+      for (var g = 0; g <= n; g++) {
+        ctx.beginPath(); ctx.moveTo(g * cell, 0); ctx.lineTo(g * cell, h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, g * cell); ctx.lineTo(w, g * cell); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    });
+  };
+
   // Teleport pad face: accent disc, gold ring, gold star.
   CCW.padTexture = function (scene, B, name, accentHexColor) {
     var P = CCW.PALETTE;
