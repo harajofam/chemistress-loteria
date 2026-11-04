@@ -27,6 +27,17 @@
  * is a room you walk into, not a door out — the HUD button and the
  * Plaza door glow glide the visitor INTO the room, exactly like the
  * room's own pad. The game keeps its own page, untouched.
+ *
+ * World fix pass (2026-11-03 evening, from the live verifications):
+ *  - A completed glide now posts its `landed` status line ("You are
+ *    in the Game Parlor…", the Plaza welcome line on return rides)
+ *    via the glider's onDone — the status no longer sits on
+ *    "Gliding to…" after the camera has arrived.
+ *  - Stepping onto a pad rides it on ENTRY only (CCW.createPadTrigger,
+ *    polled every frame): a threshold landing sets the visitor down
+ *    inside the return pad's radius, and the old level-triggered
+ *    check carried them straight back to spawn ~0.8 s later — the
+ *    "glide stall" seen live, worst at the Creator Studio.
  */
 (function (root) {
   var CCW = root.CCW || (root.CCW = {});
@@ -100,7 +111,10 @@
 
     function ride(tele) {
       if (glider.active()) return;
-      glider.start(scene.activeCamera, tele.destPos, tele.destTarget, 1400);
+      glider.start(scene.activeCamera, tele.destPos, tele.destTarget, 1400,
+        function () {
+          setStatus(tele.landed || ('You have arrived at ' + tele.label + '.'));
+        });
       glideCooldownUntil = performance.now() + 2200;
       setStatus('Gliding to ' + tele.label + '…');
     }
@@ -130,10 +144,20 @@
         m.actionManager.registerAction(
           new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () { ride(tele); }));
       });
+      // Force the world matrix first: at boot, before the first
+      // render, an unparented pad's absolute position can still
+      // read as the origin in some engine states — a step-on pad
+      // must sit where it is drawn. (Fix pass, 2026-11-03.)
+      if (tele.mesh.computeWorldMatrix) tele.mesh.computeWorldMatrix(true);
       tele.padPos = tele.mesh.getAbsolutePosition
         ? tele.mesh.getAbsolutePosition()
         : tele.mesh.position;
     });
+
+    // Step-on rides are ENTRY-triggered (see cameras.js): polled
+    // every frame so the trigger's inside/outside sense stays
+    // current even mid-glide — a landing never counts as an entry.
+    var padTrigger = CCW.createPadTrigger(world.teleports);
 
     // --- Movement modes + touch walking -------------------------------
     var walking = false; // Walking mode selected (drives the touch pad)
@@ -195,15 +219,13 @@
         // every camera inside the Plaza grounds / the parlor room.
         if (cam === desktopCam) touchWalker.update(cam, dt);
         CCW.clampCamera(B, cam);
-        if (cam === desktopCam && now > glideCooldownUntil) {
-          // Stepping onto a pad (walking) rides it too.
-          for (var i = 0; i < world.teleports.length; i++) {
-            var tele = world.teleports[i];
-            var dx = cam.position.x - tele.padPos.x;
-            var dz = cam.position.z - tele.padPos.z;
-            if (dx * dx + dz * dz < 1.7 * 1.7) { ride(tele); break; }
-          }
-        }
+      }
+      if (cam) {
+        // Stepping onto a pad (walking) rides it — on entry only,
+        // and only once any glide cooldown has passed.
+        var stepped = padTrigger.poll(cam.position,
+          !gliding && cam === desktopCam && now > glideCooldownUntil);
+        if (stepped) ride(stepped);
       }
       scene.render();
       if (!overlayHidden) {
