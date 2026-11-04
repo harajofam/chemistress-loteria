@@ -1,0 +1,113 @@
+/* Chemistress Church Lounge — world overlay styles (M0 scaffold).
+   Palette mirrors js/palette.js: house plum, gold, hot pink, teal, cream. */
+
+:root {
+  --plum-deep: #1a051f;
+  --plum-house: #2a0a33;
+  --gold: #f5c542;
+  --gold-soft: #ffd873;
+  --pink-hot: #ff2e88;
+  --teal: #12c2b2;
+  --cream: #fdf3e3;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--plum-deep);
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--cream);
+}
+
+#world-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  outline: none;
+}
+
+.hud {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hud-top {
+  top: 0.75rem;
+  left: 0.75rem;
+  background: rgba(26, 5, 31, 0.72);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 0.55rem 0.9rem;
+  max-width: min(92vw, 430px);
+}
+
+.hud-top h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--gold-soft);
+  letter-spacing: 0.02em;
+}
+
+.hud-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.hud-status {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 5.4rem;
+  width: max-content;
+  max-width: 92vw;
+  background: rgba(26, 5, 31, 0.72);
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  text-align: center;
+}
+
+.hud-status p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.hud-controls {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  width: max-content;
+  max-width: 96vw;
+  pointer-events: auto;
+}
+
+.btn {
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--cream);
+  background: var(--plum-house);
+  border: 1px solid var(--teal);
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-arcade {
+  background: var(--pink-hot);
+  border-color: var(--gold);
+  color: #fff;
+  font-weight: bold;
+}
