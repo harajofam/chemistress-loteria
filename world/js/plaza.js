@@ -239,17 +239,21 @@
     var P = CCW.PALETTE;
     var uv = outward(zone);
 
-    // ---- Lighting rig (round 2, 2026-11-03) -------------------------
+    // ---- Lighting rig (round 2, 2026-11-03; round 3 same night) ----
     // Round 1 raised the single heart-light (0.9 → 1.4) and the room
     // still read dim in the live check: one point light cannot carry
     // a 13 x 14 m room. Round 2 lights the ROOM in layers — a warm
     // hemisphere wash, a real point light inside each pendant globe,
-    // and the heart-light at 2.0 — and scopes every interior light
+    // and the heart-light — and scopes every interior light
     // to the interior meshes (includedOnlyMeshes, applied at the end
     // of this build) so the Plaza outside keeps its night. The
     // wall/table/floor surfaces also lift a step (here + palette.js):
     // less black-plum, same identity. Lights are not meshes; the
-    // scene census is unchanged.
+    // scene census is unchanged. ROUND 3: the rig was never the
+    // problem — Babylon's 4-light material cap compiled it out of
+    // every interior shader (see the scoping note at the end of
+    // this build). The cap is lifted there, and the rig's intensities
+    // are the measured round-3 values, not round 2's blind ones.
     var WALL = '#492261'; // lifted interior plum (walls were plumHouse)
     // The room's own lights, collected for interior scoping below.
     var intLights = [];
@@ -336,7 +340,7 @@
       // and is scoped to the interior at the end of the build.
       var pendantLight = new B.PointLight('parlor-int-pendant-light-' + i,
         roomWorld(pos[0], 5.5, pos[1]), scene);
-      pendantLight.intensity = 1.1;
+      pendantLight.intensity = 0.65;
       pendantLight.diffuse = new B.Color3(1.0, 0.76, 0.52);
       pendantLight.range = 10;
       intLights.push(pendantLight);
@@ -348,10 +352,16 @@
     // and cozy, and the Plaza's own lights are untouched. Lighting
     // round 2, same night: 1.4 → 2.0, now one layer of the room's
     // rig — see the note at the top of this build — and scoped to
-    // the interior below.)
+    // the interior below. Round 3, same night: 2.0 → 1.0. Round 2's
+    // values were tuned blind — the brightness investigation proved
+    // NONE of the rig was reaching the shader (the 4-light cap,
+    // see the scoping note at the end of this build); with the cap
+    // lifted, the full round-2 stack over-lit the room ~3x.
+    // Round 3's values are the measured ones: brightness-
+    // investigation/README.md.)
     var roomLight = new B.PointLight('parlor-int-light',
       new B.Vector3(uv[0] * (CCW.ZONE_RADIUS + 8), 5.4, uv[1] * (CCW.ZONE_RADIUS + 8)), scene);
-    roomLight.intensity = 2.0;
+    roomLight.intensity = 1.0;
     roomLight.diffuse = new B.Color3(1.0, 0.72, 0.5);
     roomLight.range = 30;
     intLights.push(roomLight);
@@ -363,7 +373,7 @@
     // Plaza keeps the global night hemisphere untouched.
     var roomHemi = new B.HemisphericLight('parlor-int-hemi',
       new B.Vector3(0, 1, 0), scene);
-    roomHemi.intensity = 1.0;
+    roomHemi.intensity = 0.5; // round 3 measured value (was 1.0 blind)
     roomHemi.diffuse = new B.Color3(1.0, 0.82, 0.62);
     roomHemi.groundColor = new B.Color3(0.38, 0.20, 0.28);
     intLights.push(roomHemi);
@@ -574,6 +584,30 @@
       return m.name.indexOf('parlor-int-') === 0;
     });
     intLights.forEach(function (l) { l.includedOnlyMeshes = intMeshes; });
+
+    // THE DIM ROOM, SOLVED (lighting round 3, 2026-11-03 — measured,
+    // brightness-investigation/README.md): Babylon binds only the
+    // first `maxSimultaneousLights` entries of a mesh's light list
+    // (StandardMaterial default: 4), in scene-creation order. The
+    // four global night lights (hemi, sun, hearth, entrance) are
+    // created before every zone, so they filled all four slots of
+    // every interior material and the room's whole rig — correctly
+    // scoped, correctly positioned — was compiled out of the shader.
+    // Rounds 1–2 changed intensities and surfaces that were never
+    // lit by the rig at all (the small A→B pixel lift was the wall
+    // COLOR change showing under the same global light). The fix:
+    // interior materials admit every light in the scene. Interior
+    // materials are created per-mesh inside this build and used by
+    // no Plaza mesh, so the raise stays inside the room; Plaza
+    // materials keep the default 4 and the night is untouched
+    // (pixel-proven: the Plaza view is identical before/after).
+    var sceneLightCount = scene.lights.length;
+    intMeshes.forEach(function (m) {
+      if (m.material && m.material.maxSimultaneousLights !== undefined &&
+          m.material.maxSimultaneousLights < sceneLightCount) {
+        m.material.maxSimultaneousLights = sceneLightCount;
+      }
+    });
 
     return {
       returnPad: returnPad,
