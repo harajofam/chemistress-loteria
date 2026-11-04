@@ -28,6 +28,7 @@ const { ChemistressDominoesRoom } = require('./dominoes-room');
 const { ChemistressCheckersRoom } = require('./checkers-room');
 const { ChemistressChessRoom } = require('./chess-room');
 const { ChemistressMancalaRoom } = require('./mancala-room');
+const { ChemistressBackgammonRoom } = require('./backgammon-room');
 
 const PORT = Number(process.env.PORT) || 2567;
 
@@ -80,6 +81,12 @@ app.use('/chess', express.static(path.join(CLIENT_ROOT, 'chess')));
 // self-hosted colyseus.js bundle from the client root.
 app.use('/mancala', express.static(path.join(CLIENT_ROOT, 'mancala')));
 
+// --- Backgammon (The Game Parlor, fifth playable table) --------------------
+// The flat Backgammon client lives in its own tree (backgammon/) and
+// is served at /backgammon/, mirroring the /mancala mount. It loads
+// the same self-hosted colyseus.js bundle from the client root.
+app.use('/backgammon', express.static(path.join(CLIENT_ROOT, 'backgammon')));
+
 // --- Game server on the same HTTP server -----------------------------------
 // Colyseus's matchmaking routes wrap this server's request handler and
 // delegate everything else (the static client above) untouched; the
@@ -93,6 +100,7 @@ gameServer.define('chemistress_dominoes', ChemistressDominoesRoom);
 gameServer.define('chemistress_checkers', ChemistressCheckersRoom);
 gameServer.define('chemistress_chess', ChemistressChessRoom);
 gameServer.define('chemistress_mancala', ChemistressMancalaRoom);
+gameServer.define('chemistress_backgammon', ChemistressBackgammonRoom);
 
 gameServer
   .listen(PORT)

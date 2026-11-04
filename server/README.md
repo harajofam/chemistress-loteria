@@ -241,3 +241,43 @@ players; full rules as implemented live in
   sweep units + staged endgames + illegal-sow battery + full bot
   games with a per-broadcast 48-seed conservation audit + static
   checks).
+
+## Backgammon — The Game Parlor's fifth table (`chemistress_backgammon`)
+
+The same process also hosts the Backgammon room and serves its flat
+client at `/backgammon/` (files in `../backgammon/`; it loads the same
+self-hosted `../colyseus.js` bundle). Standard backgammon for exactly
+2 players; full rules as implemented live in
+`../BACKGAMMON-BUILD-NOTES.md`.
+
+- **State is the full public board** — backgammon has no hidden
+  information (the dice are rolled server-side and are public once
+  rolled). The position syncs as a 56-char string (24 points as
+  owner-letter + hex-count pairs, then bar and off counts) plus
+  seats, turn, the turn's dice as digit strings, and last-move
+  bookkeeping.
+- **Messages in:** `ready`, `move { from, to, die }` (from = point
+  1–24 or `'bar'`, to = point 1–24 or `'off'`, die = the die being
+  spent), `resign`. Illegal moves get a private
+  `rejected { action, reason }` and change nothing.
+- **Messages out:** `welcome`, `game_start` (with the opening-roll
+  dice), `rolled`, `legal_moves` (private to the mover — the exact
+  moves that keep the turn fully played under the dice law),
+  `moved`, `turn_passed`, `game_result` ('win' | 'resign' |
+  'forfeit', with the score and its kind). First seat is pink; who
+  moves first is decided by the opening roll (one die each, ties
+  re-roll, the higher roller plays both numbers). The server
+  enforces the full dice law — both dice if playable, the higher
+  die if only one is, doubles as four moves — plus blot hits to
+  the bar, bar-entry priority, exact/higher bear-off law, and
+  gammon (2) / backgammon (3) scoring. No doubling cube in v1.
+  Resigning scores as a plain single-game loss.
+- **Env knobs:** `BACKGAMMON_TEST_HOOKS=1` (enables the lobby-only
+  `setup_game { board, turnSeat, dice }` staging message and the
+  `force_dice { dice }` next-roll message — **never in
+  production**).
+- **Tests:** `npm test` runs the Lotería, Dominoes, Checkers,
+  Chess and Mancala suites, then `test/run-backgammon-tests.js`
+  (setup/movement/dice-law/scoring units + staged scenarios +
+  illegal battery + full bot games with a per-move conservation
+  and dice-consumption audit + static checks).
