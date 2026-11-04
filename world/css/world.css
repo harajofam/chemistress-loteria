@@ -381,6 +381,181 @@ html, body {
   justify-content: center;
 }
 
+/* The theme picker (THEME-PICKER PREVIEW, 2026-11-04). The
+   popover chrome itself NEVER changes skin — it stays in emblem
+   language (plum-black field, cream border, gold hairline,
+   Georgia serif) so the control is findable in every view. The
+   card/bar chrome around it follows the ACTIVE skin via the
+   body[data-theater-skin] rules below; Dream Pop (and no
+   attribute) is the pop chrome above, untouched. */
+.skin-pop {
+  background: #12060f;
+  border: 2px solid var(--cream);
+  outline: 1px solid var(--gold);
+  outline-offset: -6px;
+  border-radius: 8px;
+  padding: 0.55rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.55);
+}
+
+.skin-pop[hidden] { display: none; }
+
+.theater-bar .skin-pop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 10px);
+  width: min(20rem, 92vw);
+}
+
+.theater-card-box .skin-pop {
+  margin-top: 0.7rem;
+  text-align: left;
+}
+
+.skin-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: var(--cream);
+  background: transparent;
+  border: 1.5px solid rgba(253, 243, 227, 0.45);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  margin: 0 0 0.4rem;
+  cursor: pointer;
+}
+
+.skin-row:last-child { margin-bottom: 0; }
+
+.skin-row.on {
+  border-color: var(--gold);
+  background: rgba(253, 243, 227, 0.08);
+}
+
+.skin-dot {
+  flex: 0 0 1.1em;
+  color: var(--gold);
+  font-size: 0.8em;
+}
+
+.skin-row-name {
+  font-weight: bold;
+  letter-spacing: 0.04em;
+}
+
+.skin-row-tag {
+  flex-basis: 100%;
+  padding-left: 1.5em;
+  font-size: 0.82em;
+  font-style: italic;
+  opacity: 0.85;
+  line-height: 1.35;
+}
+
+/* EMBLEM POSTER chrome: the card as a tarot card — black field,
+   cream double border, decade bands as flat jewel solids (no
+   halftone, no pink ground). */
+body[data-theater-skin='emblem-poster'] .theater-card-box {
+  background-color: #0d0510;
+  background-image: none;
+  border: 3px solid var(--cream);
+  outline: 1.5px solid var(--cream);
+  outline-offset: -9px;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.85);
+}
+
+body[data-theater-skin='emblem-poster'] .theater-card-box .game-card-kicker {
+  background: #e8871e;
+  border-color: var(--cream);
+  box-shadow: 3px 3px 0 rgba(253, 243, 227, 0.9);
+  transform: none;
+}
+
+body[data-theater-skin='emblem-poster'] .theater-decade {
+  background: #12c2b2;
+  border-color: var(--cream);
+  box-shadow: 3px 3px 0 rgba(253, 243, 227, 0.85);
+}
+
+body[data-theater-skin='emblem-poster'] .theater-decade:nth-of-type(2) { background: #ff2e88; }
+body[data-theater-skin='emblem-poster'] .theater-decade:nth-of-type(3) { background: #e8871e; }
+body[data-theater-skin='emblem-poster'] .theater-decade:nth-of-type(4) { background: #8f7fd4; }
+
+body[data-theater-skin='emblem-poster'] .theater-title {
+  background: rgba(253, 243, 227, 0.07);
+  border-color: var(--cream);
+  box-shadow: 3px 3px 0 rgba(253, 243, 227, 0.55);
+}
+
+body[data-theater-skin='emblem-poster'] .theater-title:active {
+  background: var(--cream);
+  color: #0d0510;
+  box-shadow: 1px 1px 0 rgba(253, 243, 227, 0.55);
+}
+
+body[data-theater-skin='emblem-poster'] .theater-bar {
+  background: rgba(13, 5, 16, 0.97);
+  border-color: var(--cream);
+  outline-color: var(--cream);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85);
+}
+
+body[data-theater-skin='emblem-poster'] .theater-now { color: var(--cream); }
+
+/* PHYSICAL CHURCH chrome: the card as a framed chart-board —
+   navy field, gold hairline, decade bands in deep teal/plum. */
+body[data-theater-skin='physical-church'] .theater-card-box {
+  background-color: #1b1440;
+  background-image: none;
+  border: 3px solid #120c2c;
+  outline: 2px solid var(--gold);
+  outline-offset: -9px;
+  box-shadow: 8px 8px 0 rgba(11, 90, 84, 0.85);
+}
+
+body[data-theater-skin='physical-church'] .theater-card-box .game-card-kicker {
+  background: #0b5a54;
+  color: var(--cream);
+  border-color: var(--gold);
+  box-shadow: 3px 3px 0 rgba(245, 197, 66, 0.6);
+  transform: none;
+}
+
+body[data-theater-skin='physical-church'] .theater-decade {
+  background: #0b5a54;
+  color: var(--cream);
+  border-color: rgba(245, 197, 66, 0.7);
+  box-shadow: 3px 3px 0 rgba(245, 197, 66, 0.45);
+}
+
+body[data-theater-skin='physical-church'] .theater-decade:nth-of-type(2) { background: #7a1f4d; }
+body[data-theater-skin='physical-church'] .theater-decade:nth-of-type(3) { background: #0e7d74; }
+body[data-theater-skin='physical-church'] .theater-decade:nth-of-type(4) { background: #3d1847; }
+
+body[data-theater-skin='physical-church'] .theater-title {
+  background: rgba(253, 243, 227, 0.06);
+  border-color: rgba(245, 197, 66, 0.6);
+  box-shadow: none;
+}
+
+body[data-theater-skin='physical-church'] .theater-title:active {
+  background: #0b5a54;
+  color: var(--cream);
+  box-shadow: none;
+}
+
+body[data-theater-skin='physical-church'] .theater-bar {
+  background: rgba(27, 20, 64, 0.97);
+  border-color: #120c2c;
+  outline-color: var(--gold);
+  box-shadow: 6px 6px 0 rgba(11, 90, 84, 0.8);
+}
+
 .theater-fs {
   position: fixed;
   inset: 0;
