@@ -150,3 +150,30 @@ double-six set, 2–4 players; full rules as implemented live in
 - **Tests:** `npm test` runs the Lotería suite, then
   `test/run-dominoes-tests.js` (unit + staged scoring rounds + the
   privacy audit + full bot matches at 2/3/4 players + static checks).
+
+## Checkers — The Game Parlor's second table (`chemistress_checkers`)
+
+The same process also hosts the Checkers room and serves its flat
+client at `/checkers/` (files in `../checkers/`; it loads the same
+self-hosted `../colyseus.js` bundle). American / English draughts for
+exactly 2 players; full rules as implemented live in
+`../CHECKERS-BUILD-NOTES.md`.
+
+- **State is the full public board** — checkers has no hidden
+  information. The position syncs as a 64-char string ('.', 'p', 'P',
+  't', 'T') plus seats, turn, chain square, and captured/wins tallies.
+- **Messages in:** `ready`, `move { from, to }` (ONE step or jump; a
+  multi-jump is a sequence of moves by the same player, who keeps the
+  turn until the chain is spent), `resign`. Illegal moves get a
+  private `rejected { action, reason }` and change nothing.
+- **Messages out:** `welcome`, `game_start`, `moved` (with captured /
+  kinged / chain flags), `game_result` ('elimination' | 'no_moves' |
+  'resign' | 'forfeit'). Captures are forced and chains must be
+  completed; a man kinged by a jump ends its turn there. No draw rule
+  in v1.
+- **Env knobs:** `CHECKERS_TEST_HOOKS=1` (enables the lobby-only
+  `setup_game` staging message — **never in production**).
+- **Tests:** `npm test` runs the Lotería and Dominoes suites, then
+  `test/run-checkers-tests.js` (unit move-generation + staged
+  endgames/chains + illegal-move battery + full bot games + static
+  checks).
