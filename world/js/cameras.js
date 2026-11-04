@@ -480,4 +480,62 @@
       visible: function () { return !pad.hidden; }
     };
   };
+
+  /*
+   * The Game Parlor's offer card (parlor table wiring, 2026-11-04).
+   * Tapping a game table (or its framed motif) in the parlor shows
+   * this HTML card — the game's name, a one-line invitation, a Play
+   * button, and a "Stay in the parlor" button. The tap itself NEVER
+   * navigates: an accidental brush of a table must not eject
+   * anyone from the world. Only Play navigates, same-tab, to the
+   * tapped game's own path — and the five parlor game paths in
+   * world.gameTargets (plaza.js) are the only destinations the
+   * world will ever offer. The Lotería game page is never a
+   * destination (Jay's rule: it keeps its own page, its own door).
+   *
+   * env: { document, navigate } — navigation is injected (main.js
+   * passes the real location change) so the headless smoke can
+   * record it instead of leaving the page. Any document-like
+   * object works, like wireTouchWalk's. Returns { element, show,
+   * hide, visible, current } or null when the card markup is
+   * absent (main.js then simply wires no card).
+   */
+  CCW.wireGameCard = function (env) {
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var card = doc.getElementById('game-card');
+    var title = doc.getElementById('game-card-title');
+    var blurb = doc.getElementById('game-card-blurb');
+    var playBtn = doc.getElementById('game-card-play');
+    var closeBtn = doc.getElementById('game-card-close');
+    if (!card || !title || !blurb || !playBtn || !closeBtn) return null;
+    var navigate = typeof env.navigate === 'function' ? env.navigate : function () {};
+    var current = null;
+    function show(game) {
+      if (!game) return;
+      current = game;
+      title.textContent = game.name;
+      blurb.textContent = game.blurb;
+      playBtn.textContent = '▶ Play ' + game.name;
+      card.hidden = false;
+    }
+    function hide() {
+      current = null;
+      card.hidden = true;
+    }
+    playBtn.addEventListener('click', function () {
+      if (!current) return;
+      var path = current.path;
+      hide();
+      navigate(path);
+    });
+    closeBtn.addEventListener('click', hide);
+    return {
+      element: card,
+      show: show,
+      hide: hide,
+      visible: function () { return !card.hidden; },
+      current: function () { return current; }
+    };
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

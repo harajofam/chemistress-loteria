@@ -28,6 +28,18 @@
  * Plaza door glow glide the visitor INTO the room, exactly like the
  * room's own pad. The game keeps its own page, untouched.
  *
+ * Parlor table wiring (2026-11-04): the Game Parlor's tables are
+ * playable doors now. buildWorld returns the room's game targets
+ * (plaza.js) — each game's table set plus its framed wall motif;
+ * every one of those meshes gets a pick action that OFFERS the
+ * game on the HTML offer card (cameras.js wireGameCard): the
+ * game's name, a line of invitation, Play, and "Stay in the
+ * parlor". The tap never navigates by itself — only Play does,
+ * same-tab, to the tapped game's own path. Those five parlor
+ * paths are the ONLY navigation in the world, and the Lotería
+ * game page is never one of them (it keeps its own page, its
+ * own door — see the re-dress note below).
+ *
  * World fix pass (2026-11-03 evening, from the live verifications):
  *  - A completed glide now posts its `landed` status line ("You are
  *    in the Game Parlor…", the Plaza welcome line on return rides)
@@ -108,9 +120,13 @@
 
     var glider = CCW.createGlider(B);
     var glideCooldownUntil = 0;
+    // The parlor's offer card, wired below once the world exists;
+    // a ride starting (pad, button, or step-on) puts it away.
+    var gameCard = null;
 
     function ride(tele) {
       if (glider.active()) return;
+      if (gameCard) gameCard.hide();
       glider.start(scene.activeCamera, tele.destPos, tele.destTarget, 1400,
         function () {
           setStatus(tele.landed || ('You have arrived at ' + tele.label + '.'));
@@ -135,6 +151,25 @@
       mesh.actionManager.registerAction(
         new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, goToParlor));
     });
+
+    // Game tables: tapping a table (or its framed motif) offers
+    // its game on the card. The pick only SHOWS the card — Play is
+    // the one and only navigation, to the game's own path.
+    gameCard = CCW.wireGameCard({
+      document: document,
+      navigate: function (path) { root.location.href = path; }
+    });
+    if (gameCard) {
+      world.gameTargets.forEach(function (game) {
+        game.meshes.forEach(function (mesh) {
+          mesh.actionManager = new B.ActionManager(scene);
+          mesh.actionManager.registerAction(
+            new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
+              gameCard.show(game);
+            }));
+        });
+      });
+    }
 
     // Teleport pads: tap/click to ride.
     world.teleports.forEach(function (tele) {

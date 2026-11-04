@@ -161,12 +161,13 @@
    * game's tabletop signature — domino tiles laid out mid-game, a
    * checkers board with its discs, a chess board with simple piece
    * forms, and a fourth table dressed generically (a closed game
-   * box + cups) for the games still to come (Mancala/Backgammon).
-   * The tables are dressed geometry; the playable wiring is a later
-   * milestone (Play v1 presents the board at the table). Kept from
-   * M2a: the checkerboard floor, the striped-canopy ceiling, the
-   * plum walls + gold wainscot, the pendant globes, the room light,
-   * and the entrance/return pads.
+   * box + cups + stones) for Mancala/Backgammon. Play v1 wiring
+   * (2026-11-04, at the end of this build): the tables and their
+   * framed wall motifs are the parlor's tap targets — tapping one
+   * OFFERS its game on the offer card, and Play opens the game's
+   * own page. Kept from M2a: the checkerboard floor, the striped-
+   * canopy ceiling, the plum walls + gold wainscot, the pendant
+   * globes, the room light, and the entrance/return pads.
    *
    * Room space (zone-group local): the facade's back face is
    * z = -0.6 and the room runs to the back wall at z = -14.4,
@@ -609,9 +610,72 @@
       }
     });
 
+    // ---- Game targets: the tables' wiring data (parlor wiring
+    // pass, 2026-11-04) -------------------------------------------
+    // Play v1 at a table = the game's own page, OFFERED — never
+    // forced — when a visitor taps the table (or its framed motif
+    // on the wall). buildWorld surfaces these as world.gameTargets;
+    // main.js hangs a pick action on every mesh listed here and
+    // shows the HTML offer card (cameras.js wireGameCard); only the
+    // card's Play button navigates, same-tab, to the game's path.
+    // These five paths are the ONLY navigation out of the world —
+    // the Lotería game is not among them (Jay's rule: it keeps its
+    // own page, its own door).
+    //
+    // The mapping follows the dressing. Four tables are dealt to
+    // Dominoes / Checkers / Chess / Mancala — the fourth table's
+    // closed box, cups and stones are its Mancala dressing — and
+    // BACKGAMMON, the fifth game, has no table of its own: its tap
+    // target is its framed back-wall motif. Each game's framed
+    // motif is wired as a second target for the same game (a tap
+    // on the picture offers the game too); the generic dice motif
+    // stays plain wall dressing. Meshes are collected by name from
+    // the scene, exactly as the light scoping above collects them
+    // — ZERO new meshes, so the census does not move.
+    function targetMeshes(prefixes, names) {
+      return scene.meshes.filter(function (m) {
+        if (names.indexOf(m.name) >= 0) return true;
+        return prefixes.some(function (p) { return m.name.indexOf(p) === 0; });
+      });
+    }
+    var gameTargets = [
+      { id: 'dominoes', name: 'Dominoes',
+        blurb: 'Classic draw dominoes — 2 to 4 players, face to face around the table.',
+        path: '/dominoes/',
+        meshes: targetMeshes(
+          ['parlor-int-table-dominoes-', 'parlor-int-domino-', 'parlor-int-stool-dominoes-'],
+          ['parlor-int-motif-0', 'parlor-int-motif-0-frame',
+           'parlor-int-motif-6', 'parlor-int-motif-6-frame']) },
+      { id: 'checkers', name: 'Checkers',
+        blurb: 'Classic checkers — two players, face to face.',
+        path: '/checkers/',
+        meshes: targetMeshes(
+          ['parlor-int-table-checkers-', 'parlor-int-checkers-', 'parlor-int-stool-checkers-'],
+          ['parlor-int-motif-1', 'parlor-int-motif-1-frame']) },
+      { id: 'chess', name: 'Chess',
+        blurb: 'Full chess — two players, face to face.',
+        path: '/chess/',
+        meshes: targetMeshes(
+          ['parlor-int-table-chess-', 'parlor-int-chess-', 'parlor-int-stool-chess-'],
+          ['parlor-int-motif-3', 'parlor-int-motif-3-frame']) },
+      { id: 'mancala', name: 'Mancala',
+        blurb: 'Mancala (Kalah) — two players, face to face.',
+        path: '/mancala/',
+        meshes: targetMeshes(
+          ['parlor-int-table-mancala-', 'parlor-int-stool-mancala-',
+           'parlor-int-gamebox', 'parlor-int-cup-', 'parlor-int-stone-'],
+          ['parlor-int-motif-5', 'parlor-int-motif-5-frame']) },
+      { id: 'backgammon', name: 'Backgammon',
+        blurb: 'Classic backgammon — two players, face to face.',
+        path: '/backgammon/',
+        meshes: targetMeshes([],
+          ['parlor-int-motif-2', 'parlor-int-motif-2-frame']) }
+    ];
+
     return {
       returnPad: returnPad,
       returnRing: returnRing,
+      gameTargets: gameTargets,
       entrance: {
         position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
         target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
@@ -1065,6 +1129,7 @@
       var interior = buildParlorInterior(scene, B, zone, add);
       result.threshold = interior.entrance;
       result.interiorReturn = { mesh: interior.returnPad, ringMesh: interior.returnRing };
+      result.gameTargets = interior.gameTargets;
     }
     if (zone.id === 'theater') {
       // The Theater (M2b): same arrival pattern as the Parlor — the
@@ -1161,8 +1226,11 @@
 
   /*
    * Build the dressed Plaza into `scene`.
-   * Returns { zones, portalMeshes, teleports } where each teleport is
-   * { mesh, ringMesh, destPos, destTarget, label, landed }.
+   * Returns { zones, portalMeshes, teleports, gameTargets } where
+   * each teleport is { mesh, ringMesh, destPos, destTarget, label,
+   * landed } and each game target is { id, name, blurb, path,
+   * meshes } — the Game Parlor's tap-to-play wiring data (see
+   * buildParlorInterior).
    */
   CCW.buildWorld = function (scene, B) {
     var P = CCW.PALETTE;
@@ -1278,11 +1346,12 @@
     buildEntrance(scene, B);
 
     // Zones + teleport wiring data.
-    var zones = {}, portalMeshes = [], teleports = [];
+    var zones = {}, portalMeshes = [], teleports = [], gameTargets = [];
     CCW.ZONES.forEach(function (zone) {
       var built = buildZone(scene, B, zone);
       zones[zone.id] = built;
       portalMeshes = portalMeshes.concat(built.portalMeshes);
+      if (built.gameTargets) gameTargets = gameTargets.concat(built.gameTargets);
 
       // Plaza-side pad: ride out to this zone's door.
       var uv = outward(zone);
@@ -1331,6 +1400,6 @@
       }
     });
 
-    return { zones: zones, portalMeshes: portalMeshes, teleports: teleports };
+    return { zones: zones, portalMeshes: portalMeshes, teleports: teleports, gameTargets: gameTargets };
   };
 })(typeof window !== 'undefined' ? window : globalThis);
