@@ -1639,6 +1639,254 @@
     });
   };
 
+  // ---- The Pen-Pal Post (M2b interior 3 of 5, 2026-11-04) --------
+  // The letterbox wall's backdrop: CREAM panelling — this room's one
+  // sanctioned palette variation (design §3.6 + Jay's photo of the
+  // pink mailbox wall on cream panelling). Drawn like the Library's
+  // pink panelling (tonal bands, speckle, moulding strokes, a
+  // wainscot band) but in warm creams, with the house's thin TEAL
+  // line + gold pinstripe riding the wainscot so the room still
+  // speaks the house language.
+  CCW.penpalWallTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(131);
+      for (var b = 0; b < 8; b++) {
+        ctx.fillStyle = b % 2 ? 'rgba(214,178,120,0.10)' : 'rgba(255,255,255,0.20)';
+        ctx.fillRect(b * w / 8, 0, w / 8, h);
+      }
+      for (var s = 0; s < 2200; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(190,150,95,0.10)' : 'rgba(255,255,255,0.16)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+      }
+      function strokeR(x, y, rw, rh) {
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + rw, y); ctx.lineTo(x + rw, y + rh);
+        ctx.lineTo(x, y + rh); ctx.closePath();
+        ctx.stroke();
+      }
+      var pw = w / 4;
+      for (var p = 0; p < 4; p++) {
+        var x0 = p * pw + 26, x1 = (p + 1) * pw - 26, y0 = 34, y1 = h * 0.70;
+        ctx.strokeStyle = 'rgba(168,128,74,0.55)'; ctx.lineWidth = 7;
+        strokeR(x0, y0, x1 - x0, y1 - y0);
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 3;
+        strokeR(x0 + 6, y0 + 6, x1 - x0 - 12, y1 - y0 - 12);
+        ctx.strokeStyle = 'rgba(168,128,74,0.32)'; ctx.lineWidth = 3;
+        strokeR(x0 + 15, y0 + 15, x1 - x0 - 30, y1 - y0 - 30);
+      }
+      var wy = h * 0.76;
+      ctx.fillStyle = '#f3e3c2';
+      ctx.fillRect(0, wy, w, h - wy);
+      for (var g = 0; g < 16; g++) {
+        ctx.fillStyle = 'rgba(168,128,74,0.25)';
+        ctx.fillRect(g * w / 16 + 8, wy + 14, 4, h - wy - 24);
+      }
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(0, wy - 7, w, 7);
+      ctx.fillStyle = P.gold;
+      ctx.fillRect(0, wy, w, 2.5);
+      // Baked light (artistry standard): a warm falloff — lit
+      // from above, gently shaded at the foot — so the wall is
+      // never a flat fill.
+      var lg = ctx.createLinearGradient(0, 0, 0, h);
+      lg.addColorStop(0, 'rgba(255,252,240,0.14)');
+      lg.addColorStop(0.55, 'rgba(255,255,255,0)');
+      lg.addColorStop(1, 'rgba(120,84,40,0.12)');
+      ctx.fillStyle = lg;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // field, cream serif, a TEAL rule, crescent + star marks).
+  // ARTISTRY PASS (Jay's standard, 2026-11-04): the room's flat
+  // fills become MATERIALS — painted metal with grain and baked
+  // light for the letterbox bodies, woven velvet for the seating,
+  // ruled paper for the desk. Richness from texture, not meshes.
+  // Painted metal: a soft top light, a shaded base, fine speckle
+  // grain and faint vertical brush streaks over the pink shade.
+  CCW.penpalMetalTexture = function (scene, B, name, shade) {
+    return CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      ctx.fillStyle = shade;
+      ctx.fillRect(0, 0, w, h);
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, 'rgba(255,255,255,0.20)');
+      g.addColorStop(0.45, 'rgba(255,255,255,0.02)');
+      g.addColorStop(1, 'rgba(90,0,40,0.16)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(shade.length * 977 + w);
+      for (var s = 0; s < 900; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.07)' : 'rgba(120,0,50,0.07)';
+        ctx.fillRect(rnd() * w, rnd() * h, 1.6, 1.6);
+      }
+      for (var b = 0; b < 26; b++) {
+        ctx.fillStyle = 'rgba(255,255,255,0.045)';
+        var bx = rnd() * w;
+        ctx.fillRect(bx, 0, 1.2, h);
+      }
+    });
+  };
+
+  // Velvet: dense two-tone nap noise with a soft diagonal sheen —
+  // reads as cloth, never as a flat fill.
+  CCW.velvetTexture = function (scene, B, name, color) {
+    return CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(color.length * 613 + h);
+      for (var s = 0; s < 5200; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.10)';
+        ctx.fillRect(rnd() * w, rnd() * h, 1.5, 2.4);
+      }
+      var g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, 'rgba(255,255,255,0.10)');
+      g.addColorStop(0.5, 'rgba(255,255,255,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0.12)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // Desk paper: warm cream, a whisper of speckle, a soft shaded
+  // edge — sheets that look handled, not printed.
+  CCW.paperTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(4242);
+      for (var s = 0; s < 500; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(190,150,95,0.08)' : 'rgba(255,255,255,0.14)';
+        ctx.fillRect(rnd() * w, rnd() * h, 1.6, 1.6);
+      }
+      var g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, 'rgba(255,255,255,0.10)');
+      g.addColorStop(1, 'rgba(150,110,60,0.10)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // The room's hot-pink panelling (penpal-only sibling of the
+  // Library's wall painter, so the Library's pixels never move):
+  // panel mouldings with a lit top edge and a shaded foot, board
+  // bands, grain, and a baked warm-light falloff.
+  CCW.penpalPinkWallTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      ctx.fillStyle = P.pinkHot;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(733);
+      for (var b = 0; b < 8; b++) {
+        ctx.fillStyle = b % 2 ? 'rgba(160,10,80,0.10)' : 'rgba(255,255,255,0.10)';
+        ctx.fillRect(b * w / 8, 0, w / 8, h);
+      }
+      for (var s = 0; s < 2400; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(140,0,60,0.10)' : 'rgba(255,200,225,0.12)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+      }
+      function strokeR(x, y, rw, rh) {
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + rw, y); ctx.lineTo(x + rw, y + rh);
+        ctx.lineTo(x, y + rh); ctx.closePath();
+        ctx.stroke();
+      }
+      var pw = w / 4;
+      for (var p = 0; p < 4; p++) {
+        var x0 = p * pw + 26, x1 = (p + 1) * pw - 26, y0 = 34, y1 = h * 0.70;
+        ctx.strokeStyle = 'rgba(140,0,60,0.50)'; ctx.lineWidth = 7;
+        strokeR(x0, y0, x1 - x0, y1 - y0);
+        ctx.strokeStyle = 'rgba(255,220,238,0.65)'; ctx.lineWidth = 3;
+        strokeR(x0 + 6, y0 + 6, x1 - x0 - 12, y1 - y0 - 12);
+        ctx.strokeStyle = 'rgba(140,0,60,0.28)'; ctx.lineWidth = 3;
+        strokeR(x0 + 15, y0 + 15, x1 - x0 - 30, y1 - y0 - 30);
+      }
+      var wy = h * 0.76;
+      ctx.fillStyle = '#e7549a';
+      ctx.fillRect(0, wy, w, h - wy);
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(0, wy - 7, w, 7);
+      ctx.fillStyle = P.gold;
+      ctx.fillRect(0, wy, w, 2.5);
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, 'rgba(255,240,245,0.12)');
+      g.addColorStop(0.55, 'rgba(255,255,255,0)');
+      g.addColorStop(1, 'rgba(110,0,50,0.13)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  CCW.penpalSignTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 288, function (ctx, w, h) {
+      ctx.fillStyle = '#12040f';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = P.cream; ctx.lineWidth = 5;
+      ctx.strokeRect(16, 16, w - 32, h - 32);
+      ctx.strokeStyle = P.teal; ctx.lineWidth = 2.5;
+      ctx.strokeRect(28, 28, w - 56, h - 56);
+      star(ctx, 92, h / 2, 26, P.goldSoft);
+      star(ctx, w - 92, h / 2, 26, P.goldSoft);
+      ctx.fillStyle = P.goldSoft;
+      ctx.beginPath();
+      ctx.arc(w / 2 - 268, 84, 21, Math.PI * 0.35, Math.PI * 1.65);
+      ctx.arc(w / 2 - 254, 84, 16, Math.PI * 1.5, Math.PI * 0.5, true);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = P.cream;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 96px Georgia, serif';
+      ctx.fillText('PEN-PAL POST', w / 2, 96);
+      ctx.fillStyle = P.teal;
+      ctx.fillRect(w / 2 - 210, 152, 420, 5);
+      ctx.font = 'italic 44px Georgia, serif';
+      ctx.fillStyle = P.goldSoft;
+      ctx.fillText('Slow mail, warm words', w / 2, 208);
+    });
+  };
+
+  // The how-it-works plaque by the door: cream field, plum serif —
+  // the rules of the Post in Jay's plain register (design §3.6:
+  // usernames only, the contact filter, slow mail on purpose).
+  CCW.penpalPlaqueTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 640, function (ctx, w, h) {
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 8;
+      ctx.strokeRect(18, 18, w - 36, h - 36);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2.5;
+      ctx.strokeRect(32, 32, w - 64, h - 64);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#7a1042';
+      ctx.font = 'bold 62px Georgia, serif';
+      ctx.fillText('HOW THE POST WORKS', w / 2, 92);
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(w / 2 - 260, 138, 520, 5);
+      ctx.fillStyle = '#3d1247';
+      ctx.font = '46px Georgia, serif';
+      var lines = [
+        'Tap any box — a letter is waiting.',
+        'Leave one of your own before you go.',
+        '',
+        'Letters travel overnight,',
+        'slow on purpose. No rush to reply.',
+        '',
+        'Usernames only, always —',
+        'no addresses, no numbers, no links.',
+        'The Post sends those back.'
+      ];
+      lines.forEach(function (ln, i) {
+        ctx.fillText(ln, w / 2, 196 + i * 50);
+      });
+    });
+  };
+
   // Teleport pad face: accent disc, gold ring, gold star.
   CCW.padTexture = function (scene, B, name, accentHexColor) {
     var P = CCW.PALETTE;

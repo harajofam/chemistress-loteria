@@ -916,6 +916,117 @@
     { t: 'Charade', y: 1963, id: 'charade_202604', file: 'Charade.mp4', whole: 1 }
   ];
 
+  /*
+   * THE PEN-PAL POST — the notes module (M2b interior 3 of 5,
+   * 2026-11-04; design §3.6). This is the ONE named seam between
+   * the room's note card (cameras.js wirePenpal) and wherever the
+   * letters live. Today the letters live HERE: a seeded starter
+   * set of house notes, plus the visitor's own left notes kept in
+   * their browser's localStorage — so a note left tonight is in
+   * YOUR boxes tomorrow, on this device. PERSISTENCE TRUTH, plain:
+   * real cross-visitor mail (a note left by one member landing in
+   * another member's box) needs a server piece that is NOT in this
+   * pass — the Hub/Render note endpoints, the shared contact
+   * filter, the overnight delivery queue, block/report (design
+   * §3.6). When that lands, it replaces THIS module's draw/leave
+   * bodies; the card and the room never change. Nothing here fakes
+   * shared persistence.
+   *
+   * The guardrails are §3.6's: usernames only — the contact filter
+   * (scan) refuses emails, phone-shaped strings, and links, in the
+   * name and the note alike, before anything is kept.
+   */
+  CCW.PENPAL_NOTES = (function () {
+    // The starter set: warm, plain, ministry-true house notes,
+    // signed with usernames like everyone else's. Nothing in them
+    // reaches outside the room (no contact details, by the rule
+    // they teach).
+    var SEED = [
+      { from: 'Marigold', text: 'Whoever finds this: you are not behind. The garden grows at its own pace, and so do you. Water something small today and call it enough.' },
+      { from: 'Tomas', text: 'I joined for the games and stayed for the quiet. If nobody has told you yet: you belong at this table. Pull up a chair.' },
+      { from: 'Juniper', text: 'A recipe for a hard day: one pot of soup, one old movie, one deep breath at the door. Repeat as needed. Sending you warmth from my kitchen.' },
+      { from: 'The Chemistress', text: 'Everything here is free because people are the treasure. Write somebody a kind sentence today — it travels farther than you think.' },
+      { from: 'Alto', text: 'I read my letter three times before I sealed it. Slow mail is good for the heart. No rush to answer, friend — the waiting is part of the gift.' },
+      { from: 'Wren', text: 'For the one doing it all alone: you are seen. The dishes can wait. Sit down, put your feet up, and let this note keep you company a minute.' },
+      { from: 'Sable', text: 'My grandmother wrote letters every Sunday of her life. This box is my way of keeping her habit alive. Tell me about someone who taught you kindness.' },
+      { from: 'Rio', text: 'Chances are, today is better than you fear. Look for one small proof and write it down. Mine was a stranger holding the door and smiling.' },
+      { from: 'Bea', text: 'If you are new: welcome in. Pick a game, pick a shelf, pick a box. There is no wrong door here, only friendly ones.' },
+      { from: 'Noor', text: 'A prayer, however you name it: may your table be full, your rent be easy, and your people be near. From my heart to your mailbox.' }
+    ];
+    var LS_KEY = 'ccw-penpal-notes-v1';
+    // In-memory fallback (private browsing, storage refused):
+    // the visitor's notes still ride their boxes for the session.
+    var memory = [];
+    function storage() {
+      try { return root.localStorage || null; } catch (e) { return null; }
+    }
+    function ownNotes() {
+      var ls = storage();
+      if (!ls) return memory.slice();
+      try {
+        var raw = ls.getItem(LS_KEY);
+        var arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) { return []; }
+    }
+    function saveOwn(arr) {
+      var ls = storage();
+      if (!ls) { memory = arr.slice(); return; }
+      try { ls.setItem(LS_KEY, JSON.stringify(arr.slice(-50))); } catch (e) {}
+    }
+    // The contact filter (design §3.6's Hub sensor, client-side
+    // edition): returns { ok: true } or { ok: false, reason } with
+    // reason 'email' | 'phone' | 'link'.
+    function scan(text) {
+      var t = String(text == null ? '' : text);
+      if (/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.test(t)) {
+        return { ok: false, reason: 'email' };
+      }
+      if (/https?:\/\/|www\.[A-Za-z0-9-]+\.[A-Za-z]{2,}/i.test(t)) {
+        return { ok: false, reason: 'link' };
+      }
+      if (/(?:\+?1[\s.\-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]\d{4}/.test(t) ||
+          /\d{5,}/.test(t.replace(/[\s.\-()]/g, ''))) {
+        return { ok: false, reason: 'phone' };
+      }
+      return { ok: true };
+    }
+    // A note drawn from a box: the starter set plus the visitor's
+    // own left notes. rng is injectable for tests.
+    function draw(rng) {
+      var pool = SEED.concat(ownNotes());
+      var r = typeof rng === 'function' ? rng() : Math.random();
+      var i = Math.floor(r * pool.length);
+      if (i < 0) i = 0;
+      if (i >= pool.length) i = pool.length - 1;
+      return pool[i];
+    }
+    // Leave a note: scanned first (name AND text), then kept for
+    // the visitor's own boxes. Returns scan's verdict shape, plus
+    // { ok: false, reason: 'empty' } for a blank note.
+    function leave(name, text) {
+      var body = String(text == null ? '' : text).trim();
+      if (!body) return { ok: false, reason: 'empty' };
+      var who = String(name == null ? '' : name).trim() || 'A friend';
+      var v = scan(who);
+      if (!v.ok) return v;
+      v = scan(body);
+      if (!v.ok) return v;
+      var arr = ownNotes();
+      arr.push({ from: who, text: body });
+      saveOwn(arr);
+      return { ok: true };
+    }
+    return {
+      SEED: SEED,
+      LS_KEY: LS_KEY,
+      draw: draw,
+      leave: leave,
+      scan: scan,
+      ownNotes: ownNotes
+    };
+  })();
+
   function buildTheaterInterior(scene, B, zone, add) {
     var P = CCW.PALETTE;
     var uv = outward(zone);
@@ -2022,6 +2133,494 @@
     };
   }
 
+  // One plum-velvet writing armchair (the library armchair's
+  // pattern, penpal names): plinth, seat, leaning back, plum arms,
+  // a contrasting throw pillow. Faces -Z in its own frame, yawed
+  // by phi.
+  function penpalArmchair(scene, B, add, cx, cz, phi, velvet, pillow, tag) {
+    var P = CCW.PALETTE;
+    var plinth = add(B.MeshBuilder.CreateBox('penpal-int-nook-' + tag + '-plinth',
+      { width: 0.98, height: 0.14, depth: 0.92 }, scene));
+    rotPlace(plinth, cx, 0.07, cz, phi, 0, 0);
+    plinth.material = CCW.mat(scene, B, 'penpal-int-nook-' + tag + '-plinth-mat', P.plumHouse);
+    // Velvet as a woven material, not a flat fill (artistry
+    // standard) — nap noise + a sheen in the texture.
+    var velvetTex = CCW.velvetTexture(scene, B,
+      'penpal-int-nook-' + tag + '-velvet-tex', velvet);
+    var seat = add(B.MeshBuilder.CreateBox('penpal-int-nook-' + tag + '-seat',
+      { width: 0.95, height: 0.2, depth: 0.88 }, scene));
+    rotPlace(seat, cx, 0.30, cz, phi, 0, 0);
+    seat.material = CCW.texMat(scene, B, 'penpal-int-nook-' + tag + '-seat-mat', velvetTex, {});
+    var back = add(B.MeshBuilder.CreateBox('penpal-int-nook-' + tag + '-back',
+      { width: 0.95, height: 1.0, depth: 0.16 }, scene));
+    rotPlace(back, cx, 0.88, cz, phi, 0, 0.44);
+    back.rotation.x = 0.08;
+    back.material = CCW.texMat(scene, B, 'penpal-int-nook-' + tag + '-back-mat', velvetTex, {});
+    [-0.47, 0.47].forEach(function (ox, i) {
+      var arm = add(B.MeshBuilder.CreateBox('penpal-int-nook-' + tag + '-arm-' + i,
+        { width: 0.15, height: 0.32, depth: 0.85 }, scene));
+      rotPlace(arm, cx, 0.56, cz, phi, ox, 0);
+      arm.material = CCW.mat(scene, B, 'penpal-int-nook-' + tag + '-arm-mat-' + i, P.plumHouse);
+    });
+    var pil = add(B.MeshBuilder.CreateBox('penpal-int-nook-' + tag + '-pillow',
+      { width: 0.42, height: 0.42, depth: 0.13 }, scene));
+    rotPlace(pil, cx, 0.62, cz, phi, 0, 0.30);
+    pil.rotation.x = 0.15;
+    pil.rotation.z = 0.06;
+    pil.material = CCW.texMat(scene, B, 'penpal-int-nook-' + tag + '-pillow-mat',
+      CCW.velvetTexture(scene, B, 'penpal-int-nook-' + tag + '-pillow-tex', pillow), {});
+  }
+
+  /*
+   * THE PEN-PAL POST (M2b interior 3 of 5, 2026-11-04): design
+   * §3.6 made physical — Jay's photo (interior-refs/08) built as a
+   * room: a wall of ALL-PINK ornate letterboxes on CREAM panelling
+   * (the room's one sanctioned palette variation — the cream lives
+   * on the letterbox wall ONLY; every other surface obeys the
+   * palette law), a writing desk dressed with paper, envelopes,
+   * pens and a wax seal, two plum-velvet writing nooks with real
+   * lamp light, and the Post's rules on a plaque by the door.
+   *
+   * The letters themselves: tapping any box opens the note card
+   * (cameras.js wirePenpal) — a draw from CCW.PENPAL_NOTES, the
+   * one named persistence seam (see its header for the honest
+   * scope: seed notes + the visitor's own notes in localStorage
+   * today; cross-visitor mail is the future server piece).
+   *
+   * ARRIVAL: the house pattern — the Plaza pad lands INSIDE, just
+   * past the door, facing the letterbox wall; the room's return
+   * pad rides home. LIGHTING: the round-3 lesson applied — a warm
+   * rig scoped to this room's meshes only, every material's
+   * maxSimultaneousLights raised at creation.
+   */
+  function buildPenpalInterior(scene, B, zone, add) {
+    var P = CCW.PALETTE;
+    var uv = outward(zone);
+    var creamTex = CCW.penpalWallTexture(scene, B, 'penpal-int-wall-tex');
+    var pinkWallTex = CCW.penpalPinkWallTexture(scene, B, 'penpal-int-pinkwall-tex');
+    var woodTex = CCW.woodTexture(scene, B, 'penpal-int-wood-tex');
+    var leafTex = CCW.leafTexture(scene, B, 'penpal-int-leaf-tex');
+    // The box fronts are PHOTO PLATES: six door faces cropped
+    // from Jay's own photo of her physical mailbox wall
+    // (interior-refs/08-pen-pal-mailboxes.jpg), self-hosted as
+    // WebPs in assets/penpal/ — her actual doors, replicated as
+    // they are, the way the Library's posters carry her actual
+    // movie art (Jay's direction, 2026-11-04). No hotlinks: the
+    // world stays fully self-hosted.
+    var boxTex = [];
+    for (var bv = 0; bv < 6; bv++) {
+      boxTex.push(new B.Texture('assets/penpal/box-' + bv + '.webp', scene));
+    }
+
+    var intLights = [];
+    function roomWorld(lx, ly, lz) {
+      var a = zone.angleDeg * Math.PI / 180 + Math.PI;
+      var ca = Math.cos(a), sa = Math.sin(a);
+      return new B.Vector3(
+        uv[0] * CCW.ZONE_RADIUS + lx * ca + lz * sa, ly,
+        uv[1] * CCW.ZONE_RADIUS - lx * sa + lz * ca);
+    }
+
+    // ---- Room shell (the shared interior volume) ------------------
+    var floor = add(B.MeshBuilder.CreateBox('penpal-int-floor',
+      { width: 13.4, height: 0.12, depth: 14.2 }, scene));
+    floor.position.set(0, -0.06, -7.5);
+    floor.material = CCW.texMat(scene, B, 'penpal-int-floor-mat',
+      CCW.libraryFloorTexture(scene, B, 'penpal-int-floor-tex'), {});
+    floor.receiveShadows = true;
+
+    // Ceiling: the star chart (navy stays the ceiling field —
+    // palette law, as in the Library).
+    var ceiling = add(B.MeshBuilder.CreateBox('penpal-int-ceiling',
+      { width: 13.6, height: 0.25, depth: 14.4 }, scene));
+    ceiling.position.set(0, 7.12, -7.5);
+    ceiling.material = CCW.texMat(scene, B, 'penpal-int-ceiling-mat',
+      CCW.starChartTexture(scene, B, 'penpal-int-ceiling-tex'), {});
+
+    // The letterbox wall: CREAM panelling (the sanctioned
+    // exception, this wall only).
+    var backWall = add(B.MeshBuilder.CreateBox('penpal-int-wall-back',
+      { width: 14, height: 7, depth: 0.5 }, scene));
+    backWall.position.set(0, 3.5, -14.65);
+    backWall.material = CCW.texMat(scene, B, 'penpal-int-wall-back-mat', creamTex, {});
+    [-6.75, 6.75].forEach(function (x, i) {
+      var side = add(B.MeshBuilder.CreateBox('penpal-int-wall-' + (i ? 'right' : 'left'),
+        { width: 0.5, height: 7, depth: 14.3 }, scene));
+      side.position.set(x, 3.5, -7.5);
+      side.material = CCW.texMat(scene, B, 'penpal-int-wall-side-mat-' + i, pinkWallTex, {});
+    });
+
+    // Interior face of the front wall + the door, seen from inside.
+    var front = add(B.MeshBuilder.CreateBox('penpal-int-front-panel',
+      { width: 13, height: 7, depth: 0.15 }, scene));
+    front.position.set(0, 3.5, -0.68);
+    front.material = CCW.texMat(scene, B, 'penpal-int-front-mat', pinkWallTex, {});
+    var doorFrameIn = add(B.MeshBuilder.CreateBox('penpal-int-door-frame',
+      { width: 4.0, height: 5.2, depth: 0.12 }, scene));
+    doorFrameIn.position.set(0, 2.6, -0.78);
+    doorFrameIn.material = CCW.mat(scene, B, 'penpal-int-door-frame-mat', P.tealDeep);
+    var doorGlowIn = add(B.MeshBuilder.CreatePlane('penpal-int-door-glow',
+      { width: 3.4, height: 4.6 }, scene));
+    // No half-turn: the readable -Z face points into the room.
+    doorGlowIn.position.set(0, 2.3, -0.86);
+    doorGlowIn.material = CCW.mat(scene, B, 'penpal-int-door-glow-mat', P.coral,
+      { emissive: P.coral });
+
+    // Teal wainscot line around the room — across the cream wall
+    // too (the cream texture draws its own; this line is the
+    // room's, on the pink walls).
+    [-6.46, 6.46].forEach(function (x, i) {
+      var wains = add(B.MeshBuilder.CreateBox('penpal-int-wainscot-' + (i ? 'right' : 'left'),
+        { width: 0.08, height: 0.14, depth: 13.7 }, scene));
+      wains.position.set(x, 1.02, -7.5);
+      wains.material = CCW.mat(scene, B, 'penpal-int-wainscot-side-mat-' + i, P.tealDeep);
+    });
+
+    // The room sign over the door, inside (house pattern).
+    var signTrim = add(B.MeshBuilder.CreateBox('penpal-int-sign-trim',
+      { width: 5.0, height: 1.05, depth: 0.1 }, scene));
+    signTrim.position.set(0, 5.95, -0.80);
+    signTrim.material = CCW.mat(scene, B, 'penpal-int-sign-trim-mat', P.tealDeep);
+    var sign = add(CCW.makeLabel(scene, B, 'penpal-int-sign',
+      ['Pen-Pal Post', 'Slow mail, warm words'], 4.7, 0.9, { fg: P.goldSoft }));
+    sign.position.set(0, 5.95, -0.87);
+
+    // ---- THE LETTERBOX WALL ---------------------------------------
+    // The emblem crown sign above the grid (saga-art signage:
+    // black field, cream serif, teal rule).
+    var crownTrim = add(B.MeshBuilder.CreateBox('penpal-int-crown',
+      { width: 12.6, height: 0.16, depth: 0.1 }, scene));
+    crownTrim.position.set(0, 5.72, -14.33);
+    crownTrim.material = CCW.mat(scene, B, 'penpal-int-crown-mat', P.tealDeep);
+    var emblemBack = add(B.MeshBuilder.CreateBox('penpal-int-sign-emblem-back',
+      { width: 3.9, height: 1.15, depth: 0.12 }, scene));
+    emblemBack.position.set(0, 6.32, -14.34);
+    emblemBack.material = CCW.mat(scene, B, 'penpal-int-sign-emblem-back-mat', P.plumHouse);
+    var emblem = add(B.MeshBuilder.CreatePlane('penpal-int-sign-emblem',
+      { width: 3.7, height: 1.0 }, scene));
+    emblem.rotation.y = Math.PI; // back wall: readable face toward the room
+    emblem.position.set(0, 6.32, -14.26);
+    emblem.material = CCW.texMat(scene, B, 'penpal-int-sign-emblem-mat',
+      CCW.penpalSignTexture(scene, B, 'penpal-int-sign-emblem-tex'), {});
+
+    // The grid itself: 11 columns x 4 rows of ornate pink boxes —
+    // a shallow body in a pink shade plus a photo-plate front
+    // (Jay's actual doors — see the boxTex note above). Every
+    // front is a tap target for the note card.
+    var boxFronts = [];
+    var boxShades = [P.pinkHot, '#e7549a', '#ff5c9e'];
+    // Painted-metal body materials (artistry standard: no flat
+    // fills — grain, brush streaks, baked light in the texture).
+    var metalTex = boxShades.map(function (shade, si) {
+      return CCW.penpalMetalTexture(scene, B, 'penpal-int-metal-' + si, shade);
+    });
+    var boxIdx = 0;
+    var jrnd = CCW.prand(90210);
+    [1.02, 2.32, 3.62, 4.92].forEach(function (rowY, row) {
+      for (var col = 0; col < 11; col++) {
+        var bx = -5.35 + col * 1.07;
+        // Handmade imperfection (the standard): every box sits
+        // a breath differently — depth, height, a whisper of
+        // tilt — the way the real wall's boxes were hung by hand.
+        var depthJ = 0.26 + jrnd() * 0.05;
+        var yJ = rowY + (jrnd() - 0.5) * 0.02;
+        var body = add(B.MeshBuilder.CreateBox('penpal-int-box-' + boxIdx,
+          { width: 0.94, height: 1.14, depth: depthJ }, scene));
+        body.position.set(bx, yJ, -14.40 + depthJ / 2);
+        body.material = CCW.texMat(scene, B, 'penpal-int-box-' + boxIdx + '-mat',
+          metalTex[(col + row) % metalTex.length], {});
+        var frontP = add(B.MeshBuilder.CreatePlane('penpal-int-box-' + boxIdx + '-front',
+          { width: 0.94, height: 1.14 }, scene));
+        frontP.rotation.y = Math.PI; // readable face toward the room
+        frontP.rotation.z = (jrnd() - 0.5) * 0.02;
+        frontP.position.set(bx, yJ, -14.40 + depthJ + 0.01);
+        frontP.material = CCW.texMat(scene, B, 'penpal-int-box-' + boxIdx + '-front-mat',
+          boxTex[(col * 3 + row) % boxTex.length], {});
+        boxFronts.push(frontP);
+        boxIdx++;
+      }
+    });
+    // Trailing plants spilling over the top corners of the wall.
+    [-4.6, 4.6].forEach(function (px, i) {
+      var trail = add(B.MeshBuilder.CreatePlane('penpal-int-trail-' + i,
+        { width: 0.95, height: 0.8 }, scene));
+      trail.position.set(px, 5.55, -14.02);
+      trail.rotation.y = Math.PI;
+      trail.rotation.x = 0.35;
+      trail.material = CCW.texMat(scene, B, 'penpal-int-trail-mat-' + i, leafTex, { alpha: true });
+    });
+
+    // ---- The writing desk ------------------------------------------
+    var deskTop = add(B.MeshBuilder.CreateBox('penpal-int-desk-top',
+      { width: 3.4, height: 0.12, depth: 1.4 }, scene));
+    deskTop.position.set(0, 0.98, -8);
+    deskTop.material = CCW.texMat(scene, B, 'penpal-int-desk-top-mat', woodTex, {});
+    var deskTrim = add(B.MeshBuilder.CreateBox('penpal-int-desk-trim',
+      { width: 3.6, height: 0.05, depth: 1.6 }, scene));
+    deskTrim.position.set(0, 0.90, -8);
+    deskTrim.material = CCW.mat(scene, B, 'penpal-int-desk-trim-mat', P.tealDeep);
+    [-1.45, 1.45].forEach(function (x, i) {
+      var leg = add(B.MeshBuilder.CreateBox('penpal-int-desk-leg-' + i,
+        { width: 0.14, height: 0.86, depth: 1.2 }, scene));
+      leg.position.set(x, 0.44, -8);
+      leg.material = CCW.mat(scene, B, 'penpal-int-desk-leg-mat-' + i, '#4a2c14');
+    });
+    // Paper waiting to be written on, envelopes waiting to travel
+    // — handled-paper texture, not flat cream (artistry standard).
+    var paperTex = CCW.paperTexture(scene, B, 'penpal-int-paper-tex');
+    [[-0.95, -8.18, 0.18], [0.15, -7.82, -0.12], [-0.35, -8.3, 0.42]].forEach(function (cfg, i) {
+      var paper = add(B.MeshBuilder.CreateBox('penpal-int-desk-paper-' + i,
+        { width: 0.42, height: 0.014, depth: 0.30 }, scene));
+      paper.position.set(cfg[0], 1.05, cfg[1]);
+      paper.rotation.y = cfg[2];
+      paper.material = CCW.texMat(scene, B, 'penpal-int-desk-paper-mat-' + i, paperTex, {});
+    });
+    [[1.02, -8.22, -0.3], [0.72, -7.78, 0.22], [-1.28, -7.85, 0.05]].forEach(function (cfg, i) {
+      var env = add(B.MeshBuilder.CreateBox('penpal-int-desk-envelope-' + i,
+        { width: 0.34, height: 0.012, depth: 0.20 }, scene));
+      env.position.set(cfg[0], 1.048, cfg[1]);
+      env.rotation.y = cfg[2];
+      env.material = CCW.texMat(scene, B, 'penpal-int-desk-envelope-mat-' + i, paperTex, {});
+    });
+    // Two pens laid down mid-sentence.
+    [[-0.6, -7.95, 0.5, P.tealDeep], [0.42, -8.12, -0.35, P.plumHouse]].forEach(function (cfg, i) {
+      var pen = add(B.MeshBuilder.CreateCylinder('penpal-int-desk-pen-' + i,
+        { diameter: 0.032, height: 0.36, tessellation: 8 }, scene));
+      pen.position.set(cfg[0], 1.06, cfg[1]);
+      pen.rotation.z = Math.PI / 2;
+      pen.rotation.y = cfg[2];
+      pen.material = CCW.mat(scene, B, 'penpal-int-desk-pen-mat-' + i, cfg[3]);
+    });
+    // The wax seal: stamp handle + base, and a fresh red seal on
+    // the middle envelope's behalf.
+    var sealHandle = add(B.MeshBuilder.CreateCylinder('penpal-int-desk-seal-handle',
+      { diameter: 0.045, height: 0.16, tessellation: 8 }, scene));
+    sealHandle.position.set(1.28, 1.12, -8.05);
+    sealHandle.material = CCW.mat(scene, B, 'penpal-int-desk-seal-handle-mat', '#4a2c14');
+    var sealBase = add(B.MeshBuilder.CreateCylinder('penpal-int-desk-seal-base',
+      { diameter: 0.085, height: 0.03, tessellation: 12 }, scene));
+    sealBase.position.set(1.28, 1.055, -8.05);
+    sealBase.material = CCW.mat(scene, B, 'penpal-int-desk-seal-base-mat', P.goldSoft);
+    var sealWax = add(B.MeshBuilder.CreateCylinder('penpal-int-desk-seal-wax',
+      { diameter: 0.11, height: 0.018, tessellation: 12 }, scene));
+    sealWax.position.set(1.02, 1.062, -8.22);
+    sealWax.material = CCW.mat(scene, B, 'penpal-int-desk-seal-wax-mat', '#b3123f');
+    var inkpot = add(B.MeshBuilder.CreateCylinder('penpal-int-desk-inkpot',
+      { diameter: 0.09, height: 0.11, tessellation: 10 }, scene));
+    inkpot.position.set(-1.32, 1.095, -8.25);
+    inkpot.material = CCW.mat(scene, B, 'penpal-int-desk-inkpot-mat', P.plumDeep);
+    // Two candles (emissive flames — the lamp rig warms the desk).
+    [-1.52, 1.52].forEach(function (cx, i) {
+      var candle = add(B.MeshBuilder.CreateCylinder('penpal-int-candle-' + i,
+        { diameter: 0.09, height: 0.22, tessellation: 10 }, scene));
+      candle.position.set(cx, 1.15, -8);
+      candle.material = CCW.mat(scene, B, 'penpal-int-candle-mat-' + i, P.cream);
+      var flame = add(B.MeshBuilder.CreateSphere('penpal-int-candle-' + i + '-flame',
+        { diameter: 0.085, segments: 8 }, scene));
+      flame.position.set(cx, 1.33, -8);
+      flame.material = CCW.glowMat(scene, B, 'penpal-int-candle-flame-mat-' + i, P.goldSoft);
+    });
+    // A small plant on the desk.
+    var dPot = add(B.MeshBuilder.CreateCylinder('penpal-int-desk-plant-pot',
+      { diameterTop: 0.17, diameterBottom: 0.12, height: 0.18, tessellation: 10 }, scene));
+    dPot.position.set(-0.82, 1.13, -8.3);
+    dPot.material = CCW.mat(scene, B, 'penpal-int-desk-plant-pot-mat', P.coral);
+    [0, Math.PI / 2].forEach(function (ry, li) {
+      var dLeaf = add(B.MeshBuilder.CreatePlane('penpal-int-desk-plant-leaf-' + li,
+        { width: 0.52, height: 0.52 }, scene));
+      dLeaf.position.set(-0.82, 1.40, -8.3);
+      dLeaf.rotation.y = ry;
+      dLeaf.material = CCW.texMat(scene, B, 'penpal-int-desk-plant-leaf-mat-' + li,
+        leafTex, { alpha: true });
+    });
+    // Two writing chairs at the desk — woven velvet seats.
+    var chairVelvets = [
+      CCW.velvetTexture(scene, B, 'penpal-int-chair-velvet-0', P.velvetMagenta),
+      CCW.velvetTexture(scene, B, 'penpal-int-chair-velvet-1', P.velvetLavender)
+    ];
+    [[-0.9, -6.8, 0], [0.9, -9.2, Math.PI]].forEach(function (cfg, i) {
+      var cx = cfg[0], cz = cfg[1], phi = cfg[2], tag = 'penpal-int-chair-' + i;
+      var base = add(B.MeshBuilder.CreateBox(tag + '-base',
+        { width: 0.42, height: 0.5, depth: 0.42 }, scene));
+      rotPlace(base, cx, 0.25, cz, phi, 0, 0);
+      base.material = CCW.mat(scene, B, tag + '-base-mat', P.plumHouse);
+      var seat = add(B.MeshBuilder.CreateBox(tag + '-seat',
+        { width: 0.62, height: 0.09, depth: 0.55 }, scene));
+      rotPlace(seat, cx, 0.55, cz, phi, 0, 0);
+      seat.material = CCW.texMat(scene, B, tag + '-seat-mat', chairVelvets[i], {});
+      var back = add(B.MeshBuilder.CreateBox(tag + '-back',
+        { width: 0.62, height: 0.72, depth: 0.09 }, scene));
+      rotPlace(back, cx, 0.93, cz, phi, 0, 0.28);
+      back.material = CCW.texMat(scene, B, tag + '-back-mat', chairVelvets[i], {});
+    });
+
+    // ---- Two writing nooks ------------------------------------------
+    // Armchair + side table (a letter waiting) + a floor lamp whose
+    // globe carries a real, room-scoped point light.
+    var nooks = [
+      { tag: 'a', x: -4.85, z: -11.6, phi: -Math.PI / 2, velvet: P.velvetMagenta,
+        pillow: P.velvetTeal, tableZ: -10.5, lampX: -5.6, lampZ: -12.4, bookRot: 0.3 },
+      { tag: 'b', x: 4.85, z: -4.6, phi: Math.PI / 2, velvet: P.velvetLavender,
+        pillow: P.coral, tableZ: -3.5, lampX: 5.6, lampZ: -5.4, bookRot: -0.2 }
+    ];
+    nooks.forEach(function (nk) {
+      penpalArmchair(scene, B, add, nk.x, nk.z, nk.phi, nk.velvet, nk.pillow, nk.tag);
+      var tTop = add(B.MeshBuilder.CreateCylinder('penpal-int-nook-' + nk.tag + '-table-top',
+        { diameter: 0.55, height: 0.05, tessellation: 14 }, scene));
+      tTop.position.set(nk.x, 0.58, nk.tableZ);
+      tTop.material = CCW.texMat(scene, B, 'penpal-int-nook-' + nk.tag + '-table-top-mat', woodTex, {});
+      var tLeg = add(B.MeshBuilder.CreateCylinder('penpal-int-nook-' + nk.tag + '-table-leg',
+        { diameter: 0.07, height: 0.55, tessellation: 8 }, scene));
+      tLeg.position.set(nk.x, 0.28, nk.tableZ);
+      tLeg.material = CCW.mat(scene, B, 'penpal-int-nook-' + nk.tag + '-table-leg-mat', P.plumHouse);
+      var letter = add(B.MeshBuilder.CreateBox('penpal-int-nook-' + nk.tag + '-letter',
+        { width: 0.34, height: 0.014, depth: 0.24 }, scene));
+      letter.position.set(nk.x, 0.615, nk.tableZ);
+      letter.rotation.y = nk.bookRot;
+      letter.material = CCW.mat(scene, B, 'penpal-int-nook-' + nk.tag + '-letter-mat', P.cream);
+      var pole = add(B.MeshBuilder.CreateCylinder('penpal-int-nook-' + nk.tag + '-lamp-pole',
+        { diameter: 0.06, height: 1.5, tessellation: 8 }, scene));
+      pole.position.set(nk.lampX, 0.75, nk.lampZ);
+      pole.material = CCW.mat(scene, B, 'penpal-int-nook-' + nk.tag + '-lamp-pole-mat', P.plumHouse);
+      var globe = add(B.MeshBuilder.CreateSphere('penpal-int-nook-' + nk.tag + '-lamp-globe',
+        { diameter: 0.36, segments: 12 }, scene));
+      globe.position.set(nk.lampX, 1.62, nk.lampZ);
+      globe.material = CCW.glowMat(scene, B, 'penpal-int-nook-' + nk.tag + '-lamp-globe-mat', P.goldSoft);
+      // A shade over the globe (artistry standard: fixtures are
+      // shaded + glowing, never bare) — an open teal bell; the
+      // glow spills from under it.
+      var shade = add(B.MeshBuilder.CreateCylinder('penpal-int-nook-' + nk.tag + '-lamp-shade',
+        { diameterTop: 0.17, diameterBottom: 0.42, height: 0.24, tessellation: 14, openEnded: true }, scene));
+      shade.position.set(nk.lampX, 1.76, nk.lampZ);
+      shade.material = CCW.mat(scene, B, 'penpal-int-nook-' + nk.tag + '-lamp-shade-mat', P.tealDeep);
+      var lampLight = new B.PointLight('penpal-int-lamp-light-' + nk.tag,
+        roomWorld(nk.lampX, 1.7, nk.lampZ), scene);
+      lampLight.intensity = 0.5;
+      lampLight.diffuse = new B.Color3(1.0, 0.78, 0.55);
+      lampLight.range = 6.5;
+      intLights.push(lampLight);
+    });
+
+    // ---- By the door: the rules + the outgoing slot -----------------
+    var plaqueFrame = add(B.MeshBuilder.CreateBox('penpal-int-plaque-frame',
+      { width: 2.9, height: 1.9, depth: 0.1 }, scene));
+    plaqueFrame.position.set(4.35, 3.3, -0.80);
+    plaqueFrame.material = CCW.mat(scene, B, 'penpal-int-plaque-frame-mat', P.plumHouse);
+    var plaque = add(B.MeshBuilder.CreatePlane('penpal-int-plaque',
+      { width: 2.7, height: 1.7 }, scene));
+    // No half-turn: front wall, readable face into the room.
+    plaque.position.set(4.35, 3.3, -0.87);
+    plaque.material = CCW.texMat(scene, B, 'penpal-int-plaque-mat',
+      CCW.penpalPlaqueTexture(scene, B, 'penpal-int-plaque-tex'), {});
+
+    var slotBox = add(B.MeshBuilder.CreateBox('penpal-int-slot-box',
+      { width: 2.3, height: 1.0, depth: 0.12 }, scene));
+    slotBox.position.set(-4.35, 3.3, -0.80);
+    slotBox.material = CCW.mat(scene, B, 'penpal-int-slot-box-mat', P.tealDeep);
+    var slotLine = add(B.MeshBuilder.CreateBox('penpal-int-slot-line',
+      { width: 1.8, height: 0.09, depth: 0.03 }, scene));
+    slotLine.position.set(-4.35, 3.42, -0.88);
+    slotLine.material = CCW.mat(scene, B, 'penpal-int-slot-line-mat', P.goldSoft);
+    var slotSign = add(CCW.makeLabel(scene, B, 'penpal-int-slot-sign',
+      ['Outgoing Mail', 'sealed with love'], 2.0, 0.5, { fg: P.goldSoft }));
+    slotSign.position.set(-4.35, 2.5, -0.87);
+
+    // ---- Corner plants + desk pendants -------------------------------
+    function cornerPlant(px, pz, tag) {
+      var pot = add(B.MeshBuilder.CreateCylinder('penpal-int-plant-' + tag + '-pot',
+        { diameterTop: 0.44, diameterBottom: 0.34, height: 0.52, tessellation: 12 }, scene));
+      pot.position.set(px, 0.26, pz);
+      pot.material = CCW.mat(scene, B, 'penpal-int-plant-' + tag + '-pot-mat', P.coral);
+      var crown = add(B.MeshBuilder.CreateSphere('penpal-int-plant-' + tag + '-crown',
+        { diameter: 0.3, segments: 8 }, scene));
+      crown.position.set(px, 0.60, pz);
+      crown.material = CCW.mat(scene, B, 'penpal-int-plant-' + tag + '-crown-mat', '#1e5c46');
+      for (var li = 0; li < 3; li++) {
+        var leaf = add(B.MeshBuilder.CreatePlane('penpal-int-plant-' + tag + '-leaf-' + li,
+          { width: 1.15, height: 1.15 }, scene));
+        leaf.position.set(px, 1.12, pz);
+        leaf.rotation.y = li * Math.PI / 3;
+        leaf.material = CCW.texMat(scene, B, 'penpal-int-plant-' + tag + '-leaf-mat-' + li,
+          leafTex, { alpha: true });
+      }
+    }
+    cornerPlant(-3.4, -10.8, 'l');
+    cornerPlant(3.4, -10.8, 'r');
+    [-0.95, 0.95].forEach(function (px, i) {
+      var cord = add(B.MeshBuilder.CreateCylinder('penpal-int-pendant-' + i + '-cord',
+        { diameter: 0.025, height: 1.9, tessellation: 6 }, scene));
+      cord.position.set(px, 6.05, -8);
+      cord.material = CCW.mat(scene, B, 'penpal-int-pendant-cord-mat-' + i, P.plumHouse);
+      var globe = add(B.MeshBuilder.CreateSphere('penpal-int-pendant-' + i + '-globe',
+        { diameter: 0.44, segments: 12 }, scene));
+      globe.position.set(px, 4.95, -8);
+      globe.material = CCW.glowMat(scene, B, 'penpal-int-pendant-globe-mat-' + i,
+        i ? '#ff7ab0' : P.goldSoft);
+      var pShade = add(B.MeshBuilder.CreateCylinder('penpal-int-pendant-' + i + '-shade',
+        { diameterTop: 0.12, diameterBottom: 0.46, height: 0.26, tessellation: 14, openEnded: true }, scene));
+      pShade.position.set(px, 5.12, -8);
+      pShade.material = CCW.mat(scene, B, 'penpal-int-pendant-shade-mat-' + i, P.tealDeep);
+    });
+
+    // ---- Return pad, inside by the door (the interiors' set) --------
+    var padTex = CCW.padTexture(scene, B, 'penpal-int-pad-tex', P.coral);
+    var returnPad = add(B.MeshBuilder.CreateDisc('penpal-int-return-pad',
+      { radius: 1.5, tessellation: 28 }, scene));
+    returnPad.rotation.x = Math.PI / 2;
+    returnPad.position.set(4.7, 0.04, -2.3);
+    returnPad.material = CCW.texMat(scene, B, 'penpal-int-return-pad-mat', padTex,
+      { alpha: true, emissive: true });
+    var returnRing = add(B.MeshBuilder.CreateTorus('penpal-int-return-ring',
+      { diameter: 3.0, thickness: 0.07, tessellation: 32 }, scene));
+    returnRing.rotation.x = Math.PI / 2;
+    returnRing.position.set(4.7, 0.05, -2.3);
+    returnRing.material = CCW.glowMat(scene, B, 'penpal-int-return-ring-mat', P.gold);
+    var returnSign = add(CCW.makeLabel(scene, B, 'penpal-int-return-sign',
+      ['↩ The Plaza'], 2.2, 0.55, { fg: P.goldSoft }));
+    returnSign.position.set(4.7, 2.7, -2.35);
+
+    // ---- The room's lights -------------------------------------------
+    var roomHemi = new B.HemisphericLight('penpal-int-hemi',
+      new B.Vector3(0, 1, 0), scene);
+    roomHemi.intensity = 0.7;
+    roomHemi.diffuse = new B.Color3(1.0, 0.84, 0.64);
+    roomHemi.groundColor = new B.Color3(0.38, 0.20, 0.28);
+    intLights.push(roomHemi);
+    var roomLight = new B.PointLight('penpal-int-light',
+      roomWorld(0, 5.2, -7.5), scene);
+    roomLight.intensity = 0.6;
+    roomLight.diffuse = new B.Color3(1.0, 0.76, 0.52);
+    roomLight.range = 17;
+    intLights.push(roomLight);
+
+    // Scope the rig to the room + lift the light cap (see header).
+    var intMeshes = scene.meshes.filter(function (m) {
+      return m.name.indexOf('penpal-int-') === 0;
+    });
+    intLights.forEach(function (l) { l.includedOnlyMeshes = intMeshes; });
+    var sceneLightCount = scene.lights.length;
+    intMeshes.forEach(function (m) {
+      if (m.material && m.material.maxSimultaneousLights !== undefined &&
+          m.material.maxSimultaneousLights < sceneLightCount) {
+        m.material.maxSimultaneousLights = sceneLightCount;
+      }
+    });
+
+    return {
+      returnPad: returnPad,
+      returnRing: returnRing,
+      entrance: {
+        position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
+        target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
+      },
+      // The Post's tap surface (surfaced by buildWorld as
+      // world.penpal): every letterbox front is a tap target —
+      // a tap opens the note card (cameras.js wirePenpal, fed by
+      // CCW.PENPAL_NOTES). Nothing here navigates anywhere.
+      penpal: { boxMeshes: boxFronts }
+    };
+  }
+
   function buildZone(scene, B, zone) {
     var P = CCW.PALETTE;
     var theta = zone.angleDeg * Math.PI / 180;
@@ -2171,6 +2770,16 @@
       result.threshold = libInterior.entrance;
       result.interiorReturn = { mesh: libInterior.returnPad, ringMesh: libInterior.returnRing };
     }
+    if (zone.id === 'penpal') {
+      // The Pen-Pal Post (M2b): same arrival pattern — the Plaza
+      // pad lands INSIDE, just past the door, facing the
+      // letterbox wall; the room's own return pad rides home.
+      // See buildPenpalInterior's header.
+      var penInterior = buildPenpalInterior(scene, B, zone, add);
+      result.threshold = penInterior.entrance;
+      result.interiorReturn = { mesh: penInterior.returnPad, ringMesh: penInterior.returnRing };
+      result.penpal = penInterior.penpal;
+    }
     return result;
   }
 
@@ -2256,13 +2865,15 @@
 
   /*
    * Build the dressed Plaza into `scene`.
-   * Returns { zones, portalMeshes, teleports, gameTargets, theater }
-   * where each teleport is { mesh, ringMesh, destPos, destTarget,
-   * label, landed }, each game target is { id, name, blurb, path,
-   * meshes } — the Game Parlor's tap-to-play wiring data (see
-   * buildParlorInterior) — and `theater` is the Theater's watch
-   * surface (board meshes, screen, glass material, camera views;
-   * see buildTheaterInterior).
+   * Returns { zones, portalMeshes, teleports, gameTargets, theater,
+   * penpal } where each teleport is { mesh, ringMesh, destPos,
+   * destTarget, label, landed }, each game target is { id, name,
+   * blurb, path, meshes } — the Game Parlor's tap-to-play wiring
+   * data (see buildParlorInterior) — `theater` is the Theater's
+   * watch surface (board meshes, screen, glass material, camera
+   * views; see buildTheaterInterior), and `penpal` is the Pen-Pal
+   * Post's tap surface (the letterbox fronts; see
+   * buildPenpalInterior).
    */
   CCW.buildWorld = function (scene, B) {
     var P = CCW.PALETTE;
@@ -2380,12 +2991,14 @@
     // Zones + teleport wiring data.
     var zones = {}, portalMeshes = [], teleports = [], gameTargets = [];
     var theaterWatch = null;
+    var penpalSurface = null;
     CCW.ZONES.forEach(function (zone) {
       var built = buildZone(scene, B, zone);
       zones[zone.id] = built;
       portalMeshes = portalMeshes.concat(built.portalMeshes);
       if (built.gameTargets) gameTargets = gameTargets.concat(built.gameTargets);
       if (built.theaterWatch) theaterWatch = built.theaterWatch;
+      if (built.penpal) penpalSurface = built.penpal;
 
       // Plaza-side pad: ride out to this zone's door.
       var uv = outward(zone);
@@ -2435,7 +3048,9 @@
             ? 'You are in the Theater. The great window glows — Classic Cinema is showing.'
             : zone.id === 'library'
               ? 'You are in the Library. Low voices, good books.'
-              : 'You are at the ' + zone.name + '.'
+              : zone.id === 'penpal'
+                ? 'You are in the Pen-Pal Post. Slow mail, warm words.'
+                : 'You are at the ' + zone.name + '.'
       });
       teleports.push({
         mesh: built.returnPad, ringMesh: null,
@@ -2456,6 +3071,6 @@
     });
 
     return { zones: zones, portalMeshes: portalMeshes, teleports: teleports,
-      gameTargets: gameTargets, theater: theaterWatch };
+      gameTargets: gameTargets, theater: theaterWatch, penpal: penpalSurface };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

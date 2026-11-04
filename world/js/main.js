@@ -133,11 +133,15 @@
     // The Theater's watch controller (catalog + watch bar), wired
     // below beside the game card; a ride puts its card away too.
     var theaterCtl = null;
+    // The Pen-Pal Post's note card, wired below beside the theater;
+    // a ride puts it away too.
+    var penpalCtl = null;
 
     function ride(tele) {
       if (glider.active()) return;
       if (gameCard) gameCard.hide();
       if (theaterCtl) theaterCtl.hideCard();
+      if (penpalCtl) penpalCtl.hideCard();
       glider.start(scene.activeCamera, tele.destPos, tele.destTarget, 1400,
         function () {
           setStatus(tele.landed || ('You have arrived at ' + tele.label + '.'));
@@ -326,6 +330,28 @@
         mesh.actionManager.registerAction(
           new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
             theaterCtl.showCatalog();
+          }));
+      });
+    }
+
+    // ---- The Pen-Pal Post's note card (2026-11-04) ---------------
+    // Tapping any letterbox front opens the note card (cameras.js
+    // wirePenpal): read a letter, leave one of your own. All letter
+    // data flows through the one named seam — CCW.PENPAL_NOTES in
+    // plaza.js (seed notes + the visitor's own notes in their
+    // browser today; cross-visitor mail is the future server
+    // piece, and its header says so plainly). A tap never
+    // navigates anywhere.
+    penpalCtl = CCW.wirePenpal({
+      document: document,
+      notes: CCW.PENPAL_NOTES || null
+    });
+    if (world.penpal && penpalCtl) {
+      world.penpal.boxMeshes.forEach(function (mesh) {
+        mesh.actionManager = new B.ActionManager(scene);
+        mesh.actionManager.registerAction(
+          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
+            penpalCtl.show();
           }));
       });
     }

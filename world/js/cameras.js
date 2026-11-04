@@ -285,6 +285,12 @@
         // its own local frame.
         angleDeg: 60, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
         minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
+      },
+      { // The Pen-Pal Post, angleDeg 300 (M2b interior 3 of 5):
+        // same room volume again, same gate/clamp numbers in its
+        // own local frame.
+        angleDeg: 300, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
+        minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
       }
     ]
   };
@@ -687,6 +693,119 @@
       },
       state: function () {
         return { mode: mode, current: current, seated: seated, fullscreen: fsOn };
+      }
+    };
+  };
+
+  /*
+   * The Pen-Pal Post's note card (M2b interior 3 of 5, 2026-11-04;
+   * design §3.6). Tapping any letterbox in the room opens this
+   * card (#penpal-card in index.html):
+   *   READ — a letter drawn for the visitor, signed with a
+   *     username; "Open another box" draws again, "Leave a note"
+   *     swaps to the writing side.
+   *   WRITE — a username field + a note field, the Post's rules
+   *     printed on the card (usernames only; no emails, phone
+   *     numbers, addresses or links), and the slow-mail promise:
+   *     a sealed note travels overnight and is in a box tomorrow.
+   * The card holds NO letter data and NO storage of its own: every
+   * read and write goes through the one named seam, env.notes —
+   * CCW.PENPAL_NOTES (plaza.js), whose header carries the honest
+   * persistence scope. The contact filter is the module's; the
+   * card only translates its verdicts into Jay's gentle register.
+   *
+   * env: { document, notes } — injected, like the wirings above.
+   * Returns { show, hideCard, state, element } or null when the
+   * markup or the notes module is absent.
+   */
+  CCW.wirePenpal = function (env) {
+    var doc = env && env.document;
+    var notes = env && env.notes;
+    if (!doc || !doc.getElementById || !notes ||
+        typeof notes.draw !== 'function' || typeof notes.leave !== 'function') {
+      return null;
+    }
+    var card = doc.getElementById('penpal-card');
+    var readView = doc.getElementById('penpal-read');
+    var writeView = doc.getElementById('penpal-write');
+    var fromEl = doc.getElementById('penpal-note-from');
+    var textEl = doc.getElementById('penpal-note-text');
+    var anotherBtn = doc.getElementById('penpal-another');
+    var toWriteBtn = doc.getElementById('penpal-to-write');
+    var closeBtn = doc.getElementById('penpal-close');
+    var nameEl = doc.getElementById('penpal-name');
+    var bodyEl = doc.getElementById('penpal-text');
+    var sendBtn = doc.getElementById('penpal-send');
+    var toReadBtn = doc.getElementById('penpal-to-read');
+    var writeCloseBtn = doc.getElementById('penpal-write-close');
+    var msgEl = doc.getElementById('penpal-msg');
+    if (!card || !readView || !writeView || !fromEl || !textEl ||
+        !anotherBtn || !toWriteBtn || !closeBtn || !nameEl || !bodyEl ||
+        !sendBtn || !toReadBtn || !writeCloseBtn || !msgEl) {
+      return null;
+    }
+
+    var view = 'read';     // 'read' | 'write'
+    var current = null;    // the note on the card
+    var sent = 0;          // notes sealed this visit
+
+    function drawNote() {
+      current = notes.draw();
+      if (current) {
+        fromEl.textContent = current.from || 'A friend';
+        textEl.textContent = current.text || '';
+      }
+    }
+    function setView(v) {
+      view = v;
+      readView.hidden = v !== 'read';
+      writeView.hidden = v !== 'write';
+      if (v === 'read' && !current) drawNote();
+    }
+    function say(msg) { msgEl.textContent = msg; }
+
+    anotherBtn.addEventListener('click', drawNote);
+    toWriteBtn.addEventListener('click', function () { say(''); setView('write'); });
+    toReadBtn.addEventListener('click', function () { setView('read'); });
+    closeBtn.addEventListener('click', function () { card.hidden = true; });
+    writeCloseBtn.addEventListener('click', function () { card.hidden = true; });
+    sendBtn.addEventListener('click', function () {
+      var verdict = notes.leave(nameEl.value, bodyEl.value);
+      if (verdict && verdict.ok) {
+        sent++;
+        bodyEl.value = '';
+        say('Sealed with love. 💌 Your note travels overnight — ' +
+            'it will be in a box tomorrow.');
+        return;
+      }
+      var reason = verdict && verdict.reason;
+      if (reason === 'email') {
+        say('That looks like an email address — the Post runs on ' +
+            'usernames only, so nobody\'s details travel. Take it ' +
+            'out and seal it again?');
+      } else if (reason === 'phone') {
+        say('That looks like a phone number — the Post runs on ' +
+            'usernames only, so nobody\'s details travel. Take it ' +
+            'out and seal it again?');
+      } else if (reason === 'link') {
+        say('Links can\'t ride the slow mail — usernames and kind ' +
+            'words only. Take it out and seal it again?');
+      } else {
+        say('Write a little something first — even one kind ' +
+            'sentence travels well.');
+      }
+    });
+
+    return {
+      element: card,
+      show: function () {
+        drawNote();
+        setView('read');
+        card.hidden = false;
+      },
+      hideCard: function () { card.hidden = true; },
+      state: function () {
+        return { open: !card.hidden, view: view, sent: sent, current: current };
       }
     };
   };
