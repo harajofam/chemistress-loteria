@@ -40,6 +40,13 @@
  * game page is never one of them (it keeps its own page, its
  * own door — see the re-dress note below).
  *
+ * Viewer Mode (2026-11-04): a stereo split-screen look mode for
+ * phones without WebXR (iPhone above all), approved by Jay in
+ * revert-safe framing — one toggle (CCW.VIEWER_MODE in cameras.js)
+ * disables it whole. Entry rides the magic-window attempt, the
+ * eyes follow its camera, any tap steps out; see the wiring
+ * below and VIEWER-MODE-BUILD-NOTES.md.
+ *
  * World fix pass (2026-11-03 evening, from the live verifications):
  *  - A completed glide now posts its `landed` status line ("You are
  *    in the Game Parlor…", the Plaza welcome line on return rides)
@@ -371,6 +378,45 @@
         ? 'Walking mode — hold the on-screen arrows to walk and turn. The glowing pads glide you to the doors.'
         : 'Walking mode — WASD or arrow keys to move, drag to look. Pads glide you to the doors.');
     });
+    // --- Viewer Mode (2026-11-04) --------------------------------
+    // The stereo split-screen look mode for phones without
+    // WebXR (cameras.js createViewerMode holds the rig + the
+    // CCW.VIEWER_MODE toggle). Shown only on touch devices, and
+    // only when the feature is toggled on. Entry runs the SAME
+    // magic-window attempt as the Look Around button — so the
+    // iOS motion-permission prompt still comes from this tap —
+    // and then lays the stereo pair over whichever camera the
+    // attempt landed on: the gyroscope drives both eyes, or the
+    // mode's own drag look does when there is no sensor to drive
+    // them. While the mode is on, the tap-catcher owns every
+    // tap (any tap steps out), pads cannot fire, and the touch
+    // walker stands down — movement stays the normal modes' job.
+    var viewerCtl = null;
+    var viewerBtn = document.getElementById('btn-viewer');
+    if (CCW.VIEWER_MODE && viewerBtn && CCW.isTouchDevice()) {
+      viewerBtn.hidden = false;
+      viewerCtl = CCW.createViewerMode({
+        B: B, scene: scene, engine: engine, canvas: canvas,
+        document: document, root: root,
+        onStatus: setStatus
+      });
+      if (viewerCtl) {
+        viewerBtn.addEventListener('click', function () {
+          if (viewerCtl.active()) { viewerCtl.exit(); return; }
+          glider.cancel();
+          walking = false;
+          syncTouchPad();
+          CCW.tryMagicWindow({
+            B: B, scene: scene, canvas: canvas,
+            onStatus: setStatus
+          }).then(function (mode) {
+            viewerCtl.enter(scene.activeCamera, mode === 'magic');
+            syncTouchPad();
+          });
+        });
+      }
+    }
+
     document.getElementById('btn-reset').addEventListener('click', function () {
       // Reset view: any camera mode returns to the spawn view.
       glider.cancel();
@@ -391,20 +437,25 @@
       var dt = now - last;
       last = now;
       var cam = scene.activeCamera;
+      var inViewer = !!(viewerCtl && viewerCtl.active());
       var gliding = !!(cam && glider.update(cam, dt));
       if (cam && !gliding) {
         // Touch buttons drive the walk camera; then the bounds keep
         // every camera inside the Plaza grounds / the parlor room.
-        if (cam === desktopCam) touchWalker.update(cam, dt);
+        // In Viewer Mode the visitor only looks — the walker and
+        // the pads stand down, and the clamp keeps the anchor (the
+        // camera the stereo eyes follow) in bounds as ever.
+        if (cam === desktopCam && !inViewer) touchWalker.update(cam, dt);
         CCW.clampCamera(B, cam);
       }
       if (cam) {
         // Stepping onto a pad (walking) rides it — on entry only,
         // and only once any glide cooldown has passed.
         var stepped = padTrigger.poll(cam.position,
-          !gliding && cam === desktopCam && now > glideCooldownUntil);
+          !gliding && !inViewer && cam === desktopCam && now > glideCooldownUntil);
         if (stepped) ride(stepped);
       }
+      if (inViewer) viewerCtl.sync();
       scene.render();
       if (!overlayHidden) {
         overlayHidden = true;

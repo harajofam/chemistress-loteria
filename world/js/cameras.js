@@ -690,4 +690,284 @@
       }
     };
   };
+
+  /*
+   * VIEWER MODE (2026-11-04 — Jay approved the build in her own
+   * revert-safe framing: 'worst that can happen is we don't like
+   * it and we have to revert'). A stereo split-screen look mode
+   * for phones WITHOUT WebXR — above all iPhone Safari, whose
+   * engine offers no WebXR at all and no wrapper or overlay can
+   * add it (IPHONE-FALLBACK-NOTE-2026-11-02). Plain WebGL draws
+   * the room twice, once per eye, and a cardboard-style viewer
+   * turns the pair into real depth. The mode EXTENDS the magic-
+   * window path above, never replaces it: entering runs the same
+   * DeviceOrientation permission attempt (CCW.tryMagicWindow,
+   * called from the same tap, so the iOS prompt still comes from
+   * the gesture), and the eyes then FOLLOW whichever camera that
+   * attempt lands on.
+   *
+   * THE TOGGLE: CCW.VIEWER_MODE below is the whole feature's one
+   * switch. Set it to false and createViewerMode returns null,
+   * main.js never shows the button, and the world behaves as the
+   * pre-Viewer build. Redeploying the previous commit reverts it
+   * too — both paths in VIEWER-MODE-BUILD-NOTES.md.
+   *
+   * The mode's shape (v1, deliberately simple):
+   *  - LOOK ONLY, from wherever the visitor stands. Walking,
+   *    pads and glides remain the normal modes' job — a visitor
+   *    enters Viewer Mode standing where they want to look from.
+   *  - Two FreeCameras (viewer-left / viewer-right), each with a
+   *    half-screen viewport, offset ±IPD/2 along the source
+   *    camera's own right vector and aimed PARALLEL to its look
+   *    direction (parallel axes are the correct stereo geometry;
+   *    toe-in would keystone). The same rig convention Babylon's
+   *    own stereo cameras use; Babylon computes each eye's
+   *    aspect from its viewport, so the halves are undistorted.
+   *  - Look source, chosen at entry: the gyroscope when the
+   *    magic-window attempt granted it (the eyes track the
+   *    DeviceOrientationCamera's direction every frame), else a
+   *    drag look owned here — base orientation captured at
+   *    entry, pointer drags on the tap-catcher steer it, with
+   *    the drag camera's exact sign conventions (a rightward
+   *    drag turns the view right, a downward drag tips it up).
+   *  - ANY tap (a press that does not become a drag) steps back
+   *    out to the single view. The tap-catcher (#viewer-tap in
+   *    index.html) covers the screen above the canvas and the
+   *    HUD, so in Viewer Mode every tap is the exit tap, and no
+   *    pad, program board or game table can fire through it.
+   *  - While in the mode the engine's hardware scaling steps
+   *    DOWN to CCW.VIEWER.scale — two renders per frame on a
+   *    phone GPU is the honest cost — and restores on exit.
+   *  - Fullscreen and a screen wake lock are requested on
+   *    entry, best-effort: either may be refused (gesture chain
+   *    broken, browser without the API) and the mode works
+   *    without them; both are released on exit.
+   *  - NO WebXR anywhere on this path: no XR host object, no
+   *    XR experience helper — that absence is the point (and
+   *    the smoke scans the sources for the API names to prove
+   *    it, so this comment avoids spelling them out).
+   *  - Rotation only: there is no positional (lean/translate)
+   *    tracking, which fits a world that moves by taps and
+   *    glides; the honest limit is in the build notes.
+   *
+   * env: { B, scene, engine, canvas, document, root, onStatus } —
+   * everything injectable, like the wirings above, so the smoke
+   * drives the controller against stubs. Returns { element,
+   * enter, exit, sync, active, left, right } (the eye cameras
+   * surface as properties once created) or null when the
+   * feature is toggled off or the tap-catcher markup is absent.
+   */
+  CCW.VIEWER_MODE = true;
+  CCW.VIEWER = {
+    ipd: 0.065,       // metres between the eyes (plausible human IPD)
+    scale: 2,         // hardware scaling level while in the mode
+    dragStep: 0.005,  // rad per px of fallback drag (the drag camera's)
+    tapSlop: 10       // px of travel that turns a tap into a drag
+  };
+
+  CCW.createViewerMode = function (env) {
+    if (!CCW.VIEWER_MODE) return null;
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var tap = doc.getElementById('viewer-tap');
+    if (!tap || !tap.addEventListener) return null;
+    var B = env.B, scene = env.scene, engine = env.engine || null;
+    var nav = (env.root && env.root.navigator) || root.navigator;
+
+    var on = false;
+    var source = null;         // the camera the eyes follow
+    var sensorDriven = false;  // gyroscope drives the look
+    var left = null, right = null; // the eye cameras (lazy)
+    var baseFwd = null, baseRight = null; // fallback look at entry
+    var yaw = 0, pitch = 0;    // fallback drag offsets (rad)
+    var savedScale = null;     // engine scaling before entry
+    var wakeLock = null;       // live wake-lock handle
+    var wakeWanted = false;    // entry asked for the lock
+    var downX = 0, downY = 0, lastX = 0, lastY = 0;
+    var pressing = false, dragged = false;
+
+    function status(msg) {
+      if (env && typeof env.onStatus === 'function') env.onStatus(msg);
+    }
+
+    function ensureEyes() {
+      if (left && right) return;
+      left = new B.FreeCamera('viewer-left', source.position.clone(), scene);
+      right = new B.FreeCamera('viewer-right', source.position.clone(), scene);
+      left.viewport = new B.Viewport(0, 0, 0.5, 1);
+      right.viewport = new B.Viewport(0.5, 0, 0.5, 1);
+      api.left = left;
+      api.right = right;
+    }
+
+    function askFullscreen() {
+      try {
+        var el = doc.documentElement;
+        if (el && typeof el.requestFullscreen === 'function') {
+          var p = el.requestFullscreen();
+          if (p && typeof p.catch === 'function') p.catch(function () {});
+        }
+      } catch (e) {}
+    }
+    function dropFullscreen() {
+      try {
+        if (doc.fullscreenElement && typeof doc.exitFullscreen === 'function') {
+          var p = doc.exitFullscreen();
+          if (p && typeof p.catch === 'function') p.catch(function () {});
+        }
+      } catch (e) {}
+    }
+    function askWakeLock() {
+      wakeWanted = true;
+      try {
+        if (nav && nav.wakeLock && typeof nav.wakeLock.request === 'function') {
+          var p = nav.wakeLock.request('screen');
+          if (p && typeof p.then === 'function') {
+            p.then(function (lock) {
+              // If the visitor already stepped out, hand the
+              // lock straight back; otherwise keep it for exit.
+              if (on && wakeWanted) { wakeLock = lock; }
+              else if (lock && typeof lock.release === 'function') { lock.release(); }
+            }).catch(function () {});
+          }
+        }
+      } catch (e) {}
+    }
+    function dropWakeLock() {
+      wakeWanted = false;
+      try {
+        if (wakeLock && typeof wakeLock.release === 'function') wakeLock.release();
+      } catch (e) {}
+      wakeLock = null;
+    }
+
+    // One frame of the rig: the eyes straddle the source camera
+    // along its own right vector and look where it looks. With
+    // the gyroscope driving, that IS the phone's orientation;
+    // without it, the entry orientation plus the drag offsets.
+    function sync() {
+      if (!on || !source || !left || !right) return false;
+      var pos = source.position;
+      var fwd, rgt;
+      if (sensorDriven) {
+        fwd = source.getDirection(new B.Vector3(0, 0, 1));
+        rgt = source.getDirection(new B.Vector3(1, 0, 0));
+      } else {
+        fwd = baseFwd.clone();
+        rgt = baseRight.clone();
+        if (yaw !== 0) {
+          var m = new B.Matrix();
+          B.Quaternion.RotationAxis(new B.Vector3(0, 1, 0), yaw).toRotationMatrix(m);
+          fwd = B.Vector3.TransformNormal(fwd, m);
+          rgt = B.Vector3.TransformNormal(rgt, m);
+        }
+        if (pitch !== 0) {
+          var m2 = new B.Matrix();
+          B.Quaternion.RotationAxis(rgt, pitch).toRotationMatrix(m2);
+          fwd = B.Vector3.TransformNormal(fwd, m2);
+        }
+      }
+      var half = CCW.VIEWER.ipd / 2;
+      left.position.copyFromFloats(
+        pos.x - rgt.x * half, pos.y - rgt.y * half, pos.z - rgt.z * half);
+      right.position.copyFromFloats(
+        pos.x + rgt.x * half, pos.y + rgt.y * half, pos.z + rgt.z * half);
+      left.setTarget(left.position.add(fwd));
+      right.setTarget(right.position.add(fwd));
+      if (source.fov) { left.fov = source.fov; right.fov = source.fov; }
+      return true;
+    }
+
+    function enter(srcCam, sensor) {
+      if (on || !srcCam) return false;
+      source = srcCam;
+      sensorDriven = !!sensor;
+      ensureEyes();
+      left.minZ = srcCam.minZ; left.maxZ = srcCam.maxZ;
+      right.minZ = srcCam.minZ; right.maxZ = srcCam.maxZ;
+      baseFwd = srcCam.getDirection(new B.Vector3(0, 0, 1)).clone();
+      baseRight = srcCam.getDirection(new B.Vector3(1, 0, 0)).clone();
+      yaw = 0; pitch = 0;
+      if (engine && typeof engine.getHardwareScalingLevel === 'function') {
+        savedScale = engine.getHardwareScalingLevel();
+        try {
+          engine.setHardwareScalingLevel(CCW.VIEWER.scale);
+          if (typeof engine.resize === 'function') engine.resize();
+        } catch (e) {}
+      }
+      scene.activeCameras = [left, right];
+      on = true;
+      tap.hidden = false;
+      askFullscreen();
+      askWakeLock();
+      sync();
+      status('👓 Viewer Mode — look around; the room is all about you. Tap anytime to step out.');
+      return true;
+    }
+
+    function exit() {
+      if (!on) return false;
+      on = false;
+      scene.activeCameras = null;
+      if (source) scene.activeCamera = source;
+      if (engine && savedScale !== null &&
+          typeof engine.setHardwareScalingLevel === 'function') {
+        try {
+          engine.setHardwareScalingLevel(savedScale);
+          if (typeof engine.resize === 'function') engine.resize();
+        } catch (e) {}
+      }
+      savedScale = null;
+      dropFullscreen();
+      dropWakeLock();
+      tap.hidden = true;
+      yaw = 0; pitch = 0;
+      status('Stepped out of Viewer Mode — back to the regular view.');
+      return true;
+    }
+
+    // The tap-catcher: a drag steers the fallback look (only
+    // when no gyroscope drives it); a press that never becomes
+    // a drag is the step-out tap, in either look mode.
+    tap.addEventListener('pointerdown', function (e) {
+      pressing = true;
+      dragged = false;
+      downX = lastX = e.clientX || 0;
+      downY = lastY = e.clientY || 0;
+    });
+    tap.addEventListener('pointermove', function (e) {
+      if (!pressing) return;
+      var x = e.clientX || 0, y = e.clientY || 0;
+      if (Math.abs(x - downX) > CCW.VIEWER.tapSlop ||
+          Math.abs(y - downY) > CCW.VIEWER.tapSlop) {
+        dragged = true;
+      }
+      if (dragged && !sensorDriven) {
+        yaw -= (x - lastX) * CCW.VIEWER.dragStep;
+        pitch -= (y - lastY) * CCW.VIEWER.dragStep;
+        if (pitch > 1.2) pitch = 1.2;
+        if (pitch < -1.2) pitch = -1.2;
+        sync();
+      }
+      lastX = x; lastY = y;
+    });
+    function release() {
+      if (!pressing) return;
+      pressing = false;
+      if (!dragged) exit();
+    }
+    tap.addEventListener('pointerup', release);
+    tap.addEventListener('pointercancel', release);
+
+    var api = {
+      element: tap,
+      enter: enter,
+      exit: exit,
+      sync: sync,
+      active: function () { return on; },
+      left: null,
+      right: null
+    };
+    return api;
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
