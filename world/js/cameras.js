@@ -176,4 +176,205 @@
       cancel: function () { state = null; }
     };
   };
+
+  /*
+   * Camera bounds (M2b phone fixes — Jay's field report 2026-11-03:
+   * she could drag/walk the view inside and behind the facades, where
+   * the flat panels read as "2D, backwards"). main.js clamps the
+   * active camera every frame (skipped mid-glide — glides are
+   * authored paths between known in-bounds points):
+   *  - Height: y in [0.5, 14] — never under the floor, never lost
+   *    above the rooftops.
+   *  - The Plaza: horizontal distance from the Plaza center <= 21 m.
+   *    The facade fronts stand at ~23.3 m, so a visitor stops a
+   *    couple of meters short of the walls all the way around, and
+   *    the chapel wall behind spawn (z = 19.2) stays out of reach
+   *    only via the same radius — the radius is the rule everywhere.
+   *  - The Arcade room is the one sanctioned interior: a camera in
+   *    its gate box (|x| <= 7.5, z in [-39.5, -23]) is instead
+   *    clamped to the room itself (x in [-6.1, 6.1], z in
+   *    [-38.0, -25.1], y <= 6.6) — just inside its walls and door.
+   *    Rooms are entered and left by the teleport pads, never by
+   *    drifting through a wall.
+   *  - Look targets get the same gate test with a wider Plaza radius
+   *    (34 m) and a lower ceiling (12 m), so a visitor can still look
+   *    AT the facades, the chapel sign, and — from the Arcade entry —
+   *    the gallery wall at the room's back (target z = -32).
+   */
+  CCW.BOUNDS = {
+    plazaRadius: 21,
+    targetRadius: 34,
+    minY: 0.5,
+    maxY: 14,
+    targetMaxY: 12,
+    room: {
+      gateHalfX: 7.5, gateMinZ: -39.5, gateMaxZ: -23.0,
+      minX: -6.1, maxX: 6.1, minZ: -38.0, maxZ: -25.1, maxY: 6.6
+    }
+  };
+
+  function inRoomGate(x, z) {
+    var r = CCW.BOUNDS.room;
+    return Math.abs(x) <= r.gateHalfX && z >= r.gateMinZ && z <= r.gateMaxZ;
+  }
+
+  // Clamp a position-like {x, y, z} in place; returns the vector.
+  CCW.clampVector = function (v, isTarget) {
+    var bd = CCW.BOUNDS, r = bd.room;
+    if (inRoomGate(v.x, v.z)) {
+      v.x = Math.max(r.minX, Math.min(r.maxX, v.x));
+      v.z = Math.max(r.minZ, Math.min(r.maxZ, v.z));
+      v.y = Math.max(bd.minY, Math.min(r.maxY, v.y));
+    } else {
+      var rad = isTarget ? bd.targetRadius : bd.plazaRadius;
+      var d = Math.sqrt(v.x * v.x + v.z * v.z);
+      if (d > rad && d > 0) {
+        var s = rad / d;
+        v.x *= s;
+        v.z *= s;
+      }
+      var yCap = isTarget ? bd.targetMaxY : bd.maxY;
+      v.y = Math.max(bd.minY, Math.min(yCap, v.y));
+    }
+    return v;
+  };
+
+  // Clamp a camera's position, and keep its look point in bounds
+  // too. NOTE: on this Babylon build a TargetCamera's getTarget()
+  // does NOT return the look point (it returns the world origin —
+  // setTarget is stored as rotation), so the look point is derived
+  // honestly as position + the camera's real direction. Given the
+  // position rules above, that point (1 m ahead) can never actually
+  // leave the target bounds — the pass exists so the guarantee is
+  // enforced, not assumed, and it re-aims only if it ever engages.
+  // Returns true when anything moved.
+  CCW.clampCamera = function (B, cam) {
+    if (!cam || !cam.position) return false;
+    var changed = false;
+    var px = cam.position.x, py = cam.position.y, pz = cam.position.z;
+    CCW.clampVector(cam.position, false);
+    if (cam.position.x !== px || cam.position.y !== py || cam.position.z !== pz) {
+      changed = true;
+    }
+    if (cam.getDirection && cam.setTarget) {
+      var look = cam.position.add(cam.getDirection(new B.Vector3(0, 0, 1)));
+      var lx = look.x, ly = look.y, lz = look.z;
+      CCW.clampVector(look, true);
+      if (Math.abs(look.x - lx) > 1e-6 || Math.abs(look.y - ly) > 1e-6 ||
+          Math.abs(look.z - lz) > 1e-6) {
+        cam.setTarget(look);
+        changed = true;
+      }
+    }
+    return changed;
+  };
+
+  /*
+   * Touch walking (M2b — the desktop walk camera is keyboard-first,
+   * so on Jay's phone Walking mode did nothing usable). Hold-to-move
+   * on-screen buttons drive the walk camera: forward/back along the
+   * camera's horizontal look direction, left/right by re-aiming its
+   * target around Y. The DOM lives in index.html (#touch-walk);
+   * wireTouchWalk binds it to a walker and returns show/hide.
+   */
+  CCW.TOUCH_WALK = { speed: 3.4, turn: 1.7 }; // m/s, rad/s
+
+  CCW.createTouchWalker = function (B) {
+    var flags = { fwd: false, back: false, left: false, right: false };
+    // The camera's real look direction. (getTarget() is NOT usable
+    // for this on this Babylon build — see clampCamera's note.)
+    function lookDir(cam) {
+      if (!cam.getDirection) return null;
+      return cam.getDirection(new B.Vector3(0, 0, 1));
+    }
+    function flatForward(cam) {
+      var f = lookDir(cam);
+      if (!f) return null;
+      f.y = 0;
+      if (f.lengthSquared() < 1e-6) return null;
+      return f.normalize();
+    }
+    return {
+      flags: flags,
+      set: function (key, on) { if (key in flags) flags[key] = !!on; },
+      clear: function () {
+        flags.fwd = flags.back = flags.left = flags.right = false;
+      },
+      anyDown: function () {
+        return flags.fwd || flags.back || flags.left || flags.right;
+      },
+      update: function (cam, dtMs) {
+        if (!this.anyDown()) return false;
+        var dt = Math.min(Math.max(dtMs || 0, 0), 100) / 1000;
+        if (flags.left || flags.right) {
+          // Positive angle turns left (forward swings toward -X when
+          // facing the Arcade from spawn). Re-aim via setTarget,
+          // which this camera family stores as rotation.
+          var dir0 = lookDir(cam);
+          if (dir0) {
+            var ang = CCW.TOUCH_WALK.turn * dt * (flags.left ? 1 : -1);
+            var c = Math.cos(ang), s = Math.sin(ang);
+            cam.setTarget(cam.position.add(new B.Vector3(
+              dir0.x * c + dir0.z * s, dir0.y, -dir0.x * s + dir0.z * c)));
+          }
+        }
+        var f = flatForward(cam);
+        if (f) {
+          var step = CCW.TOUCH_WALK.speed * dt;
+          if (flags.fwd) {
+            cam.position.x += f.x * step;
+            cam.position.z += f.z * step;
+          }
+          if (flags.back) {
+            cam.position.x -= f.x * step;
+            cam.position.z -= f.z * step;
+          }
+        }
+        return true;
+      }
+    };
+  };
+
+  CCW.isTouchDevice = function () {
+    try {
+      return ('ontouchstart' in root) ||
+        !!(root.navigator && root.navigator.maxTouchPoints > 0);
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Bind the #touch-walk buttons (env: { document, walker }). Any
+  // document-like object works, which is what lets the headless smoke
+  // exercise the wiring. Returns { element, show, hide, visible }
+  // or null when the pad markup is absent.
+  CCW.wireTouchWalk = function (env) {
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var pad = doc.getElementById('touch-walk');
+    if (!pad) return null;
+    var walker = env.walker;
+    var ids = {
+      'tw-fwd': 'fwd', 'tw-back': 'back',
+      'tw-left': 'left', 'tw-right': 'right'
+    };
+    Object.keys(ids).forEach(function (id) {
+      var btn = doc.getElementById(id);
+      if (!btn || !btn.addEventListener) return;
+      var key = ids[id];
+      btn.addEventListener('pointerdown', function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        walker.set(key, true);
+      });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (type) {
+        btn.addEventListener(type, function () { walker.set(key, false); });
+      });
+    });
+    return {
+      element: pad,
+      show: function () { pad.hidden = false; },
+      hide: function () { pad.hidden = true; walker.clear(); },
+      visible: function () { return !pad.hidden; }
+    };
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
