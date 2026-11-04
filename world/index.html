@@ -10,9 +10,9 @@
   ?v= token. Her phone once kept serving a cached build after a new
   deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
   DEPLOY: increment the token on ALL of these URLs in the same edit.
-  Current token: 2026-11-04-9 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6, the Theater view-glide fix + entrance-pad hit-area widening is -7, the Library poster gallery is -8, the Pen-Pal Post interior is -9).
+  Current token: 2026-11-04-10 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6, the Theater view-glide fix + entrance-pad hit-area widening is -7, the Library poster gallery is -8, the Pen-Pal Post interior is -9, the Theater theme-picker preview is -10).
 -->
-<link rel="stylesheet" href="css/world.css?v=2026-11-04-9">
+<link rel="stylesheet" href="css/world.css?v=2026-11-04-10">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
@@ -124,8 +124,10 @@ window.setTimeout(function () {
     <div id="theater-list" class="theater-list"></div>
     <div class="game-card-actions">
       <button id="theater-stage" type="button" class="btn">🎭 Live art takes the stage</button>
+      <button id="theater-view-card" type="button" class="btn">🎨 View</button>
       <button id="theater-close" type="button" class="btn btn-parlor">Back to the theater</button>
     </div>
+    <div id="skin-pop-card" class="skin-pop" hidden></div>
   </div>
 </div>
 
@@ -136,9 +138,11 @@ window.setTimeout(function () {
     <button id="theater-stand" type="button" class="btn" hidden>🚶 Stand up</button>
     <button id="theater-full" type="button" class="btn">⛶ Full screen</button>
     <button id="theater-aud" type="button" class="btn">👥 Audience view</button>
+    <button id="theater-view" type="button" class="btn">🎨 View</button>
     <button id="theater-bar-stage" type="button" class="btn">🎭 Stage</button>
     <button id="theater-stop" type="button" class="btn">⏹ Stop film</button>
   </div>
+  <div id="skin-pop" class="skin-pop" hidden></div>
 </div>
 
 <div id="theater-fs" class="theater-fs" hidden>
@@ -228,11 +232,11 @@ window.setTimeout(function () {
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js?v=2026-11-04-9"></script>
-<script src="js/palette.js?v=2026-11-04-9"></script>
-<script src="js/plaza.js?v=2026-11-04-9"></script>
-<script src="js/cameras.js?v=2026-11-04-9"></script>
-<script src="js/main.js?v=2026-11-04-9"></script>
+<script src="vendor/babylon.js?v=2026-11-04-10"></script>
+<script src="js/palette.js?v=2026-11-04-10"></script>
+<script src="js/plaza.js?v=2026-11-04-10"></script>
+<script src="js/cameras.js?v=2026-11-04-10"></script>
+<script src="js/main.js?v=2026-11-04-10"></script>
 <script>
 /* If the library itself failed to load or parse (the old-Safari
    failure shape), say so in plain language instead of sitting blank. */
