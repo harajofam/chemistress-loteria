@@ -208,3 +208,36 @@ self-hosted `../colyseus.js` bundle). Full standard chess for exactly
   suites, then `test/run-chess-tests.js` (perft against the
   canonical counts + hard-rules units + scripted/staged games + bot
   games with a FEN replica audit + static checks).
+
+## Mancala — The Game Parlor's fourth table (`chemistress_mancala`)
+
+The same process also hosts the Mancala room and serves its flat
+client at `/mancala/` (files in `../mancala/`; it loads the same
+self-hosted `../colyseus.js` bundle). Kalah mancala for exactly 2
+players; full rules as implemented live in
+`../MANCALA-BUILD-NOTES.md`.
+
+- **State is the full public board** — mancala has no hidden
+  information. The position syncs as a 28-char string (14 slots ×
+  two-digit counts: six pits + a store per side) plus seats, turn,
+  last-sow bookkeeping, and captured/wins/draws tallies.
+- **Messages in:** `ready`, `sow { pit }` (the mover's OWN relative
+  pit index, 0–5), `resign`. Illegal sows get a private
+  `rejected { action, reason }` and change nothing.
+- **Messages out:** `welcome`, `game_start`, `moved` (with sowed /
+  last-slot / extra-turn / captured / swept detail and both store
+  counts), `game_result` ('win' | 'tie' | 'resign' | 'forfeit').
+  First seat is pink (bottom) and sows first. Sowing is
+  counterclockwise through the mover's own store, never the
+  opponent's; a last seed in the store sows again; a last seed alone
+  in an empty own pit captures it plus the opposite pit (the lone
+  seed banks even when opposite is empty). The game ends the moment
+  a side's pits empty — the other side's seeds sweep to its store;
+  24–24 is a tie.
+- **Env knobs:** `MANCALA_TEST_HOOKS=1` (enables the lobby-only
+  `setup_game` staging message — **never in production**).
+- **Tests:** `npm test` runs the Lotería, Dominoes, Checkers, and
+  Chess suites, then `test/run-mancala-tests.js` (sowing/capture/
+  sweep units + staged endgames + illegal-sow battery + full bot
+  games with a per-broadcast 48-seed conservation audit + static
+  checks).
