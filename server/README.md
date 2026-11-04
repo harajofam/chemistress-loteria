@@ -177,3 +177,34 @@ exactly 2 players; full rules as implemented live in
   `test/run-checkers-tests.js` (unit move-generation + staged
   endgames/chains + illegal-move battery + full bot games + static
   checks).
+
+## Chess — The Game Parlor's third table (`chemistress_chess`)
+
+The same process also hosts the Chess room and serves its flat
+client at `/chess/` (files in `../chess/`; it loads the same
+self-hosted `../colyseus.js` bundle). Full standard chess for exactly
+2 players; full rules as implemented live in
+`../CHESS-BUILD-NOTES.md`.
+
+- **State is the full public board** — chess has no hidden
+  information. The position syncs as a FEN string plus seats, turn,
+  check flag, the move list as text, captured trays, and a standing
+  draw offer.
+- **Messages in:** `ready`, `move { from, to, promotion? }` (squares
+  in algebraic notation, e.g. `{ from: 'e2', to: 'e4' }`; promotion
+  is the mover's choice of 'Q'|'R'|'B'|'N'), `resign`, `offer_draw`,
+  `accept_draw`, `decline_draw`. Illegal moves get a private
+  `rejected { action, reason }` and change nothing.
+- **Messages out:** `welcome`, `game_start`, `legal_moves` (the
+  mover's exact legal moves, dealt privately each turn — a client
+  rendering convenience; moves are re-validated from scratch),
+  `moved` (with SAN), `draw_offered` / `draw_declined`, `game_result`
+  ('checkmate' | 'stalemate' | 'threefold' | 'fifty_move' |
+  'draw_agreement' | 'resign' | 'forfeit'). First seat is pink
+  (White's role) and moves first. No chess clock in v1.
+- **Env knobs:** `CHESS_TEST_HOOKS=1` (enables the lobby-only
+  `setup_game { fen }` staging message — **never in production**).
+- **Tests:** `npm test` runs the Lotería, Dominoes, and Checkers
+  suites, then `test/run-chess-tests.js` (perft against the
+  canonical counts + hard-rules units + scripted/staged games + bot
+  games with a FEN replica audit + static checks).
