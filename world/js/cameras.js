@@ -190,7 +190,7 @@
    *    couple of meters short of the walls all the way around, and
    *    the chapel wall behind spawn (z = 19.2) stays out of reach
    *    only via the same radius — the radius is the rule everywhere.
-   *  - The Arcade room is the one sanctioned interior: a camera in
+   *  - The Game Parlor room is the sanctioned interior: a camera in
    *    its gate box (|x| <= 7.5, z in [-39.5, -23]) is instead
    *    clamped to the room itself (x in [-6.1, 6.1], z in
    *    [-38.0, -25.1], y <= 6.6) — just inside its walls and door.
@@ -198,7 +198,7 @@
    *    drifting through a wall.
    *  - Look targets get the same gate test with a wider Plaza radius
    *    (34 m) and a lower ceiling (12 m), so a visitor can still look
-   *    AT the facades, the chapel sign, and — from the Arcade entry —
+   *    AT the facades, the chapel sign, and — from the parlor entry —
    *    the gallery wall at the room's back (target z = -32).
    */
   CCW.BOUNDS = {
@@ -308,7 +308,7 @@
         var dt = Math.min(Math.max(dtMs || 0, 0), 100) / 1000;
         if (flags.left || flags.right) {
           // Positive angle turns left (forward swings toward -X when
-          // facing the Arcade from spawn). Re-aim via setTarget,
+          // facing the Game Parlor from spawn). Re-aim via setTarget,
           // which this camera family stores as rotation.
           var dir0 = lookDir(cam);
           if (dir0) {
