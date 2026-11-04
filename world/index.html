@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Chemistress Church Lounge — The Plaza</title>
+<link rel="stylesheet" href="css/world.css">
+</head>
+<body>
+<canvas id="world-canvas" touch-action="none"></canvas>
+
+<header class="hud hud-top">
+  <h1>Chemistress Church Lounge</h1>
+  <p class="hud-sub">The Plaza · adults-only members' world · M1 dressed</p>
+</header>
+
+<div class="hud hud-status" role="status">
+  <p id="world-status">Waking the Plaza…</p>
+</div>
+
+<nav class="hud hud-controls" aria-label="World controls">
+  <button id="btn-arcade" type="button" class="btn btn-arcade">🎲 Enter the Lotería Arcade</button>
+  <button id="btn-magic" type="button" class="btn">📱 Look around with your phone</button>
+  <button id="btn-walk" type="button" class="btn">🚶 Walking mode</button>
+</nav>
+
+<!--
+  Babylon.js is SELF-HOSTED (Jay's decision, 2026-11-03): the pinned
+  9.33.2 UMD build lives at vendor/babylon.js and the world never
+  loads a CDN at runtime (the colyseus.js lesson — borrowed streams
+  break silently). The world pins its own copy and never borrows the
+  game's files.
+-->
+<script src="vendor/babylon.js"></script>
+<script src="js/palette.js"></script>
+<script src="js/plaza.js"></script>
+<script src="js/cameras.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
