@@ -308,11 +308,14 @@
     });
     // The room's warm heart-light. Lights are not parented to the
     // zone group, so this one is placed in world space directly.
+    // (World fix pass, 2026-11-03: raised 0.9 → 1.4 and range
+    // 26 → 30 — the interior read DIM in a desktop browser; warm
+    // and cozy, and the Plaza's own lights are untouched.)
     var roomLight = new B.PointLight('parlor-int-light',
       new B.Vector3(uv[0] * (CCW.ZONE_RADIUS + 8), 5.4, uv[1] * (CCW.ZONE_RADIUS + 8)), scene);
-    roomLight.intensity = 0.9;
+    roomLight.intensity = 1.4;
     roomLight.diffuse = new B.Color3(1.0, 0.72, 0.5);
-    roomLight.range = 26;
+    roomLight.range = 30;
 
     // ---- Four game tables -------------------------------------------
     // Front pair near the door, back pair under the gallery wall.
@@ -614,6 +617,18 @@
       position: [uv[0] * (CCW.ZONE_RADIUS - 4.4), 1.7, uv[1] * (CCW.ZONE_RADIUS - 4.4)],
       target: [uv[0] * CCW.ZONE_RADIUS, 2.3, uv[1] * CCW.ZONE_RADIUS]
     };
+    if (zone.id === 'studio') {
+      // Creator Studio exception (world fix pass, 2026-11-03): the
+      // Studio shares the +Z axis with the entrance chapel, whose
+      // wall spans z 18.8–19.6 — the generic threshold (radius 19.6)
+      // lands the camera EXACTLY on the wall's back face, at the end
+      // of a glide path that clips through the wall and its stained-
+      // glass window. Land 0.8 m deeper (radius 20.4, still inside
+      // the camera bounds at 21), clear of the wall plane, facing
+      // the Studio door.
+      threshold.position = [uv[0] * (CCW.ZONE_RADIUS - 3.6), 1.7,
+        uv[1] * (CCW.ZONE_RADIUS - 3.6)];
+    }
 
     var result = { group: group, meshes: meshes, portalMeshes: [], threshold: threshold, returnPad: pad };
 
@@ -723,7 +738,7 @@
   /*
    * Build the dressed Plaza into `scene`.
    * Returns { zones, portalMeshes, teleports } where each teleport is
-   * { mesh, destPos, destTarget, label }.
+   * { mesh, ringMesh, destPos, destTarget, label, landed }.
    */
   CCW.buildWorld = function (scene, B) {
     var P = CCW.PALETTE;
@@ -860,15 +875,23 @@
       padRingM.position.set(uv[0] * 8.5, 0.05, uv[1] * 8.5);
       padRingM.material = CCW.glowMat(scene, B, zone.id + '-plaza-pad-ring-mat', P.gold);
 
+      // `landed` is the status line main.js posts the moment the
+      // glide completes (world fix pass, 2026-11-03) — the parlor
+      // ride ends INSIDE the room; the other zone rides end at the
+      // door; every return ride restores the Plaza welcome line.
       teleports.push({
         mesh: pad, ringMesh: padRingM,
         destPos: built.threshold.position, destTarget: built.threshold.target,
-        label: zone.name
+        label: zone.name,
+        landed: zone.id === 'arcade'
+          ? 'You are in the Game Parlor. Classic games, played together.'
+          : 'You are at the ' + zone.name + '.'
       });
       teleports.push({
         mesh: built.returnPad, ringMesh: null,
         destPos: CCW.SPAWN.position.slice(), destTarget: CCW.SPAWN.target.slice(),
-        label: 'the Plaza'
+        label: 'the Plaza',
+        landed: 'Welcome to the Plaza. The Game Parlor glows pink ahead of you.'
       });
       // Rooms with an interior (the Game Parlor) register their
       // inside return pad as an additional ride back to the Plaza.
@@ -876,7 +899,8 @@
         teleports.push({
           mesh: built.interiorReturn.mesh, ringMesh: built.interiorReturn.ringMesh,
           destPos: CCW.SPAWN.position.slice(), destTarget: CCW.SPAWN.target.slice(),
-          label: 'the Plaza'
+          label: 'the Plaza',
+          landed: 'Welcome to the Plaza. The Game Parlor glows pink ahead of you.'
         });
       }
     });
