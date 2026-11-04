@@ -442,15 +442,18 @@
     });
   };
 
-  // Checkerboard floor for the parlor interior (M2a): deep plum checks
+  // Checkerboard floor for the parlor interior (M2a): plum checks
   // with gold grout — the hall floor under the game tables.
+  // (Lighting round 2, 2026-11-03: both checks lifted a step —
+  // less black-plum, same contrast. This texture serves the
+  // parlor floor only.)
   CCW.checkerTexture = function (scene, B, name) {
     var P = CCW.PALETTE;
     return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
       var n = 8, cell = w / n;
       for (var r = 0; r < n; r++) {
         for (var c = 0; c < n; c++) {
-          ctx.fillStyle = (r + c) % 2 ? '#33153f' : '#1f0726';
+          ctx.fillStyle = (r + c) % 2 ? '#47265c' : '#2e123e';
           ctx.fillRect(c * cell, r * cell, cell, cell);
         }
       }
