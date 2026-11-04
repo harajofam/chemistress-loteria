@@ -10,9 +10,9 @@
   ?v= token. Her phone once kept serving a cached build after a new
   deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
   DEPLOY: increment the token on ALL of these URLs in the same edit.
-  Current token: 2026-11-03-3 (M1 was -1, the M2a Arcade interior -2).
+  Current token: 2026-11-03-4 (M1 was -1, the interior -2, phone fixes -3).
 -->
-<link rel="stylesheet" href="css/world.css?v=2026-11-03-3">
+<link rel="stylesheet" href="css/world.css?v=2026-11-03-4">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
@@ -64,7 +64,7 @@ window.setTimeout(function () {
 
 <header class="hud hud-top">
   <h1>Chemistress Church Lounge</h1>
-  <p class="hud-sub">The Plaza · adults-only members' world · M2 — the Arcade room is open</p>
+  <p class="hud-sub">The Plaza · adults-only members' world · M2 — the Game Parlor is open</p>
 </header>
 
 <div class="hud hud-status" role="status">
@@ -72,7 +72,7 @@ window.setTimeout(function () {
 </div>
 
 <nav class="hud hud-controls" aria-label="World controls">
-  <button id="btn-arcade" type="button" class="btn btn-arcade">🎲 Enter the Lotería Arcade</button>
+  <button id="btn-parlor" type="button" class="btn btn-parlor">🁢 Enter the Game Parlor</button>
   <button id="btn-magic" type="button" class="btn">📱 Look around with your phone</button>
   <button id="btn-walk" type="button" class="btn">🚶 Walking mode</button>
   <button id="btn-reset" type="button" class="btn">🧭 Reset view</button>
@@ -101,11 +101,11 @@ window.setTimeout(function () {
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js?v=2026-11-03-3"></script>
-<script src="js/palette.js?v=2026-11-03-3"></script>
-<script src="js/plaza.js?v=2026-11-03-3"></script>
-<script src="js/cameras.js?v=2026-11-03-3"></script>
-<script src="js/main.js?v=2026-11-03-3"></script>
+<script src="vendor/babylon.js?v=2026-11-03-4"></script>
+<script src="js/palette.js?v=2026-11-03-4"></script>
+<script src="js/plaza.js?v=2026-11-03-4"></script>
+<script src="js/cameras.js?v=2026-11-03-4"></script>
+<script src="js/main.js?v=2026-11-03-4"></script>
 <script>
 /* If the library itself failed to load or parse (the old-Safari
    failure shape), say so in plain language instead of sitting blank. */
