@@ -1414,6 +1414,97 @@
       }
     });
 
+    // ---- The theme-skin registry (THEME-PICKER PREVIEW, 2026-11-04)
+    // Every material, light, and decor mesh a Theater skin may
+    // touch, grouped by ROLE (spec §2.1). Capture only: the
+    // baseline (Dream Pop) is exactly what this builder just made,
+    // and CCW.applyTheaterSkin snapshots it before the first swap
+    // and restores it by identity. The return pad / ring / sign
+    // are deliberately ABSENT — they keep Dream Pop ink in every
+    // skin (the spec's wayfinding exception), as do the pad's pick
+    // proxy and every view above.
+    var meshByName = {};
+    var skinMatByName = {};
+    intMeshes.forEach(function (m) {
+      meshByName[m.name] = m;
+      if (m.material && m.material.name) skinMatByName[m.material.name] = m.material;
+    });
+    function roleMats(names) {
+      return names.map(function (n) { return skinMatByName[n]; })
+        .filter(function (m) { return !!m; });
+    }
+    function roleMeshes(names) {
+      return names.map(function (n) { return meshByName[n]; })
+        .filter(function (m) { return !!m; });
+    }
+    var skinBenches = [0, 1, 2, 3].map(function (r) {
+      return {
+        seatBack: roleMats([
+          'theater-int-bench-r' + r + '-l-seat-mat', 'theater-int-bench-r' + r + '-l-back-mat',
+          'theater-int-bench-r' + r + '-r-seat-mat', 'theater-int-bench-r' + r + '-r-back-mat'
+        ]),
+        cushion: roleMats([
+          'theater-int-bench-r' + r + '-l-cushion-mat', 'theater-int-bench-r' + r + '-r-cushion-mat'
+        ])
+      };
+    });
+    var skinRoles = {
+      wall: roleMats(['theater-int-wall-back-mat', 'theater-int-wall-side-mat-0',
+        'theater-int-wall-side-mat-1', 'theater-int-front-mat']),
+      ceiling: [ceiling.material],
+      floor: [floor.material, stage.material],
+      board: [progBoard.material],
+      poster: [poster.material],
+      marqueeTrim: [marqueeTrim.material],
+      runner: [runner.material],
+      glass: roleMats(['theater-int-lancet-mat-0', 'theater-int-lancet-mat-1',
+        'theater-int-sidelight-left-mat-0', 'theater-int-sidelight-left-mat-1',
+        'theater-int-sidelight-right-mat-0', 'theater-int-sidelight-right-mat-1']),
+      frameSet: roleMats(['theater-int-door-frame-mat', 'theater-int-wainscot-back-mat',
+        'theater-int-wainscot-side-mat-0', 'theater-int-wainscot-side-mat-1',
+        'theater-int-lancet-frame-mat-0', 'theater-int-lancet-frame-mat-1',
+        'theater-int-program-frame-mat', 'theater-int-poster-frame-mat',
+        'theater-int-sidelight-left-frame-mat-0', 'theater-int-sidelight-left-frame-mat-1',
+        'theater-int-sidelight-right-frame-mat-0', 'theater-int-sidelight-right-frame-mat-1']),
+      aisleTrim: roleMats(['theater-int-aisle-trim-mat-0', 'theater-int-aisle-trim-mat-1']),
+      lamps: roleMats(['theater-int-lamp-globe-mat-0', 'theater-int-lamp-globe-mat-1',
+        'theater-int-lamp-globe-mat-2', 'theater-int-lamp-globe-mat-3',
+        'theater-int-pendant-globe-mat-0', 'theater-int-pendant-globe-mat-1',
+        'theater-int-stage-footlight-mat-0', 'theater-int-stage-footlight-mat-1']),
+      lampPosts: roleMats(['theater-int-lamp-post-mat-0', 'theater-int-lamp-post-mat-1',
+        'theater-int-lamp-post-mat-2', 'theater-int-lamp-post-mat-3',
+        'theater-int-pendant-cord-mat-0', 'theater-int-pendant-cord-mat-1',
+        'theater-int-stage-mic-pole-mat']),
+      plants: roleMats(['theater-int-plant-l-pot-mat', 'theater-int-plant-r-pot-mat']),
+      doorGlow: [doorGlowIn.material],
+      filmFrames: roleMats(['theater-int-filmframe-mat-0', 'theater-int-filmframe-mat-1']),
+      rings: roleMats(['theater-int-constellation-mat-0', 'theater-int-constellation-mat-1']),
+      label: [marquee.material]
+    };
+    var skinAllMats = [glassMaterial, screenFrame.material];
+    Object.keys(skinRoles).forEach(function (k) {
+      skinRoles[k].forEach(function (m) { skinAllMats.push(m); });
+    });
+    skinBenches.forEach(function (b) {
+      b.seatBack.forEach(function (m) { skinAllMats.push(m); });
+      b.cushion.forEach(function (m) { skinAllMats.push(m); });
+    });
+    var skinHandle = {
+      roles: skinRoles,
+      benches: skinBenches,
+      screenGlass: glassMaterial,
+      screenFrame: screenFrame.material,
+      lights: intLights,
+      decor: {
+        moon: roleMeshes(['theater-int-moon', 'theater-int-moon-shadow']),
+        stars: roleMeshes(['theater-int-star-0', 'theater-int-star-1', 'theater-int-star-2']),
+        frames: roleMeshes(['theater-int-filmframe-0', 'theater-int-filmframe-1']),
+        rings: roleMeshes(['theater-int-constellation-0', 'theater-int-constellation-1'])
+      },
+      allMats: skinAllMats,
+      baseline: null
+    };
+
     var entranceView = {
       position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
       target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
@@ -1436,6 +1527,9 @@
         boardMeshes: [progFrame, progBoard],
         screen: screen,
         glassMaterial: glassMaterial,
+        // The theme-picker's handle (spec §2.1): surfaces, light,
+        // and decor a skin may swap — nothing else lives here.
+        skin: skinHandle,
         views: {
           landing: entranceView,
           seat: {
@@ -1450,6 +1544,268 @@
       }
     };
   }
+
+  // ==================================================================
+  // THEATER THEME SKINS — the picker engine (THEME-PICKER PREVIEW,
+  // 2026-11-04; contract: theme-picker-preview/THEME-PICKER-PREVIEW-
+  // SPEC.md + skins.json). Jay's teaching tool: the same room, the
+  // same moment, different eyes — each visitor picks the Theater's
+  // skin for THEIR OWN view. A skin swaps SURFACES, LIGHT, and
+  // DECOR VISIBILITY only: never geometry, never a mesh position,
+  // never the views, never the film path. Three skins:
+  //   dream-pop       — the live Surrealism + Pop Art build; the
+  //                     default, and the baseline every swap
+  //                     restores from (by object identity).
+  //   emblem-poster   — the Theater as a CHEAT CODE title card:
+  //                     black fields, cream frames, flat jewel
+  //                     color, tarot emblems, ribbon line-work.
+  //   physical-church — the chapel of Jay's photos: the arch
+  //                     painted inside the glass texture (F1),
+  //                     hotter pink walls, deep teal woodwork,
+  //                     the shared star-chart ceiling, an ornate
+  //                     rug, the warmest light, dream layer hidden.
+  // A skin's procedural textures generate LAZILY on first
+  // selection and are cached by name; zero image bytes, zero
+  // load-time cost for unchosen skins. The choice persists in
+  // localStorage ('ccw-theater-skin') — the visitor's own view
+  // only; nothing about a skin is ever shared or sent anywhere.
+  // ==================================================================
+  CCW.THEATER_SKINS = [
+    { id: 'dream-pop', label: 'Dream Pop', tagline: 'Surrealism + Pop Art — the Theater as it dreams' },
+    { id: 'emblem-poster', label: 'Emblem Poster', tagline: 'The Theater as a CHEAT CODE title card' },
+    { id: 'physical-church', label: 'Physical Church', tagline: 'The chapel as it stands — pink walls, teal wood, star ceiling' }
+  ];
+  CCW.THEATER_SKIN_KEY = 'ccw-theater-skin';
+  CCW._theaterSkin = null;
+  CCW._skinTex = {};
+
+  function theaterSkinValid(id) {
+    return CCW.THEATER_SKINS.some(function (s) { return s.id === id; });
+  }
+  function theaterSkinStorage() {
+    // The Pen-Pal storage pattern: private browsing or a refused
+    // store must never break the room.
+    try { return root.localStorage || null; } catch (e) { return null; }
+  }
+  CCW.theaterSkinId = function () {
+    if (CCW._theaterSkin) return CCW._theaterSkin;
+    var ls = theaterSkinStorage();
+    var stored = null;
+    if (ls) { try { stored = ls.getItem(CCW.THEATER_SKIN_KEY); } catch (e) {} }
+    return theaterSkinValid(stored) ? stored : 'dream-pop';
+  };
+
+  function snapshotTheaterBaseline(handle) {
+    var mats = {};
+    handle.allMats.forEach(function (m) {
+      if (!m || mats[m.name]) return;
+      mats[m.name] = {
+        mat: m,
+        diffuseTexture: m.diffuseTexture || null,
+        emissiveTexture: m.emissiveTexture || null,
+        opacityTexture: m.opacityTexture || null,
+        diffuseColor: m.diffuseColor ? m.diffuseColor.clone() : null,
+        emissiveColor: m.emissiveColor ? m.emissiveColor.clone() : null
+      };
+    });
+    var lights = handle.lights.map(function (l) {
+      return {
+        light: l,
+        intensity: l.intensity,
+        diffuse: l.diffuse ? l.diffuse.clone() : null,
+        groundColor: l.groundColor ? l.groundColor.clone() : null
+      };
+    });
+    var decor = {};
+    Object.keys(handle.decor).forEach(function (k) {
+      decor[k] = handle.decor[k].map(function (m) {
+        return { mesh: m, visible: m.isVisible !== false };
+      });
+    });
+    return { mats: mats, lights: lights, decor: decor };
+  }
+
+  function restoreTheaterBaseline(handle) {
+    var base = handle.baseline;
+    Object.keys(base.mats).forEach(function (name) {
+      var s = base.mats[name];
+      // Textures come back by IDENTITY (the captured originals —
+      // zero regeneration); colors by value, from fresh clones so
+      // the snapshot itself can never be mutated by a later swap.
+      s.mat.diffuseTexture = s.diffuseTexture;
+      s.mat.emissiveTexture = s.emissiveTexture;
+      s.mat.opacityTexture = s.opacityTexture;
+      if (s.diffuseColor) s.mat.diffuseColor = s.diffuseColor.clone();
+      if (s.emissiveColor) s.mat.emissiveColor = s.emissiveColor.clone();
+    });
+    base.lights.forEach(function (s) {
+      s.light.intensity = s.intensity;
+      if (s.diffuse) s.light.diffuse = s.diffuse.clone();
+      if (s.groundColor) s.light.groundColor = s.groundColor.clone();
+    });
+    Object.keys(base.decor).forEach(function (k) {
+      base.decor[k].forEach(function (d) { d.mesh.isVisible = d.visible; });
+    });
+  }
+
+  // Lazy per-skin textures, cached by skin id (each texture's own
+  // name carries the skin suffix, per the spec's naming rule).
+  function theaterSkinTextures(scene, B, id) {
+    if (CCW._skinTex[id]) return CCW._skinTex[id];
+    var T = {};
+    if (id === 'emblem-poster') {
+      T.screen = CCW.emblemScreenTexture(scene, B, 'theater-int-screen-tex--emblem');
+      T.board = CCW.emblemBoardTexture(scene, B, 'theater-int-program-tex--emblem');
+      T.poster = CCW.emblemPosterTexture(scene, B, 'theater-int-poster-tex--emblem');
+      T.ceiling = CCW.emblemCeilingTexture(scene, B, 'theater-int-ceiling-tex--emblem');
+      T.floor = CCW.emblemCarpetTexture(scene, B, 'theater-int-floor-tex--emblem');
+      T.stage = CCW.emblemCarpetTexture(scene, B, 'theater-int-stage-tex--emblem');
+      T.runner = CCW.emblemRunnerTexture(scene, B, 'theater-int-aisle-runner-tex--emblem');
+      T.wall = CCW.libraryWallTexture(scene, B, 'theater-int-wall-tex--emblem', 'emblem');
+      T.glass = CCW.emblemGlassTexture(scene, B, 'theater-int-glass-tex--emblem');
+      T.filmFrame = CCW.emblemFilmFrameTexture(scene, B, 'theater-int-filmframe-tex--emblem');
+      T.marqueeTrim = CCW.emblemMarqueeTexture(scene, B, 'theater-int-marquee-trim-tex--emblem');
+      T.label = CCW.theaterLabelTexture(scene, B, 'theater-int-marquee-tex--emblem', '#fdf3e3');
+    } else if (id === 'physical-church') {
+      T.screen = CCW.chapelGlassTexture(scene, B, 'theater-int-screen-tex--church');
+      T.board = CCW.theaterProgramTexture(scene, B, 'theater-int-program-tex--church', 'church');
+      T.poster = CCW.theaterPopPosterTexture(scene, B, 'theater-int-poster-tex--church', 'church');
+      T.ceiling = CCW.starChartTexture(scene, B, 'theater-int-ceiling-tex--church');
+      T.floor = CCW.rugTexture(scene, B, 'theater-int-floor-tex--church');
+      T.stage = CCW.rugTexture(scene, B, 'theater-int-stage-tex--church');
+      T.runner = CCW.photoRunnerTexture(scene, B, 'theater-int-aisle-runner-tex--church');
+      T.wall = CCW.libraryWallTexture(scene, B, 'theater-int-wall-tex--church', 'church');
+      T.marqueeTrim = CCW.churchMarqueeTexture(scene, B, 'theater-int-marquee-trim-tex--church');
+      T.label = CCW.theaterLabelTexture(scene, B, 'theater-int-marquee-tex--church', '#fdf3e3');
+      // No T.glass on purpose: Physical Church keeps the baseline
+      // stained-glass texture OBJECT on the lancets + sidelights
+      // (spec §2.2 — only their teal frames re-ink).
+    }
+    CCW._skinTex[id] = T;
+    return T;
+  }
+
+  function swapSkinTex(handle, mats, tex) {
+    mats.forEach(function (m) {
+      if (!m) return;
+      var snap = handle.baseline.mats[m.name];
+      m.diffuseTexture = tex;
+      // The baseline's own slot pattern rides along: a material
+      // that glowed with its texture glows with the skin's, and an
+      // alpha-cut texture keeps its alpha cut.
+      if (snap && snap.emissiveTexture) m.emissiveTexture = tex;
+      if (snap && snap.opacityTexture) m.opacityTexture = tex;
+    });
+  }
+  function inkSkinMats(B, mats, diffuseHex, emissiveHex) {
+    mats.forEach(function (m) {
+      if (!m) return;
+      m.diffuseColor = CCW.hex(B, diffuseHex);
+      if (emissiveHex) m.emissiveColor = CCW.hex(B, emissiveHex);
+    });
+  }
+  function setSkinLight(B, handle, name, intensity, diffuse, ground) {
+    for (var i = 0; i < handle.lights.length; i++) {
+      var l = handle.lights[i];
+      if (l.name !== name) continue;
+      l.intensity = intensity;
+      if (diffuse) l.diffuse = new B.Color3(diffuse[0], diffuse[1], diffuse[2]);
+      if (ground && l.groundColor) l.groundColor = new B.Color3(ground[0], ground[1], ground[2]);
+      return;
+    }
+  }
+  function setSkinDecor(handle, key, visible) {
+    (handle.decor[key] || []).forEach(function (m) { m.isVisible = visible; });
+  }
+
+  function applyTheaterSkinLook(scene, B, handle, id) {
+    var T = theaterSkinTextures(scene, B, id);
+    var R = handle.roles;
+    swapSkinTex(handle, R.wall, T.wall);
+    swapSkinTex(handle, R.ceiling, T.ceiling);
+    swapSkinTex(handle, [R.floor[0]], T.floor);
+    swapSkinTex(handle, [R.floor[1]], T.stage);
+    // THE FILM RULE: while a film plays, the screen mesh wears the
+    // film's material — skins write ONLY to this captured glass
+    // material object, never to the screen mesh's live material,
+    // so a mid-film skin change simply waits in the glass and
+    // appears when stopFilm restores it.
+    swapSkinTex(handle, [handle.screenGlass], T.screen);
+    if (T.glass) swapSkinTex(handle, R.glass, T.glass);
+    swapSkinTex(handle, R.board, T.board);
+    swapSkinTex(handle, R.poster, T.poster);
+    swapSkinTex(handle, R.marqueeTrim, T.marqueeTrim);
+    swapSkinTex(handle, R.label, T.label);
+    swapSkinTex(handle, R.runner, T.runner);
+    if (T.filmFrame) swapSkinTex(handle, R.filmFrames, T.filmFrame);
+
+    if (id === 'emblem-poster') {
+      var CREAM = '#fdf3e3', BLACK = '#0d0510', AMBER = '#e8871e';
+      inkSkinMats(B, R.frameSet, CREAM);
+      inkSkinMats(B, R.aisleTrim, '#0b7a70');
+      inkSkinMats(B, [handle.screenFrame], BLACK);
+      inkSkinMats(B, R.lamps, CREAM, AMBER);
+      inkSkinMats(B, R.lampPosts, BLACK);
+      inkSkinMats(B, R.plants, AMBER);
+      inkSkinMats(B, R.doorGlow, AMBER, AMBER);
+      inkSkinMats(B, R.rings, CREAM, CREAM);
+      var jewels = ['#12c2b2', '#ff2e88', '#e8871e', '#8f7fd4'];
+      handle.benches.forEach(function (bench, r) {
+        inkSkinMats(B, bench.seatBack, jewels[r]);
+        inkSkinMats(B, bench.cushion, CREAM);
+      });
+      setSkinDecor(handle, 'moon', false);
+      setSkinDecor(handle, 'stars', false);
+      setSkinLight(B, handle, 'theater-int-hemi', 0.38, [0.92, 0.86, 0.78], [0.10, 0.04, 0.14]);
+      setSkinLight(B, handle, 'theater-int-screen-light', 1.0, [1.0, 0.85, 0.60], null);
+      setSkinLight(B, handle, 'theater-int-house-light', 0.30, [1.0, 0.85, 0.62], null);
+    } else if (id === 'physical-church') {
+      var TEALWOOD = '#0b5a54';
+      inkSkinMats(B, R.frameSet, TEALWOOD);
+      inkSkinMats(B, R.aisleTrim, TEALWOOD);
+      inkSkinMats(B, [handle.screenFrame], TEALWOOD);
+      // Everything else — benches, lamps, plants, door glow, the
+      // stained glass itself — keeps the restored baseline: the
+      // chapel as it stands. The dream layer rests, all of it.
+      setSkinDecor(handle, 'moon', false);
+      setSkinDecor(handle, 'stars', false);
+      setSkinDecor(handle, 'frames', false);
+      setSkinDecor(handle, 'rings', false);
+      setSkinLight(B, handle, 'theater-int-hemi', 0.72, [1.0, 0.87, 0.74], [0.36, 0.20, 0.32]);
+      setSkinLight(B, handle, 'theater-int-screen-light', 1.05, [1.0, 0.78, 0.66], null);
+      setSkinLight(B, handle, 'theater-int-house-light', 0.60, [1.0, 0.86, 0.68], null);
+    }
+  }
+
+  CCW.applyTheaterSkin = function (scene, B, world, skinId) {
+    var theater = world && world.theater;
+    if (!theater || !theater.skin) return CCW.theaterSkinId();
+    var handle = theater.skin;
+    var id = theaterSkinValid(skinId) ? skinId : CCW.theaterSkinId();
+    if (!handle.baseline) handle.baseline = snapshotTheaterBaseline(handle);
+    // Restore first, then dress: a swap can only ever produce the
+    // spec'd look from the true baseline, and 'dream-pop' after
+    // any swap is the baseline itself — byte-identical materials.
+    restoreTheaterBaseline(handle);
+    if (id !== 'dream-pop') applyTheaterSkinLook(scene, B, handle, id);
+    CCW._theaterSkin = id;
+    var ls = theaterSkinStorage();
+    if (ls) { try { ls.setItem(CCW.THEATER_SKIN_KEY, id); } catch (e) {} }
+    try {
+      // The CSS hook for the card/bar chrome. In a real browser
+      // body.dataset is a READ-ONLY accessor — assigning the map
+      // itself throws (strict mode) and the hook silently dies
+      // (render-harness caught, 2026-11-04); only the property is
+      // ever assigned. Stub bodies without a dataset get one made.
+      var doc = root.document;
+      var body = doc && doc.body;
+      if (body) {
+        if (!body.dataset) { try { body.dataset = {}; } catch (e) {} }
+        if (body.dataset) body.dataset.theaterSkin = id;
+      }
+    } catch (e) {}
+    return id;
+  };
 
   // Place a mesh at a rotated offset around a furniture center:
   // (ox, oz) is the offset in the piece's own frame, phi its yaw

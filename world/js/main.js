@@ -319,8 +319,27 @@
         if (v) rideView(v.audience,
           '👥 The whole room together: the glowing screen, the benches, everyone watching.');
       },
-      fullscreen: function (on) { if (on) openFullscreen(); else closeFullscreen(); }
+      fullscreen: function (on) { if (on) openFullscreen(); else closeFullscreen(); },
+      // The theme picker (THEME-PICKER PREVIEW, 2026-11-04): the
+      // 🎨 View control's engine — each visitor's Theater skin is
+      // THEIR OWN view (plaza.js CCW.applyTheaterSkin; surfaces,
+      // light, and decor only — the film, the index, and every
+      // view stay identical for everyone).
+      skin: {
+        options: CCW.THEATER_SKINS || [],
+        current: function () {
+          return CCW.theaterSkinId ? CCW.theaterSkinId() : 'dream-pop';
+        },
+        choose: function (id) {
+          if (CCW.applyTheaterSkin) CCW.applyTheaterSkin(scene, B, world, id);
+        }
+      }
     });
+    // Resolve the visitor's saved Theater skin once the world
+    // exists. For 'dream-pop' with no prior swap this reassigns
+    // the baseline's own materials — materially a no-op; a saved
+    // Emblem or Church choice dresses the room before first paint.
+    if (CCW.applyTheaterSkin) CCW.applyTheaterSkin(scene, B, world);
     // The program board (and its frame) are tap targets: a tap
     // opens the index card — never a navigation; the films play
     // inside this room.

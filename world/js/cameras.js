@@ -603,6 +603,80 @@
       onSit = cb('sit'), onStand = cb('stand'), onAud = cb('audience'),
       onFull = cb('fullscreen');
 
+    // ---- The theme picker (THEME-PICKER PREVIEW, 2026-11-04) ----
+    // OPTIONAL chrome: a "🎨 View" button in the watch bar and one
+    // in the catalog card, each opening a small popover of skin
+    // rows (radio-like: one tap applies, closes, persists). The
+    // skin engine lives behind env.skin (main.js injects
+    // CCW.applyTheaterSkin + CCW.THEATER_SKINS); this wiring only
+    // asks and tells. Absent markup or an absent env.skin leaves
+    // this controller exactly as it was — and a skin change never
+    // interrupts a playing film: it swaps surfaces only (the film
+    // rule lives in applyTheaterSkin).
+    var skinEnv = (env.skin && Array.isArray(env.skin.options) &&
+      typeof env.skin.choose === 'function') ? env.skin : null;
+    var skinMounts = [];
+    function skinCurrent() {
+      if (!skinEnv) return 'dream-pop';
+      try {
+        return (typeof skinEnv.current === 'function' && skinEnv.current()) || 'dream-pop';
+      } catch (e) { return 'dream-pop'; }
+    }
+    function refreshSkinMarks() {
+      var cur = skinCurrent();
+      skinMounts.forEach(function (mount) {
+        mount.rows.forEach(function (row) {
+          var on = row.id === cur;
+          row.btn.className = 'skin-row' + (on ? ' on' : '');
+          row.dot.textContent = on ? '●' : '';
+          if (row.btn.setAttribute) {
+            row.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          }
+        });
+      });
+    }
+    function closeSkinPops() {
+      skinMounts.forEach(function (mount) { mount.pop.hidden = true; });
+    }
+    function mountSkinPicker(btnId, popId) {
+      var btn = doc.getElementById(btnId);
+      var pop = doc.getElementById(popId);
+      if (!btn || !pop || !skinEnv) return;
+      var mount = { btn: btn, pop: pop, rows: [] };
+      skinEnv.options.forEach(function (opt) {
+        var row = doc.createElement('button');
+        row.type = 'button';
+        row.className = 'skin-row';
+        var dot = doc.createElement('span');
+        dot.className = 'skin-dot';
+        var name = doc.createElement('span');
+        name.className = 'skin-row-name';
+        name.textContent = opt.label;
+        var tag = doc.createElement('span');
+        tag.className = 'skin-row-tag';
+        tag.textContent = opt.tagline || '';
+        row.appendChild(dot);
+        row.appendChild(name);
+        row.appendChild(tag);
+        row.addEventListener('click', function () {
+          skinEnv.choose(opt.id);
+          refreshSkinMarks();
+          closeSkinPops();
+        });
+        pop.appendChild(row);
+        mount.rows.push({ id: opt.id, btn: row, dot: dot });
+      });
+      btn.addEventListener('click', function () {
+        var opening = pop.hidden;
+        closeSkinPops();
+        if (opening) { refreshSkinMarks(); pop.hidden = false; }
+      });
+      skinMounts.push(mount);
+    }
+    mountSkinPicker('theater-view', 'skin-pop');
+    mountSkinPicker('theater-view-card', 'skin-pop-card');
+    refreshSkinMarks();
+
     var mode = 'idle';       // 'idle' (glass) | 'watching'
     var current = null;      // the playing index entry
     var seated = false;
@@ -628,6 +702,7 @@
       bar.hidden = true;
     }
     function choose(entry) {
+      closeSkinPops();
       onPlay(entry);
       mode = 'watching';
       current = entry;
@@ -664,8 +739,9 @@
       });
     });
 
-    closeBtn.addEventListener('click', function () { card.hidden = true; });
+    closeBtn.addEventListener('click', function () { closeSkinPops(); card.hidden = true; });
     stageBtn.addEventListener('click', function () {
+      closeSkinPops();
       card.hidden = true;
       yieldTo(onStage);
     });
@@ -682,8 +758,14 @@
         card.hidden = false;
         if (mode === 'watching') bar.hidden = false;
       },
-      hideCatalog: function () { card.hidden = true; },
-      hideCard: function () { card.hidden = true; },
+      hideCatalog: function () { closeSkinPops(); card.hidden = true; },
+      hideCard: function () { closeSkinPops(); card.hidden = true; },
+      // The theme picker's surface (null-safe when unmounted).
+      skin: {
+        mounted: skinMounts.length,
+        refresh: refreshSkinMarks,
+        close: closeSkinPops
+      },
       setFullscreen: function (on) {
         // External sync (the fullscreen overlay's own close button
         // lives with the video owner in main.js).

@@ -846,8 +846,87 @@
   // Copyrighted titles must never be named as playing — not
   // here, not on the marquee, not in the glass; the smoke suite
   // guards that mechanically.
-  CCW.theaterProgramTexture = function (scene, B, name) {
+  CCW.theaterProgramTexture = function (scene, B, name, variant) {
     var P = CCW.PALETTE;
+    // THEME-PICKER 'church' variant (2026-11-04): the program as a
+    // numerology chart-board — deep navy field, fine gold chart
+    // work, cream serif, NO starburst/halftone. Every word and its
+    // place are the baseline's, verbatim; only the ink changes.
+    if (variant === 'church') {
+      return CCW.canvasTexture(scene, B, name, 768, 640, function (ctx, w, h) {
+        ctx.fillStyle = '#1b1440';
+        ctx.fillRect(0, 0, w, h);
+        var rnd = prand(419);
+        // The chart-board ground: fine gold rings + spokes + stars.
+        ctx.strokeStyle = 'rgba(245,197,66,0.20)'; ctx.lineWidth = 2;
+        [120, 210, 300].forEach(function (r) {
+          ctx.beginPath(); ctx.arc(w / 2, 330, r, 0, Math.PI * 2); ctx.stroke();
+        });
+        for (var sp = 0; sp < 12; sp++) {
+          var a = (sp / 12) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(w / 2 + Math.cos(a) * 120, 330 + Math.sin(a) * 120);
+          ctx.lineTo(w / 2 + Math.cos(a) * 300, 330 + Math.sin(a) * 300);
+          ctx.stroke();
+        }
+        for (var st = 0; st < 130; st++) {
+          star(ctx, rnd() * w, rnd() * h, 1.6 + rnd() * 2.6,
+            rnd() > 0.4 ? P.goldSoft : P.cream);
+        }
+        // Gold hairline frame, doubled (chart-board edging).
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 3;
+        ctx.strokeRect(10, 10, w - 20, h - 20);
+        ctx.strokeStyle = 'rgba(253,243,227,0.75)'; ctx.lineWidth = 1.6;
+        ctx.strokeRect(20, 20, w - 40, h - 40);
+        // Title block: navy slab, gold serif.
+        ctx.fillStyle = '#120c2c';
+        ctx.fillRect(50, 44, w - 108, 84);
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 2;
+        ctx.strokeRect(50, 44, w - 108, 84);
+        ctx.fillStyle = P.cream;
+        ctx.font = 'bold 40px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎬 NOW SHOWING', w / 2, 98);
+        ctx.fillStyle = P.gold;
+        ctx.font = 'bold 54px Georgia, serif';
+        ctx.fillText('CLASSIC CINEMA', w / 2, 186);
+        // Count band: deep teal woodwork ink.
+        ctx.fillStyle = '#0b5a54';
+        ctx.fillRect(96, 208, w - 192, 40);
+        ctx.fillStyle = '#fdf3e3';
+        ctx.font = 'bold 24px Georgia, serif';
+        ctx.fillText('83 public-domain classics · 1930s–1960s', w / 2, 237);
+        ctx.fillStyle = P.teal;
+        ctx.font = 'bold 20px Georgia, serif';
+        ctx.fillText('— HOUSE FAVORITES —', w / 2, 282);
+        ctx.fillStyle = P.cream;
+        ctx.font = '26px Georgia, serif';
+        var program = [
+          'Charade (1963)',
+          'His Girl Friday (1940)',
+          'Penny Serenade (1941)',
+          'And Then There Were None (1945)',
+          'Made for Each Other (1939)',
+          'Love Affair (1939)',
+          'Nothing Sacred (1937)'
+        ];
+        program.forEach(function (title, i) {
+          ctx.fillText(title, w / 2, 316 + i * 31);
+        });
+        // The invitation, on a deep-teal band.
+        ctx.fillStyle = '#0b5a54';
+        ctx.fillRect(64, 528, w - 128, 62);
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 2;
+        ctx.strokeRect(64, 528, w - 128, 62);
+        ctx.fillStyle = '#fdf3e3';
+        ctx.font = 'bold 24px Georgia, serif';
+        ctx.fillText('👆 Tap this board for the full index —', w / 2, 552);
+        ctx.fillText('every title free to watch, right here', w / 2, 580);
+        ctx.fillStyle = P.cream;
+        ctx.font = 'italic 21px Georgia, serif';
+        ctx.fillText('Live stage nights take the screen first 💜', w / 2, 620);
+      });
+    }
     return CCW.canvasTexture(scene, B, name, 768, 640, function (ctx, w, h) {
       // Halftone dot field over plum (pop's print-shop ground).
       ctx.fillStyle = '#2a0a33';
@@ -1103,8 +1182,60 @@
   // the program board: starburst, halftone dots, film-strip edge,
   // hard outlines. All text is house program text; no film art is
   // copied from anywhere (the posters are drawn, like the glass).
-  CCW.theaterPopPosterTexture = function (scene, B, name) {
+  CCW.theaterPopPosterTexture = function (scene, B, name, variant) {
     var P = CCW.PALETTE;
+    // THEME-PICKER 'church' variant (2026-11-04): the door poster
+    // as a framed chart-art print — navy field, gold line work,
+    // cream serif. Same words, same places; the pop ink rests.
+    if (variant === 'church') {
+      return CCW.canvasTexture(scene, B, name, 512, 640, function (ctx, w, h) {
+        ctx.fillStyle = '#1b1440';
+        ctx.fillRect(0, 0, w, h);
+        var rnd = prand(733);
+        for (var st = 0; st < 90; st++) {
+          star(ctx, rnd() * w, rnd() * h, 1.6 + rnd() * 2.4,
+            rnd() > 0.4 ? P.goldSoft : P.cream);
+        }
+        // Chart rings behind the headline.
+        ctx.strokeStyle = 'rgba(245,197,66,0.45)';
+        [66, 104, 142].forEach(function (r, i) {
+          ctx.lineWidth = i === 1 ? 3 : 2;
+          ctx.beginPath(); ctx.arc(w / 2, 172, r, 0, Math.PI * 2); ctx.stroke();
+        });
+        // Headline block: deep navy slab, gold hairline.
+        ctx.fillStyle = '#120c2c';
+        ctx.fillRect(66, 108, w - 132, 128);
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 2;
+        ctx.strokeRect(66, 108, w - 132, 128);
+        ctx.fillStyle = P.goldSoft;
+        ctx.font = 'bold 44px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('CLASSIC', w / 2, 158);
+        ctx.fillText('CINEMA', w / 2, 208);
+        ctx.fillStyle = P.cream;
+        ctx.font = 'bold 30px Georgia, serif';
+        ctx.fillText('★ 83 FILMS ★', w / 2, 300);
+        ctx.font = '26px Georgia, serif';
+        ctx.fillText('1930s — 1960s', w / 2, 342);
+        // The promise, on deep teal.
+        ctx.fillStyle = '#0b5a54';
+        ctx.fillRect(66, 396, w - 132, 74);
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 2;
+        ctx.strokeRect(66, 396, w - 132, 74);
+        ctx.fillStyle = '#fdf3e3';
+        ctx.font = 'bold 31px Georgia, serif';
+        ctx.fillText('FREE FOREVER', w / 2, 444);
+        ctx.fillStyle = P.cream;
+        ctx.font = 'italic 23px Georgia, serif';
+        ctx.fillText('old movies, always free —', w / 2, 522);
+        ctx.fillText('tap the board by the door 💜', w / 2, 554);
+        // Gold hairline frame + cream inner line.
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 3;
+        ctx.strokeRect(8, 8, w - 16, h - 16);
+        ctx.strokeStyle = 'rgba(253,243,227,0.75)'; ctx.lineWidth = 1.6;
+        ctx.strokeRect(18, 18, w - 36, h - 36);
+      });
+    }
     return CCW.canvasTexture(scene, B, name, 512, 640, function (ctx, w, h) {
       ctx.fillStyle = P.tealDeep;
       ctx.fillRect(0, 0, w, h);
@@ -1484,8 +1615,77 @@
   // with a shadow line and a pale highlight line), and a deeper
   // pink wainscot band along the bottom closed by a teal moulding
   // line with a gold pinstripe (fine-line gold only).
-  CCW.libraryWallTexture = function (scene, B, name) {
+  CCW.libraryWallTexture = function (scene, B, name, variant) {
     var P = CCW.PALETTE;
+    // THEME-PICKER variants (2026-11-04): the same drawn panelling,
+    // re-inked. 'emblem' = the tarot wall (deep plum-black panels,
+    // cream hairline moulding, a teal shadow line); 'church' = the
+    // photo wall (hotter pink field, deeper shade, a TEAL reveal in
+    // the panel grooves — her photos' pink walls carry teal
+    // woodwork shadows). The baseline draw below is untouched and
+    // stays the Library's + Dream Pop's wall, byte for byte.
+    if (variant === 'emblem' || variant === 'church') {
+      var ink = variant === 'emblem' ? {
+        field: '#1a051f', bandA: 'rgba(253,243,227,0.04)', bandB: 'rgba(0,0,0,0.28)',
+        spkA: 'rgba(253,243,227,0.07)', spkB: 'rgba(61,18,71,0.35)',
+        outer: 'rgba(18,194,178,0.55)', mid: 'rgba(253,243,227,0.85)',
+        inner: 'rgba(253,243,227,0.30)', wains: '#12060f',
+        groove: 'rgba(253,243,227,0.16)', topLine: '#fdf3e3'
+      } : {
+        field: '#f43fa0', bandA: 'rgba(255,255,255,0.05)', bandB: 'rgba(150,0,80,0.07)',
+        spkA: 'rgba(255,200,225,0.10)', spkB: 'rgba(150,0,80,0.12)',
+        outer: 'rgba(150,0,80,0.60)', mid: 'rgba(11,90,84,0.55)',
+        inner: 'rgba(255,200,225,0.50)', wains: '#c2185b',
+        groove: 'rgba(120,0,60,0.30)', topLine: P.tealDeep
+      };
+      return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+        ctx.fillStyle = ink.field;
+        ctx.fillRect(0, 0, w, h);
+        var rnd = prand(variant === 'emblem' ? 913 : 297);
+        for (var b = 0; b < 8; b++) {
+          ctx.fillStyle = b % 2 ? ink.bandA : ink.bandB;
+          ctx.fillRect(b * w / 8, 0, w / 8, h);
+        }
+        for (var s = 0; s < 2600; s++) {
+          ctx.fillStyle = rnd() > 0.5 ? ink.spkA : ink.spkB;
+          ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+        }
+        // Baked warm light: a soft falloff pool high on the wall,
+        // so the panels are lit, not printed (artistry standard).
+        var glow = ctx.createRadialGradient(w / 2, h * 0.18, 40, w / 2, h * 0.18, w * 0.62);
+        glow.addColorStop(0, variant === 'emblem' ? 'rgba(255,233,196,0.10)' : 'rgba(255,240,210,0.13)');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+        function strokeR(x, y, rw, rh) {
+          ctx.beginPath();
+          ctx.moveTo(x, y); ctx.lineTo(x + rw, y); ctx.lineTo(x + rw, y + rh);
+          ctx.lineTo(x, y + rh); ctx.closePath();
+          ctx.stroke();
+        }
+        var pw = w / 4;
+        for (var p = 0; p < 4; p++) {
+          var x0 = p * pw + 26, x1 = (p + 1) * pw - 26, y0 = 34, y1 = h * 0.70;
+          ctx.strokeStyle = ink.outer; ctx.lineWidth = 7;
+          strokeR(x0, y0, x1 - x0, y1 - y0);
+          ctx.strokeStyle = ink.mid; ctx.lineWidth = 3;
+          strokeR(x0 + 6, y0 + 6, x1 - x0 - 12, y1 - y0 - 12);
+          ctx.strokeStyle = ink.inner; ctx.lineWidth = 3;
+          strokeR(x0 + 15, y0 + 15, x1 - x0 - 30, y1 - y0 - 30);
+        }
+        var wy = h * 0.76;
+        ctx.fillStyle = ink.wains;
+        ctx.fillRect(0, wy, w, h - wy);
+        for (var g = 0; g < 16; g++) {
+          ctx.fillStyle = ink.groove;
+          ctx.fillRect(g * w / 16 + 8, wy + 14, 4, h - wy - 24);
+        }
+        ctx.fillStyle = ink.topLine;
+        ctx.fillRect(0, wy - 7, w, 7);
+        ctx.fillStyle = P.gold;
+        ctx.fillRect(0, wy, w, 2.5);
+      });
+    }
     return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
       ctx.fillStyle = P.pinkHot;
       ctx.fillRect(0, 0, w, h);
@@ -1900,6 +2100,787 @@
       ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(w / 2, h / 2, 76, 0, Math.PI * 2); ctx.stroke();
       star(ctx, w / 2, h / 2, 34, P.goldSoft);
+    });
+  };
+
+  // ==================================================================
+  // THEATER THEME SKINS (2026-11-04) — the generators behind the
+  // theme-picker preview (spec: theme-picker-preview/). Everything
+  // here is procedural canvas in the house style (deterministic
+  // prand seeds, Georgia serif display type, <=1024px a side) and
+  // is generated LAZILY by CCW.applyTheaterSkin on first selection:
+  // zero image bytes, zero load-time cost for unchosen skins.
+  // Artistry standard applies inside the skins: no large flat
+  // fills — grain, ribbon line-work, panel detail, baked light.
+  // ==================================================================
+
+  // --- Shared emblem marks (her saga iconography) -------------------
+  function emblemCrescent(ctx, x, y, r, fill, shadowFill) {
+    ctx.fillStyle = fill;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = shadowFill;
+    ctx.beginPath(); ctx.arc(x + r * 0.38, y - r * 0.22, r * 0.82, 0, Math.PI * 2); ctx.fill();
+  }
+  function emblemBook(ctx, x, y, s, fill, line) {
+    // An open book: two page quads under a spine point.
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.42);
+    ctx.quadraticCurveTo(x - s * 0.52, y - s * 0.78, x - s * 0.98, y - s * 0.52);
+    ctx.lineTo(x - s * 0.98, y + s * 0.52);
+    ctx.quadraticCurveTo(x - s * 0.5, y + s * 0.26, x, y + s * 0.6);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.42);
+    ctx.quadraticCurveTo(x + s * 0.52, y - s * 0.78, x + s * 0.98, y - s * 0.52);
+    ctx.lineTo(x + s * 0.98, y + s * 0.52);
+    ctx.quadraticCurveTo(x + s * 0.5, y + s * 0.26, x, y + s * 0.6);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = line; ctx.lineWidth = Math.max(2, s * 0.07);
+    ctx.beginPath(); ctx.moveTo(x, y - s * 0.42); ctx.lineTo(x, y + s * 0.6); ctx.stroke();
+  }
+  function emblemAtom(ctx, x, y, r, color) {
+    ctx.strokeStyle = color; ctx.lineWidth = Math.max(2, r * 0.09);
+    for (var i = 0; i < 3; i++) {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(i * Math.PI / 3);
+      ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.42, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y, r * 0.14, 0, Math.PI * 2); ctx.fill();
+  }
+  function emblemFruit(ctx, x, y, r, fill, leaf) {
+    ctx.fillStyle = fill;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = leaf; ctx.lineWidth = Math.max(2, r * 0.14);
+    ctx.beginPath(); ctx.moveTo(x, y - r * 0.92);
+    ctx.quadraticCurveTo(x + r * 0.1, y - r * 1.3, x + r * 0.42, y - r * 1.38); ctx.stroke();
+    ctx.fillStyle = leaf;
+    ctx.beginPath(); ctx.ellipse(x + r * 0.42, y - r * 1.3, r * 0.34, r * 0.15, -0.6, 0, Math.PI * 2); ctx.fill();
+  }
+  function emblemRosette(ctx, x, y, R, petalA, petalB, center) {
+    for (var p = 0; p < 8; p++) {
+      var ang = (p / 8) * Math.PI * 2;
+      ctx.fillStyle = p % 2 ? petalA : petalB;
+      ctx.beginPath();
+      ctx.ellipse(x + Math.cos(ang) * R * 0.55, y + Math.sin(ang) * R * 0.55,
+        R * 0.34, R * 0.18, ang, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = center;
+    ctx.beginPath(); ctx.arc(x, y, R * 0.22, 0, Math.PI * 2); ctx.fill();
+  }
+  function ribbonSwirl(ctx, pts, color, width, alpha) {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    ctx.bezierCurveTo(pts[1][0], pts[1][1], pts[2][0], pts[2][1], pts[3][0], pts[3][1]);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  function grainOver(ctx, w, h, seed, n, light, dark) {
+    var rnd = prand(seed);
+    for (var i = 0; i < n; i++) {
+      ctx.fillStyle = rnd() > 0.5 ? light : dark;
+      ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+    }
+  }
+
+  // EMBLEM: the great glass as a tarot medallion (1024x768).
+  CCW.emblemScreenTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    var CREAM = '#fdf3e3', GOLD = '#ffd873', BLACK = '#0d0510';
+    return CCW.canvasTexture(scene, B, name, 1024, 768, function (ctx, w, h) {
+      ctx.fillStyle = BLACK;
+      ctx.fillRect(0, 0, w, h);
+      var glow = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, w * 0.55);
+      glow.addColorStop(0, 'rgba(61,18,71,0.55)');
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
+      // Ribbon line-work: the saga's swirling smoke/water lines.
+      ribbonSwirl(ctx, [[60, 640], [300, 480], [420, 700], [700, 560]], P.teal, 6, 0.55);
+      ribbonSwirl(ctx, [[964, 130], [760, 260], [640, 90], [380, 200]], '#8f7fd4', 6, 0.5);
+      ribbonSwirl(ctx, [[120, 120], [320, 240], [520, 110], [760, 210]], '#e8871e', 4, 0.45);
+      ribbonSwirl(ctx, [[880, 660], [700, 540], [560, 690], [300, 590]], P.teal, 4, 0.4);
+      // Central medallion: crescent+star over the open book.
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 3.5;
+      ctx.beginPath(); ctx.arc(w / 2, 330, 168, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = GOLD; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(w / 2, 330, 152, 0, Math.PI * 2); ctx.stroke();
+      emblemCrescent(ctx, w / 2 - 8, 268, 74, GOLD, BLACK);
+      star(ctx, w / 2 + 66, 208, 17, CREAM);
+      emblemBook(ctx, w / 2, 428, 62, CREAM, BLACK);
+      ribbonSwirl(ctx, [[w / 2 - 120, 500], [w / 2 - 40, 452], [w / 2 + 40, 520], [w / 2 + 120, 470]], P.teal, 5, 0.7);
+      // Flat-jewel rosette corners.
+      emblemRosette(ctx, 108, 108, 56, P.teal, P.pinkHot, GOLD);
+      emblemRosette(ctx, w - 108, 108, 56, P.pinkHot, P.teal, GOLD);
+      emblemRosette(ctx, 108, h - 108, 56, '#e8871e', P.teal, GOLD);
+      emblemRosette(ctx, w - 108, h - 108, 56, P.teal, '#e8871e', GOLD);
+      // The small emblems row: eye, cross, 7, fruit.
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 2.6;
+      ctx.beginPath(); ctx.arc(212, 596, 30, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = P.teal;
+      ctx.beginPath(); ctx.arc(212, 596, 11, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#e8871e'; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.moveTo(392, 572); ctx.lineTo(392, 620); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(376, 590); ctx.lineTo(408, 590); ctx.stroke();
+      ctx.fillStyle = GOLD;
+      ctx.font = 'bold 56px Georgia, serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('7', 592, 598);
+      emblemFruit(ctx, 792, 600, 26, '#e8871e', '#2d6a4f');
+      // Cartouche.
+      ctx.strokeStyle = 'rgba(253,243,227,0.6)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(282, 688); ctx.lineTo(742, 688); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(282, 742); ctx.lineTo(742, 742); ctx.stroke();
+      ctx.fillStyle = CREAM;
+      ctx.font = 'bold 42px Georgia, serif';
+      ctx.fillText('CLASSIC CINEMA', w / 2, 716);
+      // Cream double frame (the tarot border).
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 5;
+      ctx.strokeRect(16, 16, w - 32, h - 32);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(30, 30, w - 60, h - 60);
+      grainOver(ctx, w, h, 601, 1500, 'rgba(253,243,227,0.05)', 'rgba(0,0,0,0.3)');
+    });
+  };
+
+  // EMBLEM: the program board as a tarot card (768x640). ALL text
+  // verbatim from the baseline board; only the treatment changes.
+  CCW.emblemBoardTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    var CREAM = '#fdf3e3', GOLD = '#ffd873', BLACK = '#0d0510';
+    return CCW.canvasTexture(scene, B, name, 768, 640, function (ctx, w, h) {
+      ctx.fillStyle = BLACK;
+      ctx.fillRect(0, 0, w, h);
+      ribbonSwirl(ctx, [[30, 90], [180, 30], [300, 110], [470, 50]], P.teal, 4, 0.4);
+      ribbonSwirl(ctx, [[738, 560], [590, 610], [470, 540], [300, 600]], '#8f7fd4', 4, 0.4);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = CREAM;
+      ctx.font = 'bold 34px Georgia, serif';
+      ctx.fillText('🎬 NOW SHOWING', w / 2, 76);
+      ctx.fillStyle = GOLD;
+      ctx.font = 'bold 46px Georgia, serif';
+      ctx.fillText('CLASSIC CINEMA', w / 2, 130);
+      ctx.strokeStyle = 'rgba(253,243,227,0.65)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(120, 152); ctx.lineTo(w - 120, 152); ctx.stroke();
+      ctx.fillStyle = CREAM;
+      ctx.font = 'bold 22px Georgia, serif';
+      ctx.fillText('83 public-domain classics · 1930s–1960s', w / 2, 184);
+      ctx.fillStyle = P.teal;
+      ctx.font = 'bold 19px Georgia, serif';
+      ctx.fillText('— HOUSE FAVORITES —', w / 2, 220);
+      ctx.fillStyle = CREAM;
+      ctx.font = '25px Georgia, serif';
+      var program = [
+        'Charade (1963)',
+        'His Girl Friday (1940)',
+        'Penny Serenade (1941)',
+        'And Then There Were None (1945)',
+        'Made for Each Other (1939)',
+        'Love Affair (1939)',
+        'Nothing Sacred (1937)'
+      ];
+      program.forEach(function (title, i) {
+        ctx.fillText(title, w / 2, 256 + i * 30);
+      });
+      ctx.font = 'bold 22px Georgia, serif';
+      ctx.fillText('👆 Tap this board for the full index —', w / 2, 486);
+      ctx.fillText('every title free to watch, right here', w / 2, 514);
+      ctx.font = 'italic 20px Georgia, serif';
+      ctx.fillText('Live stage nights take the screen first 💜', w / 2, 548);
+      // The numeral-7 seal.
+      ctx.strokeStyle = GOLD; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.ellipse(w / 2, 596, 40, 21, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = GOLD;
+      ctx.font = 'bold 26px Georgia, serif';
+      ctx.fillText('7', w / 2, 597);
+      // Cream double frame.
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 4;
+      ctx.strokeRect(11, 11, w - 22, h - 22);
+      ctx.lineWidth = 1.6;
+      ctx.strokeRect(22, 22, w - 44, h - 44);
+      grainOver(ctx, w, h, 607, 1100, 'rgba(253,243,227,0.05)', 'rgba(0,0,0,0.3)');
+    });
+  };
+
+  // EMBLEM: the door poster as a tarot card (512x640). Text verbatim.
+  CCW.emblemPosterTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    var CREAM = '#fdf3e3', GOLD = '#ffd873', BLACK = '#0d0510';
+    return CCW.canvasTexture(scene, B, name, 512, 640, function (ctx, w, h) {
+      ctx.fillStyle = BLACK;
+      ctx.fillRect(0, 0, w, h);
+      ribbonSwirl(ctx, [[40, 520], [160, 420], [300, 540], [470, 450]], P.teal, 5, 0.45);
+      ribbonSwirl(ctx, [[40, 90], [180, 170], [330, 80], [470, 150]], '#8f7fd4', 4, 0.4);
+      // Crescent+star seal where the starburst sat.
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(w / 2, 128, 76, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = GOLD; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(w / 2, 128, 66, 0, Math.PI * 2); ctx.stroke();
+      emblemCrescent(ctx, w / 2 - 4, 118, 40, GOLD, BLACK);
+      star(ctx, w / 2 + 36, 84, 11, CREAM);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = CREAM;
+      ctx.font = 'bold 44px Georgia, serif';
+      ctx.fillText('CLASSIC', w / 2, 262);
+      ctx.fillText('CINEMA', w / 2, 312);
+      ctx.fillStyle = GOLD;
+      ctx.font = 'bold 28px Georgia, serif';
+      ctx.fillText('★ 83 FILMS ★', w / 2, 368);
+      ctx.fillStyle = CREAM;
+      ctx.font = '24px Georgia, serif';
+      ctx.fillText('1930s — 1960s', w / 2, 406);
+      // The promise band: cream-outlined, flat.
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 2.6;
+      ctx.strokeRect(66, 436, w - 132, 62);
+      ctx.fillStyle = CREAM;
+      ctx.font = 'bold 30px Georgia, serif';
+      ctx.fillText('FREE FOREVER', w / 2, 476);
+      ctx.font = 'italic 22px Georgia, serif';
+      ctx.fillText('old movies, always free —', w / 2, 548);
+      ctx.fillText('tap the board by the door 💜', w / 2, 580);
+      // Cream double frame.
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 4;
+      ctx.strokeRect(10, 10, w - 20, h - 20);
+      ctx.lineWidth = 1.6;
+      ctx.strokeRect(20, 20, w - 40, h - 40);
+      grainOver(ctx, w, h, 613, 900, 'rgba(253,243,227,0.05)', 'rgba(0,0,0,0.3)');
+    });
+  };
+
+  // EMBLEM: the black vault (1024x512) — cream chart-work, the big
+  // numeral 7 and the atom, ribbon nebula instead of halftone sky.
+  CCW.emblemCeilingTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    var CREAM = '#fdf3e3', GOLD = '#ffd873', BLACK = '#0d0510';
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      ctx.fillStyle = BLACK;
+      ctx.fillRect(0, 0, w, h);
+      ribbonSwirl(ctx, [[40, 420], [300, 300], [520, 440], [800, 330]], '#3d1847', 26, 0.8);
+      ribbonSwirl(ctx, [[120, 90], [380, 190], [620, 80], [900, 170]], P.teal, 5, 0.35);
+      ribbonSwirl(ctx, [[900, 430], [680, 330], [470, 450], [220, 360]], '#8f7fd4', 5, 0.3);
+      var rnd = prand(619);
+      for (var i = 0; i < 90; i++) {
+        star(ctx, rnd() * w, rnd() * h, 1.8 + rnd() * 2.6,
+          rnd() > 0.45 ? CREAM : GOLD);
+      }
+      // Fine-line chart medallion at the center: the atom.
+      ctx.strokeStyle = 'rgba(253,243,227,0.85)';
+      [64, 112, 160].forEach(function (r, i) {
+        ctx.lineWidth = i === 1 ? 2.2 : 1.4;
+        ctx.beginPath(); ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2); ctx.stroke();
+      });
+      for (var sp = 0; sp < 12; sp++) {
+        var a = (sp / 12) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(w / 2 + Math.cos(a) * 64, h / 2 + Math.sin(a) * 64);
+        ctx.lineTo(w / 2 + Math.cos(a) * 160, h / 2 + Math.sin(a) * 160);
+        ctx.stroke();
+      }
+      emblemAtom(ctx, w / 2, h / 2, 52, GOLD);
+      // The big numeral 7, left; crescent, right.
+      ctx.fillStyle = GOLD;
+      ctx.font = 'bold 150px Georgia, serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('7', 168, 258);
+      emblemCrescent(ctx, 856, 240, 56, GOLD, BLACK);
+      star(ctx, 898, 196, 13, CREAM);
+      emblemBook(ctx, 168, 420, 34, CREAM, BLACK);
+      emblemBook(ctx, 856, 420, 34, CREAM, BLACK);
+      grainOver(ctx, w, h, 623, 1200, 'rgba(253,243,227,0.04)', 'rgba(0,0,0,0.3)');
+    });
+  };
+
+  // EMBLEM: the great carpet as a cream-line lattice (1024x1024).
+  CCW.emblemCarpetTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    var CREAM = '#fdf3e3', GOLD = '#ffd873';
+    return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
+      ctx.fillStyle = '#150818';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(631);
+      for (var i = 0; i < 5200; i++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(253,243,227,0.045)' : 'rgba(0,0,0,0.35)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.4, 2.4);
+      }
+      function diamond(cx, cy, r, lw, color) {
+        ctx.strokeStyle = color; ctx.lineWidth = lw;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy);
+        ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy);
+        ctx.closePath(); ctx.stroke();
+      }
+      // The lattice: line-work only, never a flat fill.
+      for (var gx = 0; gx <= 4; gx++) {
+        for (var gy = 0; gy <= 4; gy++) {
+          diamond(gx * 256, gy * 256, 128, 2.4, 'rgba(253,243,227,0.55)');
+          diamond(gx * 256, gy * 256, 96, 1.4, 'rgba(255,216,115,0.5)');
+        }
+      }
+      // Small emblems ride the intersections.
+      var kinds = ['crescent', 'atom', 'fruit', 'star'];
+      for (var ix = 0; ix < 4; ix++) {
+        for (var iy = 0; iy < 4; iy++) {
+          var cx = 128 + ix * 256, cy = 128 + iy * 256;
+          var kind = kinds[(ix + iy * 4) % 4];
+          if (kind === 'crescent') emblemCrescent(ctx, cx, cy, 20, GOLD, '#150818');
+          else if (kind === 'atom') emblemAtom(ctx, cx, cy, 24, P.teal);
+          else if (kind === 'fruit') emblemFruit(ctx, cx, cy + 4, 17, '#e8871e', '#2d6a4f');
+          else star(ctx, cx, cy, 18, P.pinkHot);
+        }
+      }
+      // Edge: cream frame line + gold pinstripe.
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 5;
+      ctx.strokeRect(12, 12, w - 24, h - 24);
+      ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+      ctx.strokeRect(26, 26, w - 52, h - 52);
+    });
+  };
+
+  // EMBLEM: the aisle runner — medallions in single file (256x1024).
+  CCW.emblemRunnerTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    var CREAM = '#fdf3e3', GOLD = '#ffd873', BLACK = '#0d0510';
+    return CCW.canvasTexture(scene, B, name, 256, 1024, function (ctx, w, h) {
+      ctx.fillStyle = BLACK;
+      ctx.fillRect(0, 0, w, h);
+      var shade = ctx.createLinearGradient(0, 0, w, 0);
+      shade.addColorStop(0, 'rgba(0,0,0,0.5)');
+      shade.addColorStop(0.5, 'rgba(61,18,71,0.35)');
+      shade.addColorStop(1, 'rgba(0,0,0,0.5)');
+      ctx.fillStyle = shade;
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = CREAM;
+      ctx.fillRect(12, 0, 3, h);
+      ctx.fillRect(w - 15, 0, 3, h);
+      ctx.fillStyle = GOLD;
+      ctx.fillRect(24, 0, 1.6, h);
+      ctx.fillRect(w - 26, 0, 1.6, h);
+      var ys = [128, 384, 640, 896];
+      ys.forEach(function (cy, i) {
+        ctx.strokeStyle = CREAM; ctx.lineWidth = 2.6;
+        ctx.beginPath(); ctx.arc(w / 2, cy, 46, 0, Math.PI * 2); ctx.stroke();
+        if (i % 4 === 0) emblemCrescent(ctx, w / 2 - 2, cy - 2, 24, GOLD, BLACK);
+        else if (i % 4 === 1) emblemBook(ctx, w / 2, cy, 26, CREAM, BLACK);
+        else if (i % 4 === 2) {
+          ctx.fillStyle = GOLD;
+          ctx.font = 'bold 44px Georgia, serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('7', w / 2, cy + 2);
+        } else emblemFruit(ctx, w / 2, cy + 2, 20, '#e8871e', '#2d6a4f');
+      });
+      grainOver(ctx, w, h, 641, 700, 'rgba(253,243,227,0.05)', 'rgba(0,0,0,0.3)');
+    });
+  };
+
+  // EMBLEM: the lancets as flat jewel panes (512x640) — thick black
+  // leading, emblem rosettes, the arch silhouette kept by alpha,
+  // exactly like the Dream Pop glass it replaces.
+  CCW.emblemGlassTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 640, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      // Immediate-mode path tracing (the house style — no
+      // Path2D, so the headless smoke's fake context runs it too).
+      function traceArch() {
+        ctx.beginPath();
+        ctx.moveTo(28, h);
+        ctx.lineTo(28, 210);
+        ctx.quadraticCurveTo(28, 30, w / 2, 16);
+        ctx.quadraticCurveTo(w - 28, 30, w - 28, 210);
+        ctx.lineTo(w - 28, h);
+        ctx.closePath();
+      }
+      traceArch();
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = '#12060f';
+      ctx.fillRect(0, 0, w, h);
+      var panes = [P.teal, P.pinkHot, P.coral, '#e8871e', '#8f7fd4'];
+      var rnd = prand(653);
+      var cols = 4, rows = 6;
+      for (var c = 0; c < cols; c++) {
+        for (var r = 0; r < rows; r++) {
+          ctx.fillStyle = panes[Math.floor(rnd() * panes.length)];
+          ctx.globalAlpha = 0.92;
+          ctx.fillRect(28 + c * (w - 56) / cols, 16 + r * (h - 16) / rows,
+            (w - 56) / cols, (h - 16) / rows);
+          ctx.globalAlpha = rnd() > 0.5 ? 0.07 : 0;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(28 + c * (w - 56) / cols, 16 + r * (h - 16) / rows,
+            (w - 56) / cols, (h - 16) / rows);
+          ctx.globalAlpha = 1;
+        }
+      }
+      // Emblem rosettes ride the panes, flat as print.
+      emblemRosette(ctx, w / 2, 168, 82, P.coral, P.teal, '#ffd873');
+      emblemRosette(ctx, w / 2 - 108, 430, 52, P.teal, P.pinkHot, '#ffd873');
+      emblemRosette(ctx, w / 2 + 108, 430, 52, P.pinkHot, P.teal, '#ffd873');
+      // Thick black leading.
+      ctx.strokeStyle = '#0d0510';
+      ctx.lineWidth = 11;
+      for (var v = 1; v < cols; v++) {
+        ctx.beginPath();
+        ctx.moveTo(28 + v * (w - 56) / cols, 16);
+        ctx.lineTo(28 + v * (w - 56) / cols, h);
+        ctx.stroke();
+      }
+      for (var hz = 1; hz < rows; hz++) {
+        ctx.beginPath();
+        ctx.moveTo(28, 16 + hz * (h - 16) / rows);
+        ctx.lineTo(w - 28, 16 + hz * (h - 16) / rows);
+        ctx.stroke();
+      }
+      ctx.restore();
+      // The arch leading + a cream hairline just inside it.
+      ctx.strokeStyle = '#0d0510'; ctx.lineWidth = 17;
+      traceArch();
+      ctx.stroke();
+      traceArch();
+      ctx.save(); ctx.clip();
+      ctx.strokeStyle = 'rgba(253,243,227,0.85)'; ctx.lineWidth = 2.4;
+      traceArch();
+      ctx.stroke();
+      ctx.restore();
+    });
+  };
+
+  // EMBLEM: the floating film frames, cream-lined (256x192).
+  CCW.emblemFilmFrameTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 256, 192, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = '#fdf3e3'; ctx.lineWidth = 13;
+      ctx.strokeRect(9, 9, w - 18, h - 18);
+      ctx.strokeStyle = '#ffd873'; ctx.lineWidth = 3;
+      ctx.strokeRect(24, 24, w - 48, h - 48);
+      ctx.fillStyle = '#fdf3e3';
+      for (var x = 26; x < w - 20; x += 34) {
+        ctx.beginPath(); ctx.arc(x, 42, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, h - 42, 5, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+  };
+
+  // The marquee casings: small canvases, per-skin ink.
+  CCW.emblemMarqueeTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 1024, 144, function (ctx, w, h) {
+      ctx.fillStyle = '#0d0510';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#fdf3e3'; ctx.lineWidth = 3;
+      ctx.strokeRect(6, 6, w - 12, h - 12);
+      ctx.strokeStyle = '#ffd873'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(15, 15, w - 30, h - 30);
+      grainOver(ctx, w, h, 659, 500, 'rgba(253,243,227,0.05)', 'rgba(0,0,0,0.3)');
+    });
+  };
+  CCW.churchMarqueeTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 144, function (ctx, w, h) {
+      ctx.fillStyle = '#0b5a54';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(661);
+      for (var i = 0; i < 60; i++) {
+        ctx.strokeStyle = rnd() > 0.5 ? 'rgba(0,0,0,0.16)' : 'rgba(255,255,255,0.07)';
+        ctx.lineWidth = 1 + rnd() * 2;
+        var y = rnd() * h;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y + (rnd() - 0.5) * 6); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.fillRect(w / 3, 0, 3, h);
+      ctx.fillRect(2 * w / 3, 0, 3, h);
+      // Painted globe dots along both edges (the chapel's bulbs).
+      for (var x = 34; x < w - 20; x += 58) {
+        ctx.fillStyle = '#ffe9c4';
+        ctx.beginPath(); ctx.arc(x, 20, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, h - 20, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(x, 20, 8.5, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, h - 20, 8.5, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.strokeStyle = '#fdf3e3'; ctx.lineWidth = 2.4;
+      ctx.strokeRect(5, 5, w - 10, h - 10);
+    });
+  };
+
+  // The marquee LABEL, re-inked: a byte-faithful copy of the
+  // makeLabel draw for the 7.0 x 0.85 marquee (both lines, same
+  // fonts, same positions) with only the ink changed — the spec
+  // forbids tinting the label material (its color lives here).
+  CCW.theaterLabelTexture = function (scene, B, name, fg) {
+    return CCW.canvasTexture(scene, B, name, 1024, 124, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = fg;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 84px Georgia, serif';
+      ctx.fillText('NOW SHOWING', w / 2, h / 2 - 56);
+      ctx.font = '44px Georgia, serif';
+      ctx.fillText('Classic Cinema — old movies, always free', w / 2, h / 2 + 62);
+    });
+  };
+
+  // CHURCH: the chapel glass (1024x768) — a true tall arch DRAWN
+  // inside the rectangle's texture (spec prep flag F1: the screen
+  // mesh stays a rectangle; the arch is painted). Radiant sun
+  // heart at the center, planets on fine gold orbits, a floral
+  // rosette base, gold leading — the chapel window of her photos,
+  // painted the house way (artistry standard: grain, washes,
+  // speckle, baked glow — never one flat fill).
+  CCW.chapelGlassTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 768, function (ctx, w, h) {
+      // Deep plum-violet ground with nebula washes.
+      var bg = ctx.createLinearGradient(0, 0, 0, h);
+      bg.addColorStop(0, '#241243');
+      bg.addColorStop(0.55, '#2c1550');
+      bg.addColorStop(1, '#33124e');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(673);
+      var washes = ['rgba(255,111,145,0.20)', 'rgba(18,194,178,0.16)', 'rgba(143,127,212,0.18)', 'rgba(245,197,66,0.12)'];
+      for (var i = 0; i < 26; i++) {
+        var wx = rnd() * w, wy = rnd() * h, wr = 60 + rnd() * 170;
+        var wg = ctx.createRadialGradient(wx, wy, 4, wx, wy, wr);
+        var wc = washes[Math.floor(rnd() * washes.length)];
+        wg.addColorStop(0, wc);
+        wg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = wg;
+        ctx.fillRect(wx - wr, wy - wr, wr * 2, wr * 2);
+      }
+      for (var st = 0; st < 170; st++) {
+        star(ctx, rnd() * w, rnd() * h, 1.6 + rnd() * 3,
+          rnd() > 0.4 ? P.goldSoft : P.cream);
+      }
+      // The arch itself: gold leading around a lighter field.
+      // (Immediate-mode tracing, house style — no Path2D.)
+      function traceArch() {
+        ctx.beginPath();
+        ctx.moveTo(212, 716);
+        ctx.lineTo(212, 330);
+        ctx.quadraticCurveTo(212, 84, 512, 62);
+        ctx.quadraticCurveTo(812, 84, 812, 330);
+        ctx.lineTo(812, 716);
+        ctx.closePath();
+      }
+      traceArch();
+      ctx.save();
+      ctx.clip();
+      var ag = ctx.createLinearGradient(0, 60, 0, 716);
+      ag.addColorStop(0, '#3a1a63');
+      ag.addColorStop(1, '#452073');
+      ctx.fillStyle = ag;
+      ctx.fillRect(180, 40, 664, 700);
+      // Jewel panes inside the arch, washes not flats.
+      var panes = [P.teal, P.pinkHot, P.coral, '#8f7fd4', '#e8871e'];
+      for (var pw = 0; pw < 30; pw++) {
+        var px = 230 + rnd() * 560, py = 90 + rnd() * 580, pr = 26 + rnd() * 74;
+        var pg = ctx.createRadialGradient(px, py, 2, px, py, pr);
+        var pc = panes[Math.floor(rnd() * panes.length)];
+        pg.addColorStop(0, pc);
+        pg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = 0.34;
+        ctx.fillStyle = pg;
+        ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+      }
+      ctx.globalAlpha = 1;
+      // Fine gold leading lines inside the arch.
+      ctx.strokeStyle = 'rgba(245,197,66,0.55)'; ctx.lineWidth = 3;
+      [300, 388, 476, 564, 652].forEach(function (x) {
+        ctx.beginPath(); ctx.moveTo(x, 90); ctx.lineTo(x, 716); ctx.stroke();
+      });
+      ctx.beginPath(); ctx.moveTo(212, 330); ctx.lineTo(812, 330); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(212, 540); ctx.lineTo(812, 540); ctx.stroke();
+      // Orbits: fine gold ellipses with planet dots.
+      ctx.strokeStyle = 'rgba(245,197,66,0.8)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(512, 356, 196, 128, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(512, 356, 268, 176, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = P.teal;
+      ctx.beginPath(); ctx.arc(512 + 168, 356 - 76, 15, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = P.pinkHot;
+      ctx.beginPath(); ctx.arc(512 - 236, 356 + 82, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#8f7fd4';
+      ctx.beginPath(); ctx.arc(512 + 92, 356 + 156, 19, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ffd873'; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.arc(512 + 92, 356 + 156, 28, 0, Math.PI * 2); ctx.stroke();
+      // The radiant sun heart.
+      var sun = ctx.createRadialGradient(512, 356, 10, 512, 356, 130);
+      sun.addColorStop(0, 'rgba(255,233,196,0.95)');
+      sun.addColorStop(0.55, 'rgba(245,197,66,0.55)');
+      sun.addColorStop(1, 'rgba(245,197,66,0)');
+      ctx.fillStyle = sun;
+      ctx.fillRect(512 - 140, 356 - 140, 280, 280);
+      ctx.fillStyle = '#ffd873';
+      ctx.beginPath(); ctx.arc(512, 356, 88, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = P.coral;
+      ctx.beginPath(); ctx.arc(512, 356, 62, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = P.goldSoft;
+      for (var ray = 0; ray < 12; ray++) {
+        var ra = (ray / 12) * Math.PI * 2;
+        ctx.save();
+        ctx.translate(512, 356); ctx.rotate(ra);
+        ctx.fillRect(102, -4, 44, 8);
+        ctx.restore();
+      }
+      // The heart at the sun's core.
+      ctx.fillStyle = '#fff3d6';
+      ctx.beginPath();
+      ctx.moveTo(512, 392);
+      ctx.bezierCurveTo(462, 356, 470, 306, 512, 330);
+      ctx.bezierCurveTo(554, 306, 562, 356, 512, 392);
+      ctx.fill();
+      // Floral rosette base inside the arch.
+      function chapelRose(x, y, R) {
+        for (var p = 0; p < 10; p++) {
+          var ang = (p / 10) * Math.PI * 2;
+          ctx.fillStyle = p % 2 ? P.pinkHot : P.teal;
+          ctx.globalAlpha = 0.9;
+          ctx.beginPath();
+          ctx.ellipse(x + Math.cos(ang) * R * 0.6, y + Math.sin(ang) * R * 0.6,
+            R * 0.38, R * 0.2, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#ffd873';
+        ctx.beginPath(); ctx.arc(x, y, R * 0.24, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = P.coral;
+        ctx.beginPath(); ctx.arc(x, y, R * 0.13, 0, Math.PI * 2); ctx.fill();
+      }
+      chapelRose(512, 646, 62);
+      chapelRose(330, 660, 40);
+      chapelRose(694, 660, 40);
+      // The cartouche, in serif, at the arch's base.
+      ctx.fillStyle = 'rgba(27,10,40,0.88)';
+      ctx.fillRect(512 - 168, 428, 336, 56);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2;
+      ctx.strokeRect(512 - 168, 428, 336, 56);
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = 'bold 30px Georgia, serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('CLASSIC CINEMA', 512, 457);
+      ctx.restore();
+      // The arch's own leading: gold outer, cream hairline inside.
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 9;
+      traceArch();
+      ctx.stroke();
+      traceArch();
+      ctx.save(); ctx.clip();
+      ctx.strokeStyle = 'rgba(253,243,227,0.8)'; ctx.lineWidth = 2;
+      traceArch();
+      ctx.stroke();
+      ctx.restore();
+      // Surrounding frame order: the rectangle's edges still read.
+      ctx.strokeStyle = 'rgba(245,197,66,0.35)'; ctx.lineWidth = 3;
+      ctx.strokeRect(8, 8, w - 16, h - 16);
+      grainOver(ctx, w, h, 683, 1600, 'rgba(255,240,210,0.05)', 'rgba(10,0,20,0.16)');
+    });
+  };
+
+  // CHURCH: the ornate rug (1024x1024) — deep magenta field, teal
+  // border bands, amber + cream motifs, a floral medallion heart.
+  CCW.rugTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
+      ctx.fillStyle = '#7a1f4d';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(691);
+      for (var i = 0; i < 7000; i++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,180,210,0.05)' : 'rgba(30,0,18,0.14)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.4, 2.4);
+      }
+      // Woven border bands: teal outer, amber line, cream hairline.
+      ctx.strokeStyle = '#0e7d74'; ctx.lineWidth = 30;
+      ctx.strokeRect(30, 30, w - 60, h - 60);
+      ctx.strokeStyle = '#e8871e'; ctx.lineWidth = 6;
+      ctx.strokeRect(58, 58, w - 116, h - 116);
+      ctx.strokeStyle = 'rgba(253,243,227,0.85)'; ctx.lineWidth = 2.4;
+      ctx.strokeRect(74, 74, w - 148, h - 148);
+      ctx.strokeStyle = 'rgba(253,243,227,0.4)'; ctx.lineWidth = 1.6;
+      ctx.strokeRect(96, 96, w - 192, h - 192);
+      function rugDiamond(cx, cy, r) {
+        ctx.strokeStyle = 'rgba(253,243,227,0.75)'; ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy);
+        ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy);
+        ctx.closePath(); ctx.stroke();
+      }
+      function rugFloral(x, y, R) {
+        for (var p = 0; p < 8; p++) {
+          var ang = (p / 8) * Math.PI * 2;
+          ctx.fillStyle = p % 2 ? '#e8871e' : P.coral;
+          ctx.beginPath();
+          ctx.ellipse(x + Math.cos(ang) * R * 0.58, y + Math.sin(ang) * R * 0.58,
+            R * 0.36, R * 0.19, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#ffd873';
+        ctx.beginPath(); ctx.arc(x, y, R * 0.22, 0, Math.PI * 2); ctx.fill();
+      }
+      // The motif lattice.
+      for (var gx = 0; gx < 4; gx++) {
+        for (var gy = 0; gy < 4; gy++) {
+          var cx = 192 + gx * 214, cy = 192 + gy * 214;
+          if ((gx === 1 || gx === 2) && (gy === 1 || gy === 2)) continue; // the medallion's ground
+          rugDiamond(cx, cy, 58);
+          if ((gx + gy) % 2 === 0) rugFloral(cx, cy, 30);
+          else {
+            ctx.fillStyle = '#0e7d74';
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 22); ctx.lineTo(cx + 22, cy);
+            ctx.lineTo(cx, cy + 22); ctx.lineTo(cx - 22, cy);
+            ctx.closePath(); ctx.fill();
+          }
+        }
+      }
+      // The center medallion: diamond chain + great floral.
+      rugDiamond(512, 512, 178);
+      rugDiamond(512, 512, 148);
+      rugFloral(512, 512, 118);
+      // Corner quarter motifs.
+      [[128, 128], [896, 128], [128, 896], [896, 896]].forEach(function (c) {
+        rugFloral(c[0], c[1], 42);
+      });
+      // Baked wear: a soft darkening toward the edges.
+      var vig = ctx.createRadialGradient(512, 512, 300, 512, 512, 760);
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(20,0,12,0.22)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // CHURCH: the aisle runner in the rug's family (256x1024).
+  CCW.photoRunnerTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 256, 1024, function (ctx, w, h) {
+      ctx.fillStyle = '#8e2447';
+      ctx.fillRect(0, 0, w, h);
+      grainOver(ctx, w, h, 701, 1600, 'rgba(255,180,210,0.05)', 'rgba(30,0,18,0.15)');
+      ctx.fillStyle = '#0e7d74';
+      ctx.fillRect(0, 0, 18, h);
+      ctx.fillRect(w - 18, 0, 18, h);
+      ctx.fillStyle = '#e8871e';
+      ctx.fillRect(22, 0, 3, h);
+      ctx.fillRect(w - 25, 0, 3, h);
+      [170, 512, 854].forEach(function (cy) {
+        ctx.strokeStyle = 'rgba(253,243,227,0.85)'; ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(128, cy - 62); ctx.lineTo(128 + 62, cy);
+        ctx.lineTo(128, cy + 62); ctx.lineTo(128 - 62, cy);
+        ctx.closePath(); ctx.stroke();
+        for (var p = 0; p < 8; p++) {
+          var ang = (p / 8) * Math.PI * 2;
+          ctx.fillStyle = p % 2 ? '#e8871e' : P.coral;
+          ctx.beginPath();
+          ctx.ellipse(128 + Math.cos(ang) * 26, cy + Math.sin(ang) * 26,
+            16, 8.5, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#ffd873';
+        ctx.beginPath(); ctx.arc(128, cy, 10, 0, Math.PI * 2); ctx.fill();
+      });
     });
   };
 })(typeof window !== 'undefined' ? window : globalThis);
