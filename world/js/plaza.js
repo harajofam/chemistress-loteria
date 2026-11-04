@@ -2334,12 +2334,31 @@
       padRingM.position.set(uv[0] * 8.5, 0.05, uv[1] * 8.5);
       padRingM.material = CCW.glowMat(scene, B, zone.id + '-plaza-pad-ring-mat', P.gold);
 
+      // INVISIBLE pick proxy (interaction fix pass, 2026-11-04):
+      // the pad disc is flat on the ground, so from a standing
+      // visitor's eye (1.7 m) at Plaza distances (13–24 m) it
+      // foreshortens to a sliver ~9–12 px tall on screen — taps a
+      // few pixels high or low land on the plaza ground and the
+      // pad reads as a dead button (one live checker could not
+      // enter the Theater at all; Jay felt the same deadness on
+      // her phone). This cylinder (r 2.3, top at 1.15 m — below
+      // eye level, so it never blocks a door or a sign) gives
+      // every entrance pad a generous invisible target with the
+      // exact same ride; the pad's look does not change at all.
+      // visibility 0 keeps it out of the render; it carries no
+      // material and no light rig — it exists only to be tapped.
+      var padHit = B.MeshBuilder.CreateCylinder(zone.id + '-plaza-pad-hit',
+        { diameter: 4.6, height: 1.15, tessellation: 20 }, scene);
+      padHit.position.set(uv[0] * 8.5, 0.575, uv[1] * 8.5);
+      padHit.visibility = 0;
+      padHit.isPickable = true;
+
       // `landed` is the status line main.js posts the moment the
       // glide completes (world fix pass, 2026-11-03) — the parlor
       // ride ends INSIDE the room; the other zone rides end at the
       // door; every return ride restores the Plaza welcome line.
       teleports.push({
-        mesh: pad, ringMesh: padRingM,
+        mesh: pad, ringMesh: padRingM, hitMesh: padHit,
         destPos: built.threshold.position, destTarget: built.threshold.target,
         label: zone.name,
         landed: zone.id === 'arcade'

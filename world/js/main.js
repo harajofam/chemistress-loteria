@@ -274,9 +274,18 @@
       if (!view || glider.active()) return;
       if (gameCard) gameCard.hide();
       if (theaterCtl) theaterCtl.hideCard();
-      glider.start(scene.activeCamera,
-        new B.Vector3(view.position[0], view.position[1], view.position[2]),
-        new B.Vector3(view.target[0], view.target[1], view.target[2]),
+      // glider.start's contract is plain [x, y, z] arrays — the
+      // same one ride() honors with tele.destPos / tele.destTarget
+      // — and the stored views already ARE arrays, so hand them
+      // over as-is. (This call once wrapped them in Vector3 first:
+      // Babylon's Vector3 has no [0]/[1]/[2] indices, so the
+      // glider read undefineds, its constructor defaulted them to
+      // 0, and every view glide carried the camera to the world
+      // origin — the Plaza — while the buttons flipped and the
+      // status lines reported success. Live-caught 2026-11-04;
+      // reproduced + guarded in theater-render-check/runfix.js
+      // and world-smoke10.js.)
+      glider.start(scene.activeCamera, view.position, view.target,
         1400, function () { setStatus(landedStatus); });
       glideCooldownUntil = performance.now() + 2200;
     }
@@ -321,9 +330,11 @@
       });
     }
 
-    // Teleport pads: tap/click to ride.
+    // Teleport pads: tap/click to ride. Entrance pads also wire
+    // their invisible hit proxy (plaza.js) — same ride, a much
+    // bigger target than the flat disc alone.
     world.teleports.forEach(function (tele) {
-      [tele.mesh, tele.ringMesh].forEach(function (m) {
+      [tele.mesh, tele.ringMesh, tele.hitMesh].forEach(function (m) {
         if (!m) return;
         m.actionManager = new B.ActionManager(scene);
         m.actionManager.registerAction(
