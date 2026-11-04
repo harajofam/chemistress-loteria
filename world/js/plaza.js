@@ -1801,6 +1801,74 @@
       lid.position.set(-6.17, 1.10, jc[0]);
       lid.material = CCW.mat(scene, B, 'library-int-desk-jar-lid-mat-' + i, P.goldSoft);
     });
+    // ---- The Chemist Dates poster gallery (the CookBook corner's
+    // other face: the left wall) ------------------------------------
+    // The back wall is bookcase end to end, so the twelve CookBook
+    // movie pairings hang salon-style along the left wall — the
+    // CookBook corner's second face — woven around the star charts,
+    // the sideboard treasures and nook a, moving nothing. The
+    // posters are the REAL theatrical posters from Jay's verified
+    // manifest (posters-manifest.json), self-hosted as WebPs under
+    // assets/posters/ (no hotlinks — the world stays fully
+    // procedural except this one gallery, whose files live in the
+    // repo). Frames alternate TEAL / PLUM with a FINE-LINE goldSoft
+    // liner — gold stays a thin edge, never a surface (palette
+    // law). Each poster keeps its own true aspect inside its slot.
+    // Display only: no taps, no links (the Library has none).
+    var GALLERY = [
+      // The big five along the top, deep end first.
+      { slug: 'casablanca', z: -6.30, y: 5.32, mw: 1.00, mh: 1.30, iw: 432, ih: 640, frame: P.tealDeep },
+      { slug: 'charade', z: -5.02, y: 5.32, mw: 1.00, mh: 1.30, iw: 415, ih: 640, frame: P.plumHouse },
+      { slug: 'sunset-boulevard', z: -3.74, y: 5.32, mw: 1.00, mh: 1.30, iw: 426, ih: 640, frame: P.tealDeep },
+      { slug: 'some-like-it-hot', z: -2.46, y: 5.32, mw: 1.00, mh: 1.30, iw: 408, ih: 640, frame: P.plumHouse },
+      { slug: 'breakfast-at-tiffanys', z: -1.30, y: 5.32, mw: 1.00, mh: 1.30, iw: 415, ih: 640, frame: P.tealDeep },
+      // The deep end, around nook a and its lamp.
+      { slug: 'the-bishops-wife', z: -6.30, y: 3.86, mw: 0.66, mh: 0.98, iw: 425, ih: 640, frame: P.plumHouse },
+      { slug: 'harvey', z: -5.78, y: 1.98, mw: 0.72, mh: 1.08, iw: 427, ih: 640, frame: P.tealDeep },
+      { slug: 'his-girl-friday', z: -4.40, y: 2.02, mw: 0.78, mh: 1.14, iw: 411, ih: 640, frame: P.plumHouse },
+      { slug: 'holiday', z: -3.45, y: 2.02, mw: 0.72, mh: 1.08, iw: 330, ih: 496, frame: P.tealDeep },
+      // A small one tucked between the two star charts, then the
+      // sideboard row, low over the scholar's treasures.
+      { slug: 'the-apartment', z: -2.97, y: 3.20, mw: 0.60, mh: 0.90, iw: 415, ih: 640, frame: P.plumHouse },
+      { slug: 'arsenic-and-old-lace', z: -2.00, y: 2.13, mw: 0.64, mh: 0.94, iw: 250, ih: 370, frame: P.tealDeep },
+      { slug: 'kiss-me-stupid', z: -1.16, y: 2.13, mw: 0.64, mh: 0.94, iw: 220, ih: 338, frame: P.plumHouse }
+    ];
+    GALLERY.forEach(function (g) {
+      var a = g.iw / g.ih;
+      var w = g.mw, h = w / a;
+      if (h > g.mh) { h = g.mh; w = h * a; }
+      var tag = 'library-int-gallery-' + g.slug;
+      var gFrame = add(B.MeshBuilder.CreateBox(tag + '-frame',
+        { width: w + 0.16, height: h + 0.16, depth: 0.09 }, scene));
+      gFrame.rotation.y = -Math.PI / 2;
+      gFrame.position.set(-6.44, g.y, g.z);
+      gFrame.material = CCW.mat(scene, B, tag + '-frame-mat', g.frame);
+      var gLiner = add(B.MeshBuilder.CreatePlane(tag + '-liner',
+        { width: w + 0.06, height: h + 0.06 }, scene));
+      gLiner.rotation.y = -Math.PI / 2;
+      gLiner.position.set(-6.382, g.y, g.z);
+      gLiner.material = CCW.mat(scene, B, tag + '-liner-mat', P.goldSoft);
+      var gArt = add(B.MeshBuilder.CreatePlane(tag,
+        { width: w, height: h }, scene));
+      gArt.rotation.y = -Math.PI / 2;
+      gArt.position.set(-6.360, g.y, g.z);
+      gArt.material = CCW.texMat(scene, B, tag + '-mat',
+        new B.Texture('assets/posters/' + g.slug + '.webp', scene), {});
+    });
+    // The gallery's emblem plaque at its door end (the saga-art
+    // signage standard: black field, cream serif, a cream frame
+    // line) — "Chemist Dates / Movies we cook by."
+    var galTrim = add(B.MeshBuilder.CreateBox('library-int-gallery-plaque-trim',
+      { width: 1.31, height: 0.64, depth: 0.1 }, scene));
+    galTrim.rotation.y = -Math.PI / 2;
+    galTrim.position.set(-6.44, 4.15, -1.42);
+    galTrim.material = CCW.mat(scene, B, 'library-int-gallery-plaque-trim-mat', P.cream);
+    var galPlaque = add(CCW.makeLabel(scene, B, 'library-int-gallery-plaque',
+      ['CHEMIST DATES', 'Movies we cook by'], 1.15, 0.52,
+      { bg: '#12040f', fg: P.cream, fgSoft: P.goldSoft }));
+    galPlaque.rotation.y = -Math.PI / 2;
+    galPlaque.position.set(-6.37, 4.15, -1.42);
+
     // Trailing plants spilling over the back shelves.
     [-4.35, 4.35].forEach(function (px, i) {
       var trail = add(B.MeshBuilder.CreatePlane('library-int-trail-' + i,
