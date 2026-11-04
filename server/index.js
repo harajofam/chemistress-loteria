@@ -46,6 +46,12 @@ for (const file of CLIENT_FILES) {
 }
 app.use('/assets', express.static(path.join(CLIENT_ROOT, 'assets')));
 
+// --- World (Chemistress Church Lounge, Phase 2) ----------------------------
+// The Babylon world lives in its own tree (world/) and is served at
+// /world/ only. The game keeps / exactly as before; game routes and
+// the room definition are untouched by this mount.
+app.use('/world', express.static(path.join(CLIENT_ROOT, 'world')));
+
 // --- Game server on the same HTTP server -----------------------------------
 // Colyseus's matchmaking routes wrap this server's request handler and
 // delegate everything else (the static client above) untouched; the
