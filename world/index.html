@@ -10,9 +10,9 @@
   ?v= token. Her phone once kept serving a cached build after a new
   deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
   DEPLOY: increment the token on ALL of these URLs in the same edit.
-  Current token: 2026-11-04-8 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6, the Theater view-glide fix + entrance-pad hit-area widening is -7, the Library poster gallery is -8).
+  Current token: 2026-11-04-9 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6, the Theater view-glide fix + entrance-pad hit-area widening is -7, the Library poster gallery is -8, the Pen-Pal Post interior is -9).
 -->
-<link rel="stylesheet" href="css/world.css?v=2026-11-04-8">
+<link rel="stylesheet" href="css/world.css?v=2026-11-04-9">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
@@ -64,7 +64,7 @@ window.setTimeout(function () {
 
 <header class="hud hud-top">
   <h1>Chemistress Church Lounge</h1>
-  <p class="hud-sub">The Plaza · adults-only members' world · M2b — the Game Parlor, the Theater &amp; the Library are open</p>
+  <p class="hud-sub">The Plaza · adults-only members' world · M2b — the Game Parlor, the Theater, the Library &amp; the Pen-Pal Post are open</p>
 </header>
 
 <div class="hud hud-status" role="status">
@@ -147,6 +147,49 @@ window.setTimeout(function () {
 </div>
 
 <!--
+  Pen-Pal Post note card (M2b interior 3 of 5, 2026-11-04; design
+  §3.6): tapping any letterbox in the Pen-Pal Post opens this card,
+  bound by cameras.js wirePenpal. READ side: a letter drawn for the
+  visitor (another box, another letter). WRITE side: a username +
+  a note, the Post's rules printed on the card — usernames only,
+  no emails, phone numbers, addresses or links (the note module's
+  contact filter sends those back) — and the slow-mail promise: a
+  sealed note travels overnight and is in a box tomorrow. All
+  letter data flows through the one named seam, CCW.PENPAL_NOTES
+  (plaza.js); the card itself stores nothing. Nothing here is a
+  link and nothing navigates.
+-->
+<div id="penpal-card" class="game-card penpal-card" hidden role="dialog" aria-labelledby="penpal-card-title">
+  <div class="game-card-box penpal-card-box">
+    <p class="game-card-kicker">The Pen-Pal Post · slow mail</p>
+    <div id="penpal-read">
+      <h2 id="penpal-card-title">💌 A letter for you</h2>
+      <p class="penpal-from">From <span id="penpal-note-from"></span></p>
+      <p id="penpal-note-text" class="penpal-note-text"></p>
+      <div class="game-card-actions">
+        <button id="penpal-another" type="button" class="btn">Open another box</button>
+        <button id="penpal-to-write" type="button" class="btn btn-parlor">✍️ Leave a note</button>
+        <button id="penpal-close" type="button" class="btn">Back to the post</button>
+      </div>
+    </div>
+    <div id="penpal-write" hidden>
+      <h2>✍️ Leave a note</h2>
+      <label class="penpal-label" for="penpal-name">Your username</label>
+      <input id="penpal-name" class="penpal-input" type="text" maxlength="24" placeholder="Just a username — never your real name">
+      <label class="penpal-label" for="penpal-text">Your note</label>
+      <textarea id="penpal-text" class="penpal-input" rows="4" maxlength="400" placeholder="Something kind for a stranger's tomorrow…"></textarea>
+      <p class="penpal-rules">Usernames only — no emails, phone numbers, addresses or links; the Post sends those back. Notes travel overnight, slow on purpose.</p>
+      <p id="penpal-msg" class="penpal-msg" role="status"></p>
+      <div class="game-card-actions">
+        <button id="penpal-send" type="button" class="btn btn-parlor">💌 Seal it &amp; send it slow</button>
+        <button id="penpal-to-read" type="button" class="btn">← Read a note instead</button>
+        <button id="penpal-write-close" type="button" class="btn">Back to the post</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
   Touch walking controls (M2b): bound by cameras.js wireTouchWalk,
   shown only while Walking mode is selected on a touch device.
   Hold-to-move: pointerdown starts, release/leave/cancel stops.
@@ -185,11 +228,11 @@ window.setTimeout(function () {
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js?v=2026-11-04-8"></script>
-<script src="js/palette.js?v=2026-11-04-8"></script>
-<script src="js/plaza.js?v=2026-11-04-8"></script>
-<script src="js/cameras.js?v=2026-11-04-8"></script>
-<script src="js/main.js?v=2026-11-04-8"></script>
+<script src="vendor/babylon.js?v=2026-11-04-9"></script>
+<script src="js/palette.js?v=2026-11-04-9"></script>
+<script src="js/plaza.js?v=2026-11-04-9"></script>
+<script src="js/cameras.js?v=2026-11-04-9"></script>
+<script src="js/main.js?v=2026-11-04-9"></script>
 <script>
 /* If the library itself failed to load or parse (the old-Safari
    failure shape), say so in plain language instead of sitting blank. */
