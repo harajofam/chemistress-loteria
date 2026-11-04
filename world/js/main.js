@@ -4,7 +4,7 @@
  * Chemistress Church Lounge — world boot (M1; M2b phone fixes).
  *
  * Wiring only: engine + scene from plaza.js, cameras from cameras.js,
- * HTML overlay buttons, the Arcade portal, and the teleport pads.
+ * HTML overlay buttons, the Game Parlor's door glow, and the pads.
  * Movement (Jay's decision, 2026-11-03): smooth WASD walk is primary
  * on desktop; each zone has a glowing pad on the Plaza that glides
  * the visitor to the door, and a pad at the door that glides them
@@ -15,32 +15,26 @@
  *    buttons (cameras.js createTouchWalker / wireTouchWalk), shown
  *    only while Walking mode is selected on a touch device.
  *  - A Reset view button returns any camera to the spawn view.
- *  - The active camera is clamped to the Plaza grounds / the Arcade
- *    room every frame (CCW.clampCamera) — no more drifting inside
- *    or behind the facades.
+ *  - The active camera is clamped to the Plaza grounds / the Game
+ *    Parlor room every frame (CCW.clampCamera) — no more drifting
+ *    inside or behind the facades.
  *  - The loading overlay (index.html) clears only once the scene is
  *    really rendering; any failure in the load chain turns it into a
  *    plain-language message instead of Safari's silent blank.
  *
- * The game itself is NOT embedded or touched — the portal and the
- * button navigate to the live game page on the same origin.
+ * The Game Parlor re-dress (Jay's decision, 2026-11-03 evening):
+ * the world contains NO link to the Lotería game page. The parlor
+ * is a room you walk into, not a door out — the HUD button and the
+ * Plaza door glow glide the visitor INTO the room, exactly like the
+ * room's own pad. The game keeps its own page, untouched.
  */
 (function (root) {
   var CCW = root.CCW || (root.CCW = {});
   var B = root.BABYLON;
 
-  // The live game page. The world is served at /world/ on the same
-  // origin as the game at /, so '../' reaches it in production
-  // and from a local static preview alike.
-  CCW.GAME_URL = '../';
-
   function setStatus(msg) {
     var el = document.getElementById('world-status');
     if (el) el.textContent = msg;
-  }
-
-  function goToArcade() {
-    root.location.href = CCW.GAME_URL;
   }
 
   // --- Loading overlay ------------------------------------------------
@@ -111,11 +105,21 @@
       setStatus('Gliding to ' + tele.label + '…');
     }
 
-    // Portal: tapping the Arcade's glowing ring walks you to the game.
+    // The parlor's Plaza teleport — the ride the room's own pad
+    // gives. The HUD button and the door glow offer the same ride.
+    var parlorTele = null;
+    world.teleports.forEach(function (tele) {
+      if (tele.label === 'The Game Parlor') parlorTele = tele;
+    });
+    function goToParlor() {
+      if (parlorTele) ride(parlorTele);
+    }
+
+    // Door glow: tapping the parlor's glowing ring glides you inside.
     world.portalMeshes.forEach(function (mesh) {
       mesh.actionManager = new B.ActionManager(scene);
       mesh.actionManager.registerAction(
-        new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, goToArcade));
+        new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, goToParlor));
     });
 
     // Teleport pads: tap/click to ride.
@@ -145,7 +149,7 @@
       }
     }
 
-    document.getElementById('btn-arcade').addEventListener('click', goToArcade);
+    document.getElementById('btn-parlor').addEventListener('click', goToParlor);
     document.getElementById('btn-magic').addEventListener('click', function () {
       glider.cancel();
       walking = false;
@@ -175,7 +179,7 @@
       desktopCam.setTarget(new B.Vector3(
         CCW.SPAWN.target[0], CCW.SPAWN.target[1], CCW.SPAWN.target[2]));
       syncTouchPad();
-      setStatus('Back at the Plaza entrance. The Lotería Arcade glows pink ahead of you.');
+      setStatus('Back at the Plaza entrance. The Game Parlor glows pink ahead of you.');
     });
 
     var last = performance.now();
@@ -188,7 +192,7 @@
       var gliding = !!(cam && glider.update(cam, dt));
       if (cam && !gliding) {
         // Touch buttons drive the walk camera; then the bounds keep
-        // every camera inside the Plaza grounds / the Arcade room.
+        // every camera inside the Plaza grounds / the parlor room.
         if (cam === desktopCam) touchWalker.update(cam, dt);
         CCW.clampCamera(B, cam);
         if (cam === desktopCam && now > glideCooldownUntil) {
@@ -208,7 +212,7 @@
       }
     });
     root.addEventListener('resize', function () { engine.resize(); });
-    setStatus('Welcome to the Plaza. The Lotería Arcade glows pink ahead of you.');
+    setStatus('Welcome to the Plaza. The Game Parlor glows pink ahead of you.');
   }
 
   function guardedBoot() {
