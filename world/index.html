@@ -4,10 +4,63 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Chemistress Church Lounge — The Plaza</title>
-<link rel="stylesheet" href="css/world.css">
+<!--
+  CACHE-BUST CONVENTION (M2b, from Jay's field report 2026-11-03):
+  every first-party script and stylesheet URL in this file carries a
+  ?v= token. Her phone once kept serving a cached build after a new
+  deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
+  DEPLOY: increment the token on ALL of these URLs in the same edit.
+  Current token: 2026-11-03-3 (M1 was -1, the M2a Arcade interior -2).
+-->
+<link rel="stylesheet" href="css/world.css?v=2026-11-03-3">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
+
+<!--
+  Loading overlay (M2b): in the markup from first paint, so no
+  browser — Safari above all — can fail silently into a blank page.
+  main.js clears it only once the scene is really rendering; the
+  boot guard below turns it into a plain-language failure message
+  if any file in the chain fails to load or start.
+-->
+<div id="world-overlay" class="overlay">
+  <div class="overlay-card">
+    <p id="overlay-title" class="overlay-title">Entering the Plaza…</p>
+    <p id="overlay-msg" class="overlay-msg">Waking the world — the first load can take a moment on a phone connection.</p>
+    <p class="overlay-tip">Tip: on a phone, Chrome shows the Plaza best. To walk, tap “Walking mode” and hold the on-screen arrows.</p>
+  </div>
+</div>
+
+<script>
+/* Boot guard — runs before the world files load. __ccwFail turns the
+   loading overlay into the failure message; __ccwRunning (set by
+   main.js after the first real frame) disarms it for good. */
+window.__ccwFail = function (msg) {
+  if (window.__ccwRunning) return;
+  var ov = document.getElementById('world-overlay');
+  if (!ov || ov.classList.contains('overlay-done')) return;
+  ov.classList.add('overlay-error');
+  var t = document.getElementById('overlay-title');
+  var m = document.getElementById('overlay-msg');
+  if (t) t.textContent = 'The Plaza could not open';
+  if (m) m.textContent = msg;
+};
+window.addEventListener('error', function (e) {
+  var t = e && e.target;
+  if (t && t.tagName === 'SCRIPT') {
+    window.__ccwFail('A Plaza file failed to load. Check your connection and reload — if Safari keeps failing, try Chrome.');
+  }
+}, true);
+window.setTimeout(function () {
+  if (window.__ccwRunning) return;
+  var ov = document.getElementById('world-overlay');
+  var m = document.getElementById('overlay-msg');
+  if (ov && m && !ov.classList.contains('overlay-error')) {
+    m.textContent = 'Still waking — the world file is big, and this connection looks slow. Hang tight, or reload on Wi-Fi.';
+  }
+}, 30000);
+</script>
 
 <header class="hud hud-top">
   <h1>Chemistress Church Lounge</h1>
@@ -22,7 +75,24 @@
   <button id="btn-arcade" type="button" class="btn btn-arcade">🎲 Enter the Lotería Arcade</button>
   <button id="btn-magic" type="button" class="btn">📱 Look around with your phone</button>
   <button id="btn-walk" type="button" class="btn">🚶 Walking mode</button>
+  <button id="btn-reset" type="button" class="btn">🧭 Reset view</button>
 </nav>
+
+<!--
+  Touch walking controls (M2b): bound by cameras.js wireTouchWalk,
+  shown only while Walking mode is selected on a touch device.
+  Hold-to-move: pointerdown starts, release/leave/cancel stops.
+-->
+<div id="touch-walk" class="touch-walk" hidden aria-label="Touch walking controls">
+  <div class="tw-cluster">
+    <button id="tw-left" type="button" class="tw-btn">◀ Turn</button>
+    <button id="tw-right" type="button" class="tw-btn">Turn ▶</button>
+  </div>
+  <div class="tw-cluster">
+    <button id="tw-back" type="button" class="tw-btn">▼ Back</button>
+    <button id="tw-fwd" type="button" class="tw-btn">▲ Forward</button>
+  </div>
+</div>
 
 <!--
   Babylon.js is SELF-HOSTED (Jay's decision, 2026-11-03): the pinned
@@ -31,10 +101,17 @@
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js"></script>
-<script src="js/palette.js"></script>
-<script src="js/plaza.js"></script>
-<script src="js/cameras.js"></script>
-<script src="js/main.js"></script>
+<script src="vendor/babylon.js?v=2026-11-03-3"></script>
+<script src="js/palette.js?v=2026-11-03-3"></script>
+<script src="js/plaza.js?v=2026-11-03-3"></script>
+<script src="js/cameras.js?v=2026-11-03-3"></script>
+<script src="js/main.js?v=2026-11-03-3"></script>
+<script>
+/* If the library itself failed to load or parse (the old-Safari
+   failure shape), say so in plain language instead of sitting blank. */
+if (typeof BABYLON === 'undefined') {
+  window.__ccwFail('The 3D library did not load. Check your connection and reload — if Safari keeps failing, try Chrome.');
+}
+</script>
 </body>
 </html>
