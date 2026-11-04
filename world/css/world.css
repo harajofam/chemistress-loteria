@@ -105,7 +105,7 @@ html, body {
 
 .btn:active { transform: scale(0.97); }
 
-.btn-arcade {
+.btn-parlor {
   background: var(--pink-hot);
   border-color: var(--gold);
   color: #fff;
