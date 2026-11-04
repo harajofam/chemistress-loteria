@@ -10,9 +10,9 @@
   ?v= token. Her phone once kept serving a cached build after a new
   deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
   DEPLOY: increment the token on ALL of these URLs in the same edit.
-  Current token: 2026-11-04-3 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3).
+  Current token: 2026-11-04-5 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5).
 -->
-<link rel="stylesheet" href="css/world.css?v=2026-11-04-3">
+<link rel="stylesheet" href="css/world.css?v=2026-11-04-5">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
@@ -100,6 +100,52 @@ window.setTimeout(function () {
 </div>
 
 <!--
+  Theater catalog card + watch bar (the watch build, 2026-11-04):
+  tapping the Theater's program board opens the catalog — the
+  full Classic Cinema index (83 public-domain titles, grouped by
+  decade; the list is built by cameras.js wireTheater from the
+  index data in plaza.js). Choosing a title plays it in the big
+  viewer overlay below — a plain video element carrying the
+  Archive.org stream (the Archive's file servers send no CORS
+  header, so an in-world video texture cannot legally read
+  their frames; the viewer is the working cinema surface, and
+  the film rail that lights the great glass itself is written
+  up in THEATER-BUILD-NOTES.md). The watch bar then offers Sit
+  & watch, Stand up, Full screen (back to the viewer), Audience
+  view, Live art takes the stage, and Stop film. Nothing here
+  is a link and nothing navigates.
+-->
+<div id="theater-card" class="game-card theater-card" hidden role="dialog" aria-labelledby="theater-card-title">
+  <div class="game-card-box theater-card-box">
+    <p class="game-card-kicker">The Theater · Classic Cinema</p>
+    <h2 id="theater-card-title">🎬 The Classic Cinema Index</h2>
+    <p id="theater-card-blurb">83 public-domain classics, free to watch together right here. Live art always takes the stage first.</p>
+    <div id="theater-list" class="theater-list"></div>
+    <div class="game-card-actions">
+      <button id="theater-stage" type="button" class="btn">🎭 Live art takes the stage</button>
+      <button id="theater-close" type="button" class="btn btn-parlor">Back to the theater</button>
+    </div>
+  </div>
+</div>
+
+<div id="theater-bar" class="theater-bar" hidden>
+  <p id="theater-now" class="theater-now"></p>
+  <div class="theater-bar-actions">
+    <button id="theater-sit" type="button" class="btn">🪑 Sit &amp; watch</button>
+    <button id="theater-stand" type="button" class="btn" hidden>🚶 Stand up</button>
+    <button id="theater-full" type="button" class="btn">⛶ Full screen</button>
+    <button id="theater-aud" type="button" class="btn">👥 Audience view</button>
+    <button id="theater-bar-stage" type="button" class="btn">🎭 Stage</button>
+    <button id="theater-stop" type="button" class="btn">⏹ Stop film</button>
+  </div>
+</div>
+
+<div id="theater-fs" class="theater-fs" hidden>
+  <video id="theater-fs-video" playsinline controls></video>
+  <button id="theater-fs-close" type="button" class="btn theater-fs-close">✕ Back to the theater</button>
+</div>
+
+<!--
   Touch walking controls (M2b): bound by cameras.js wireTouchWalk,
   shown only while Walking mode is selected on a touch device.
   Hold-to-move: pointerdown starts, release/leave/cancel stops.
@@ -122,11 +168,11 @@ window.setTimeout(function () {
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js?v=2026-11-04-3"></script>
-<script src="js/palette.js?v=2026-11-04-3"></script>
-<script src="js/plaza.js?v=2026-11-04-3"></script>
-<script src="js/cameras.js?v=2026-11-04-3"></script>
-<script src="js/main.js?v=2026-11-04-3"></script>
+<script src="vendor/babylon.js?v=2026-11-04-5"></script>
+<script src="js/palette.js?v=2026-11-04-5"></script>
+<script src="js/plaza.js?v=2026-11-04-5"></script>
+<script src="js/cameras.js?v=2026-11-04-5"></script>
+<script src="js/main.js?v=2026-11-04-5"></script>
 <script>
 /* If the library itself failed to load or parse (the old-Safari
    failure shape), say so in plain language instead of sitting blank. */
