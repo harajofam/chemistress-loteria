@@ -87,6 +87,15 @@
     mat.backFaceCulling = false;
     var plane = B.MeshBuilder.CreatePlane(name, { width: width, height: height }, scene);
     plane.material = mat;
+    // ORIENTATION CONTRACT: Babylon 9.33.2 CreatePlane geometry faces
+    // local -Z (vertex normals (0,0,-1)) — a plane's readable face is
+    // its -Z side, while this file places planes by aiming local +Z
+    // at the viewer. Callers must therefore give label planes a
+    // half-turn (rotation.y += Math.PI) in their parent space, or the
+    // double-sided material shows the plane's back: text MIRRORED
+    // (the M1 live-verification catch). Zone signs do this in
+    // buildZone; the entrance sign needs no turn (it is unparented
+    // and its -Z side already faces the Plaza).
     return plane;
   };
 
@@ -118,6 +127,7 @@
       frame.material = CCW.mat(scene, B, 'theater-panel-frame-mat', P.gold);
       var glass = add(B.MeshBuilder.CreatePlane('theater-panel',
         { width: 5.8, height: 6.4 }, scene));
+      glass.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
       glass.position.set(0, 3.55, 0.74);
       glass.material = CCW.texMat(scene, B, 'theater-panel-mat',
         CCW.stainedGlassTexture(scene, B, 'glass-floral', 'floral'), { emissive: true, alpha: true });
@@ -131,8 +141,291 @@
     else tex = CCW.jarsTexture(scene, B, 'studio-jars');
     var panel = add(B.MeshBuilder.CreatePlane(zone.id + '-panel',
       { width: 11.6, height: 5.4 }, scene));
+    panel.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
     panel.position.set(0, 3.6, 0.63);
     panel.material = CCW.texMat(scene, B, matName, tex, {});
+  }
+
+  /*
+   * M2a — the Lotería Arcade INTERIOR (the first dressed room).
+   *
+   * An enclosed hall behind the Arcade facade, in the group's local
+   * space: the facade's back face is z = -0.6 and the room runs to
+   * the back wall at z = -14.4, x in [-6.5, 6.5], ceiling at y = 7.
+   * Treatment follows the Arcade's established exterior: market
+   * stripes (canopy ceiling + the deck stack), hot pink/coral +
+   * plum + gold, checkerboard market floor. The dressed game table
+   * at the room's heart is the M3 centerpiece — geometry only here,
+   * the playable wiring arrives with the spectator mirror.
+   *
+   * ORIENTATION: interior planes obey the makeLabel contract — a
+   * plane's readable face is its local -Z side. On the front wall
+   * (viewer in the -Z direction) planes take NO half-turn; on the
+   * back wall (viewer in the +Z direction) they take rotation.y =
+   * PI; on the side walls they take rotation.y = -/+ PI/2 so the
+   * readable face points at the room's center. The smoke audit
+   * verifies every art plane's world -Z against the room.
+   *
+   * Card art: compressed derivatives of the Original-48 deck live in
+   * world/assets/arcade/ (the world stays self-contained); originals
+   * are never touched. 15 unique cards are shown: 14 on the walls +
+   * El Soul Sovereign featured on the table's caller stand.
+   */
+  var ARCADE_ART = {
+    back: [
+      '01-el-gluten-gremlin', '08-la-coffee-prophet', '13-la-empathy-elixir',
+      '20-la-meditation-muse', '32-la-kale-queen',
+      '03-el-mitochondria', '10-la-pantry-priestess', '16-la-gratitude-gangster',
+      '22-la-forgiveness-flame', '29-el-quantum-joker'
+    ],
+    left: ['28-la-intuition-inventor', '33-el-market-magician'],
+    right: ['05-el-fiber-fiend', '46-la-heart-hacker'],
+    feature: '25-el-soul-sovereign'
+  };
+
+  function cardArtMat(scene, B, file) {
+    var tex = new B.Texture('assets/arcade/' + file + '.webp', scene, false, true);
+    tex.hasAlpha = false;
+    return CCW.texMat(scene, B, 'arcade-int-art-mat-' + file, tex, { emissive: true });
+  }
+
+  // One framed card: gold frame box + art plane, placed by the caller
+  // (position/rotation set on BOTH so they travel together).
+  function framedCard(scene, B, add, file, w, h) {
+    var tag = file.slice(0, 2);
+    var frame = add(B.MeshBuilder.CreateBox('arcade-int-art-' + tag + '-frame',
+      { width: w + 0.16, height: h + 0.16, depth: 0.09 }, scene));
+    frame.material = CCW.mat(scene, B, 'arcade-int-art-frame-mat-' + tag, CCW.PALETTE.gold);
+    var art = add(B.MeshBuilder.CreatePlane('arcade-int-art-' + tag,
+      { width: w, height: h }, scene));
+    art.material = cardArtMat(scene, B, file);
+    return { frame: frame, art: art };
+  }
+
+  function buildArcadeInterior(scene, B, zone, add) {
+    var P = CCW.PALETTE;
+    var uv = outward(zone);
+
+    // ---- Room shell -------------------------------------------------
+    var floor = add(B.MeshBuilder.CreateBox('arcade-int-floor',
+      { width: 13.4, height: 0.12, depth: 14.2 }, scene));
+    floor.position.set(0, -0.06, -7.5);
+    floor.material = CCW.texMat(scene, B, 'arcade-int-floor-mat',
+      CCW.checkerTexture(scene, B, 'arcade-int-floor-tex'), {});
+    floor.receiveShadows = true;
+
+    // Ceiling treatment: the market-stripe canopy (decision noted in
+    // the M2a deploy notes — stripes over star-chart, echoing the
+    // facade panel so the hall reads as one market room).
+    var ceiling = add(B.MeshBuilder.CreateBox('arcade-int-ceiling',
+      { width: 13.6, height: 0.25, depth: 14.4 }, scene));
+    ceiling.position.set(0, 7.12, -7.5);
+    ceiling.material = CCW.texMat(scene, B, 'arcade-int-ceiling-mat',
+      CCW.stripesTexture(scene, B, 'arcade-int-canopy'), {});
+
+    var backWall = add(B.MeshBuilder.CreateBox('arcade-int-wall-back',
+      { width: 14, height: 7, depth: 0.5 }, scene));
+    backWall.position.set(0, 3.5, -14.65);
+    backWall.material = CCW.mat(scene, B, 'arcade-int-wall-back-mat', P.plumHouse);
+    [-6.75, 6.75].forEach(function (x, i) {
+      var side = add(B.MeshBuilder.CreateBox('arcade-int-wall-' + (i ? 'right' : 'left'),
+        { width: 0.5, height: 7, depth: 14.3 }, scene));
+      side.position.set(x, 3.5, -7.5);
+      side.material = CCW.mat(scene, B, 'arcade-int-wall-side-mat-' + i, P.plumHouse);
+    });
+
+    // Interior face of the front wall + the door, seen from inside.
+    var front = add(B.MeshBuilder.CreateBox('arcade-int-front-panel',
+      { width: 13, height: 7, depth: 0.15 }, scene));
+    front.position.set(0, 3.5, -0.68);
+    front.material = CCW.mat(scene, B, 'arcade-int-front-mat', P.plumWall);
+    var doorFrameIn = add(B.MeshBuilder.CreateBox('arcade-int-door-frame',
+      { width: 4.0, height: 5.2, depth: 0.12 }, scene));
+    doorFrameIn.position.set(0, 2.6, -0.78);
+    doorFrameIn.material = CCW.mat(scene, B, 'arcade-int-door-frame-mat', P.gold);
+    var doorGlowIn = add(B.MeshBuilder.CreatePlane('arcade-int-door-glow',
+      { width: 3.4, height: 4.6 }, scene));
+    // No half-turn: the readable -Z face points into the room (the
+    // viewer stands in the -Z direction from this wall). See header.
+    doorGlowIn.position.set(0, 2.3, -0.86);
+    doorGlowIn.material = CCW.mat(scene, B, 'arcade-int-door-glow-mat', P.pinkHot,
+      { emissive: P.pinkHot });
+
+    // Gold wainscot line around the room.
+    var wainsBack = add(B.MeshBuilder.CreateBox('arcade-int-wainscot-back',
+      { width: 12.9, height: 0.14, depth: 0.08 }, scene));
+    wainsBack.position.set(0, 1.02, -14.36);
+    wainsBack.material = CCW.mat(scene, B, 'arcade-int-wainscot-back-mat', P.gold);
+    [-6.46, 6.46].forEach(function (x, i) {
+      var wains = add(B.MeshBuilder.CreateBox('arcade-int-wainscot-' + (i ? 'right' : 'left'),
+        { width: 0.08, height: 0.14, depth: 13.7 }, scene));
+      wains.position.set(x, 1.02, -7.5);
+      wains.material = CCW.mat(scene, B, 'arcade-int-wainscot-side-mat-' + i, P.gold);
+    });
+
+    // Warm pendant globes over the hall.
+    [[-3.4, -5], [3.4, -5], [-3.4, -11], [3.4, -11]].forEach(function (pos, i) {
+      var rod = add(B.MeshBuilder.CreateCylinder('arcade-int-pendant-rod-' + i,
+        { diameter: 0.06, height: 1.3, tessellation: 6 }, scene));
+      rod.position.set(pos[0], 6.35, pos[1]);
+      rod.material = CCW.mat(scene, B, 'arcade-int-pendant-rod-mat-' + i, P.gold);
+      var globe = add(B.MeshBuilder.CreateSphere('arcade-int-pendant-globe-' + i,
+        { diameter: 0.8, segments: 12 }, scene));
+      globe.position.set(pos[0], 5.55, pos[1]);
+      globe.material = CCW.glowMat(scene, B, 'arcade-int-pendant-globe-mat-' + i, P.goldSoft);
+    });
+    // The room's warm heart-light. Lights are not parented to the
+    // zone group, so this one is placed in world space directly.
+    var roomLight = new B.PointLight('arcade-int-light',
+      new B.Vector3(uv[0] * (CCW.ZONE_RADIUS + 8), 5.4, uv[1] * (CCW.ZONE_RADIUS + 8)), scene);
+    roomLight.intensity = 0.9;
+    roomLight.diffuse = new B.Color3(1.0, 0.72, 0.5);
+    roomLight.range = 26;
+
+    // ---- The game table (dressed centerpiece; wiring is M3) --------
+    var tableZ = -8;
+    var top = add(B.MeshBuilder.CreateBox('arcade-int-table-top',
+      { width: 5.6, height: 0.16, depth: 2.8 }, scene));
+    top.position.set(0, 1.02, tableZ);
+    top.material = CCW.mat(scene, B, 'arcade-int-table-top-mat', P.plumHouse);
+    var trim = add(B.MeshBuilder.CreateBox('arcade-int-table-trim',
+      { width: 5.85, height: 0.07, depth: 3.05 }, scene));
+    trim.position.set(0, 0.93, tableZ);
+    trim.material = CCW.mat(scene, B, 'arcade-int-table-trim-mat', P.gold);
+    [-2.2, 2.2].forEach(function (x, i) {
+      var ped = add(B.MeshBuilder.CreateBox('arcade-int-table-pedestal-' + i,
+        { width: 0.5, height: 0.9, depth: 2.2 }, scene));
+      ped.position.set(x, 0.45, tableZ);
+      ped.material = CCW.mat(scene, B, 'arcade-int-table-pedestal-mat-' + i, P.plumWall);
+    });
+    var runner = add(B.MeshBuilder.CreateBox('arcade-int-table-runner',
+      { width: 5.0, height: 0.03, depth: 1.1 }, scene));
+    runner.position.set(0, 1.115, tableZ);
+    runner.material = CCW.mat(scene, B, 'arcade-int-table-runner-mat', P.velvetMagenta);
+    var stand = add(B.MeshBuilder.CreateCylinder('arcade-int-caller-stand',
+      { diameter: 0.7, height: 0.1, tessellation: 20 }, scene));
+    stand.position.set(0, 1.16, tableZ);
+    stand.material = CCW.glowMat(scene, B, 'arcade-int-caller-stand-mat', P.gold);
+
+    // The featured card on the caller stand, leaning back toward the
+    // entrance: readable face aims +Z (and a touch up) in group space.
+    var featFrame = add(B.MeshBuilder.CreateBox('arcade-int-feature-frame',
+      { width: 0.74, height: 1.16, depth: 0.05 }, scene));
+    featFrame.position.set(0, 1.66, tableZ);
+    featFrame.rotation.x = 0.28;
+    featFrame.material = CCW.mat(scene, B, 'arcade-int-feature-frame-mat', P.gold);
+    var featArt = add(B.MeshBuilder.CreatePlane('arcade-int-feature-art',
+      { width: 0.64, height: 1.07 }, scene));
+    featArt.position.set(0, 1.675, tableZ + 0.048);
+    featArt.rotation.y = Math.PI; // readable face toward the entrance
+    featArt.rotation.x = 0.28;
+    featArt.material = cardArtMat(scene, B, ARCADE_ART.feature);
+
+    var deckStack = add(B.MeshBuilder.CreateBox('arcade-int-deck-stack',
+      { width: 0.52, height: 0.16, depth: 0.8 }, scene));
+    deckStack.position.set(1.9, 1.18, tableZ - 0.3);
+    deckStack.rotation.y = 0.35;
+    deckStack.material = CCW.texMat(scene, B, 'arcade-int-deck-stack-mat',
+      CCW.stripesTexture(scene, B, 'arcade-int-deck-stripes'), {});
+    var beanBowl = add(B.MeshBuilder.CreateCylinder('arcade-int-bean-bowl',
+      { diameterTop: 0.55, diameterBottom: 0.4, height: 0.18, tessellation: 16 }, scene));
+    beanBowl.position.set(-1.9, 1.19, tableZ + 0.3);
+    beanBowl.material = CCW.mat(scene, B, 'arcade-int-bean-bowl-mat', P.coral);
+
+    // ---- Seating: velvet benches on the long sides, stools at the ends
+    [[-5.55, P.velvetMagenta, 'a'], [-10.45, P.velvetTeal, 'b']].forEach(function (cfg) {
+      var z = cfg[0], velvet = cfg[1], tag = cfg[2];
+      var seat = add(B.MeshBuilder.CreateBox('arcade-int-bench-' + tag + '-seat',
+        { width: 5.2, height: 0.16, depth: 0.7 }, scene));
+      seat.position.set(0, 0.6, z);
+      seat.material = CCW.mat(scene, B, 'arcade-int-bench-' + tag + '-seat-mat', velvet);
+      var dir = z > tableZ ? 1 : -1; // backrest on the side away from the table
+      var back = add(B.MeshBuilder.CreateBox('arcade-int-bench-' + tag + '-back',
+        { width: 5.2, height: 0.75, depth: 0.13 }, scene));
+      back.position.set(0, 1.12, z + dir * 0.36);
+      back.material = CCW.mat(scene, B, 'arcade-int-bench-' + tag + '-back-mat', velvet);
+      var ped = add(B.MeshBuilder.CreateBox('arcade-int-bench-' + tag + '-pedestal',
+        { width: 4.6, height: 0.52, depth: 0.5 }, scene));
+      ped.position.set(0, 0.26, z);
+      ped.material = CCW.mat(scene, B, 'arcade-int-bench-' + tag + '-pedestal-mat', P.plumWall);
+    });
+    [[-3.55, P.velvetLavender, 'a'], [3.55, P.velvetOrange, 'b']].forEach(function (cfg) {
+      var x = cfg[0], velvet = cfg[1], tag = cfg[2];
+      var seat = add(B.MeshBuilder.CreateCylinder('arcade-int-stool-' + tag + '-seat',
+        { diameter: 0.85, height: 0.13, tessellation: 18 }, scene));
+      seat.position.set(x, 0.68, tableZ);
+      seat.material = CCW.mat(scene, B, 'arcade-int-stool-' + tag + '-seat-mat', velvet);
+      var leg = add(B.MeshBuilder.CreateCylinder('arcade-int-stool-' + tag + '-leg',
+        { diameter: 0.12, height: 0.62, tessellation: 10 }, scene));
+      leg.position.set(x, 0.31, tableZ);
+      leg.material = CCW.mat(scene, B, 'arcade-int-stool-' + tag + '-leg-mat', P.plumHouse);
+    });
+
+    // ---- Card-art wall ----------------------------------------------
+    // Back wall: a 5 x 2 grid the entering visitor reads at once.
+    var artW = 1.17, artH = 1.95;
+    ARCADE_ART.back.forEach(function (file, i) {
+      var col = i % 5, row = Math.floor(i / 5);
+      var x = -4.8 + col * 2.4, y = row === 0 ? 4.75 : 2.45;
+      var piece = framedCard(scene, B, add, file, artW, artH);
+      piece.frame.position.set(x, y, -14.33);
+      piece.art.position.set(x, y, -14.26);
+      piece.art.rotation.y = Math.PI; // viewer stands in +Z of the plane
+    });
+    // Side walls: two pieces each, facing the room's center.
+    ARCADE_ART.left.forEach(function (file, i) {
+      var z = i === 0 ? -5.5 : -10.5;
+      var piece = framedCard(scene, B, add, file, artW, artH);
+      piece.frame.rotation.y = -Math.PI / 2;
+      piece.frame.position.set(-6.44, 3.55, z);
+      piece.art.rotation.y = -Math.PI / 2; // readable face toward +X
+      piece.art.position.set(-6.37, 3.55, z);
+    });
+    ARCADE_ART.right.forEach(function (file, i) {
+      var z = i === 0 ? -5.5 : -10.5;
+      var piece = framedCard(scene, B, add, file, artW, artH);
+      piece.frame.rotation.y = Math.PI / 2;
+      piece.frame.position.set(6.44, 3.55, z);
+      piece.art.rotation.y = Math.PI / 2; // readable face toward -X
+      piece.art.position.set(6.37, 3.55, z);
+    });
+    // Header plaque over the gallery wall.
+    var plaqueTrim = add(B.MeshBuilder.CreateBox('arcade-int-plaque-trim',
+      { width: 7.4, height: 1.0, depth: 0.1 }, scene));
+    plaqueTrim.position.set(0, 6.3, -14.34);
+    plaqueTrim.material = CCW.mat(scene, B, 'arcade-int-plaque-trim-mat', P.gold);
+    var plaque = add(CCW.makeLabel(scene, B, 'arcade-int-plaque',
+      ['Lotería Arcade', 'The Original Deck, on the wall'], 7.0, 0.85, { fg: P.goldSoft }));
+    plaque.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
+    plaque.position.set(0, 6.3, -14.27);
+
+    // ---- Return pad, inside by the door ------------------------------
+    var padTex = CCW.padTexture(scene, B, 'arcade-int-pad-tex', P.pinkHot);
+    var returnPad = add(B.MeshBuilder.CreateDisc('arcade-int-return-pad',
+      { radius: 1.5, tessellation: 28 }, scene));
+    returnPad.rotation.x = Math.PI / 2;
+    returnPad.position.set(4.7, 0.04, -2.3);
+    returnPad.material = CCW.texMat(scene, B, 'arcade-int-return-pad-mat', padTex,
+      { alpha: true, emissive: true });
+    var returnRing = add(B.MeshBuilder.CreateTorus('arcade-int-return-ring',
+      { diameter: 3.0, thickness: 0.07, tessellation: 32 }, scene));
+    returnRing.rotation.x = Math.PI / 2;
+    returnRing.position.set(4.7, 0.05, -2.3);
+    returnRing.material = CCW.glowMat(scene, B, 'arcade-int-return-ring-mat', P.gold);
+    var returnSign = add(CCW.makeLabel(scene, B, 'arcade-int-return-sign',
+      ['↩ The Plaza'], 2.2, 0.55, { fg: P.goldSoft }));
+    // No half-turn: the sign's readable -Z face looks into the room,
+    // toward a visitor coming from the table. See header contract.
+    returnSign.position.set(4.7, 2.7, -2.35);
+
+    return {
+      returnPad: returnPad,
+      returnRing: returnRing,
+      entrance: {
+        position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
+        target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
+      }
+    };
   }
 
   function buildZone(scene, B, zone) {
@@ -181,6 +474,7 @@
     doorFrame.material = CCW.mat(scene, B, zone.id + '-door-frame-mat', P.gold);
     var door = add(B.MeshBuilder.CreatePlane(zone.id + '-door',
       { width: 3.4, height: 4.6 }, scene));
+    door.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
     door.position.set(0, 2.3, 0.68);
     door.material = CCW.mat(scene, B, zone.id + '-door-mat', accent, { emissive: accent });
 
@@ -204,6 +498,7 @@
     signPlaque.material = CCW.mat(scene, B, zone.id + '-sign-plaque-mat', P.plumHouse);
     var sign = add(CCW.makeLabel(scene, B, zone.id + '-sign',
       [zone.name, zone.blurb], 11, 2.2, { fg: P.goldSoft }));
+    sign.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
     sign.position.set(0, 8.95, 0.55);
 
     // Threshold teleport pad (return ride to the Plaza).
@@ -236,10 +531,18 @@
       ring.material = CCW.glowMat(scene, B, 'arcade-portal-mat', P.pinkHot);
       var glow = add(B.MeshBuilder.CreateDisc('arcade-portal-glow',
         { radius: 2.1, tessellation: 32 }, scene));
+      glow.rotation.y = Math.PI; // disc faces local -Z too; see makeLabel
       glow.position.set(0, 2.6, 1.05);
       glow.material = CCW.mat(scene, B, 'arcade-portal-glow-mat', P.pinkHot,
         { alpha: 0.35, emissive: P.pinkHot });
       result.portalMeshes = [ring, glow];
+
+      // M2a: the dressed interior behind this door. The Plaza pad
+      // now lands INSIDE the room's entrance (facing the table), and
+      // the room gains its own return pad by the door.
+      var interior = buildArcadeInterior(scene, B, zone, add);
+      result.threshold = interior.entrance;
+      result.interiorReturn = { mesh: interior.returnPad, ringMesh: interior.returnRing };
     }
     return result;
   }
@@ -276,7 +579,9 @@
     var win = add(B.MeshBuilder.CreatePlane('entrance-window',
       { width: 5.6, height: 7.0 }, scene));
     win.position.set(0, 3.6, 18.74);
-    win.rotation.y = Math.PI; // face the Plaza (spawn side)
+    // No rotation: a Babylon plane's readable face is its local -Z
+    // side, which already faces the Plaza here (see makeLabel). The
+    // half-turn this line used to apply presented the window's back.
     win.material = CCW.texMat(scene, B, 'entrance-window-mat',
       CCW.stainedGlassTexture(scene, B, 'glass-cosmic', 'cosmic'), { emissive: true, alpha: true });
 
@@ -309,7 +614,10 @@
     var welcome = add(CCW.makeLabel(scene, B, 'entrance-sign',
       ['Chemistress Church Lounge', 'Welcome in — the Plaza'], 9, 1.8, { fg: P.goldSoft }));
     welcome.position.set(0, 9.9, 18.46);
-    welcome.rotation.y = Math.PI;
+    // No rotation: this sign is unparented and a plane's readable
+    // face is its -Z side (see makeLabel), which already faces the
+    // Plaza from the chapel wall. The half-turn this spot used to
+    // apply presented the sign's back — mirrored lettering.
 
     var light = new B.PointLight('entrance-light', new B.Vector3(0, 4.4, 16.2), scene);
     light.intensity = 0.8;
@@ -431,7 +739,7 @@
     var boardFace = B.MeshBuilder.CreatePlane('notice-face',
       { width: 3.2, height: 2.1 }, scene);
     boardFace.position.set(4.6 + Math.sin(-0.93) * 0.1, 3.1, 11.5 + Math.cos(-0.93) * 0.1);
-    boardFace.rotation.y = -0.93;
+    boardFace.rotation.y = -0.93 + Math.PI; // plane faces local -Z; see makeLabel
     boardFace.material = CCW.texMat(scene, B, 'notice-face-mat',
       CCW.noticeTexture(scene, B, 'notice-tex'), {});
 
@@ -469,6 +777,15 @@
         destPos: CCW.SPAWN.position.slice(), destTarget: CCW.SPAWN.target.slice(),
         label: 'the Plaza'
       });
+      // M2a: rooms with an interior (the Arcade) register their
+      // inside return pad as an additional ride back to the Plaza.
+      if (built.interiorReturn) {
+        teleports.push({
+          mesh: built.interiorReturn.mesh, ringMesh: built.interiorReturn.ringMesh,
+          destPos: CCW.SPAWN.position.slice(), destTarget: CCW.SPAWN.target.slice(),
+          label: 'the Plaza'
+        });
+      }
     });
 
     return { zones: zones, portalMeshes: portalMeshes, teleports: teleports };
