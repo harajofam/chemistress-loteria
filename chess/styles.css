@@ -1,0 +1,83 @@
+body{margin:0;font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;background:#0b0815;color:#f5f0ff}
+#ui{position:relative;z-index:10;max-width:920px;margin:16px auto;padding:16px;background:#120d22;border:1px solid #2a2146;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+h1{margin-top:0;margin-bottom:2px;color:#FF3FA4}
+.sub{margin:0 0 10px;color:#FFE066}
+h2{margin:0 0 8px;font-size:15px;color:#FFE066}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0}
+.row.actions{flex-wrap:wrap;margin-top:10px}
+label{min-width:90px;color:#FFE066}
+input{flex:1;padding:8px 10px;border-radius:8px;border:1px solid #2a2146;background:#1a1330;color:#fff}
+button{padding:8px 12px;border-radius:8px;border:1px solid #7A3EF0;background:#7A3EF0;color:#fff;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+#status{margin:10px 0;color:#00B3B8}
+#table{display:flex;gap:12px;align-items:flex-start}
+.panel{margin-top:12px;padding:10px;border-radius:10px;background:#0f0b1d;border:1px solid #2a2146}
+.panel.grow{flex:1}
+#hint{margin-top:8px;color:#cbb8ff;min-height:18px}
+.empty{color:#8f83b8}
+#log{margin:0;padding-left:18px;color:#cbb8ff;max-height:150px;overflow:auto}
+#log li{margin:2px 0}
+
+/* player list / scoreboard */
+.player{display:flex;gap:8px;align-items:center;padding:5px 8px;border-radius:8px;border:1px solid transparent}
+.player.turn{border-color:#FFE066;background:#1a1330}
+.player.me .pname{color:#FF3FA4}
+.chip{width:12px;height:12px;border-radius:50%;flex:none}
+.chip.pink{background:#FF3FA4}
+.chip.teal{background:#00B3B8}
+.pname{font-weight:600}
+.pmeta{color:#cbb8ff;font-size:13px}
+.pscore{margin-left:auto;color:#FFE066;font-weight:600}
+
+/* draw offer banner */
+.draw-banner{margin-top:10px;padding:8px 10px;border:1px solid #FFE066;border-radius:10px;background:#1a1330;color:#FFE066;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.draw-banner[hidden]{display:none}
+
+/* captured trays */
+.tray-title{margin-top:14px}
+.tray{display:flex;gap:8px;align-items:center;min-height:26px}
+.tray-label{color:#cbb8ff;font-size:13px;min-width:64px}
+.tray-pieces{display:flex;flex-wrap:wrap}
+.tray-piece{font-size:20px;line-height:1}
+.tray-piece.pink{color:#FF3FA4;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.tray-piece.teal{color:#00B3B8;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+
+/* the chessboard: fixed orientation, pink at the bottom */
+#board{display:flex;justify-content:center}
+.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:0;width:min(100%,520px);border:2px solid #b9a86b;border-radius:6px;overflow:hidden}
+.sq{position:relative;aspect-ratio:1/1;padding:0;border:none;border-radius:0;cursor:default;display:flex;align-items:center;justify-content:center}
+.sq.light{background:#3d2c63}
+.sq.dark{background:#1d1436}
+.sq:disabled{opacity:1;cursor:default}
+.sq.movable,.sq.dest{cursor:pointer}
+.sq.movable::after{content:'';position:absolute;inset:0;box-shadow:inset 0 0 0 2px rgba(0,179,184,.85)}
+.sq.dest::after{content:'';position:absolute;inset:0;box-shadow:inset 0 0 0 3px #00B3B8}
+.sq.dest.capture::after{box-shadow:inset 0 0 0 3px #FF7A00}
+.sq.selected::after{content:'';position:absolute;inset:0;box-shadow:inset 0 0 0 3px #FFE066}
+.sq.lastmove{box-shadow:inset 0 0 0 2px rgba(255,224,102,.35)}
+.sq.incheck{box-shadow:inset 0 0 0 3px #ff4040}
+.coord{position:absolute;font-size:10px;color:rgba(245,240,255,.55);pointer-events:none;line-height:1}
+.coord.rank{top:2px;left:3px}
+.coord.file{bottom:2px;right:3px}
+.piece{font-size:32px;line-height:1;pointer-events:none}
+.piece.pink{color:#FF3FA4;text-shadow:0 0 0 #FF3FA4, 0 2px 3px rgba(0,0,0,.65)}
+.piece.teal{color:#00B3B8;text-shadow:0 0 0 #00B3B8, 0 2px 3px rgba(0,0,0,.65)}
+
+/* promotion picker */
+.promo-picker{margin-top:10px;display:flex;gap:8px;align-items:center;color:#FFE066}
+.promo-picker[hidden]{display:none}
+.promo-btn{font-size:26px;padding:4px 10px;line-height:1}
+.promo-picker.pink .promo-btn{color:#FF3FA4}
+.promo-picker.teal .promo-btn{color:#00B3B8}
+.promo-btn.cancel{font-size:16px;color:#f5f0ff}
+
+/* move list */
+.moves-title{margin-top:12px}
+.moves-text{color:#f5f0ff;font-size:14px;line-height:1.5;word-spacing:2px;max-height:120px;overflow:auto}
+@media (max-width:640px){
+  #ui{margin:8px;padding:10px}
+  #table{flex-direction:column}
+  #table .panel{width:100%;box-sizing:border-box}
+  .row{flex-wrap:wrap}
+  .piece{font-size:22px}
+}

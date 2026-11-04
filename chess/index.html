@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chemistress Chess — The Game Parlor</title>
+  <!-- Colyseus.js client: the SELF-HOSTED esbuild bundle from the client
+       root (the stock UMD evaluates to an empty namespace in browsers —
+       see BUILD-STATUS.md). No CDN scripts anywhere on this page. -->
+  <script src="../colyseus.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="ui">
+    <h1>♞ Chemistress Chess</h1>
+    <p class="sub">The Game Parlor · full chess, face to face · pink moves first · no clock — pull up a chair</p>
+
+    <div class="row">
+      <label>Your Name</label>
+      <input id="playerName" value="Jay" />
+      <button id="btnJoin">Join Table</button>
+      <button id="btnReady" disabled>Ready</button>
+    </div>
+    <div id="status">Status: Not connected.</div>
+
+    <div id="drawBanner" class="draw-banner" hidden>
+      <span id="drawText"></span>
+      <button id="btnAcceptDraw">Accept draw</button>
+      <button id="btnDeclineDraw">Decline</button>
+    </div>
+
+    <div id="table">
+      <div class="panel">
+        <h2>At the table</h2>
+        <div id="players"></div>
+        <div class="row actions">
+          <button id="btnResign" disabled>Resign</button>
+          <button id="btnOfferDraw" disabled>Offer draw</button>
+        </div>
+        <h2 class="tray-title">Captured</h2>
+        <div class="tray"><span class="tray-label">Pink took</span><span id="trayPink" class="tray-pieces"></span></div>
+        <div class="tray"><span class="tray-label">Teal took</span><span id="trayTeal" class="tray-pieces"></span></div>
+      </div>
+
+      <div class="panel grow">
+        <h2>The board</h2>
+        <div id="board"><span class="empty">Join the table to see the board.</span></div>
+        <div id="promoPicker" class="promo-picker" hidden>
+          <span>Promote to:</span>
+          <button data-promo="Q" class="promo-btn">♛</button>
+          <button data-promo="R" class="promo-btn">♜</button>
+          <button data-promo="B" class="promo-btn">♝</button>
+          <button data-promo="N" class="promo-btn">♞</button>
+          <button id="promoCancel" class="promo-btn cancel">✕</button>
+        </div>
+        <div id="hint"></div>
+        <h2 class="moves-title">Moves</h2>
+        <div id="movesText" class="moves-text">No moves yet.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Table talk</h2>
+      <ul id="log"></ul>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
