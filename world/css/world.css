@@ -205,3 +205,58 @@ html, body {
   color: #fff;
   transform: scale(0.96);
 }
+
+/* Game offer card (parlor table wiring, 2026-11-04): the centered
+   offer shown when a game table or its framed motif is tapped in
+   the Game Parlor — bound by cameras.js wireGameCard. The wrapper
+   never blocks the room (pointer-events: none); the card itself
+   takes the taps. [hidden] must win over the flex display below. */
+.game-card {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+.game-card[hidden] { display: none; }
+
+.game-card-box {
+  pointer-events: auto;
+  max-width: 24rem;
+  text-align: center;
+  background: rgba(42, 10, 51, 0.94);
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  padding: 1.2rem 1.2rem 1.3rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+}
+
+.game-card-kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.game-card-box h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.45rem;
+  color: var(--gold-soft);
+}
+
+#game-card-blurb {
+  margin: 0 0 0.9rem;
+  line-height: 1.45;
+}
+
+.game-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
