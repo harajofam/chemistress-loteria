@@ -316,7 +316,7 @@
     });
   };
 
-  // Market-hall stripes for the Arcade facade panel (pink / gold / plum).
+  // Awning stripes for the Game Parlor facade panel (pink / gold / plum).
   CCW.stripesTexture = function (scene, B, name) {
     var P = CCW.PALETTE;
     return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
@@ -432,7 +432,7 @@
       ctx.fillStyle = '#3d1247';
       ctx.textAlign = 'left';
       ctx.font = 'bold 34px Georgia, serif';
-      ctx.fillText('🎲 Game night — Fridays at dusk, in the Arcade', 36, 152);
+      ctx.fillText('🎲 Game night — Fridays at dusk, in the Game Parlor', 36, 152);
       ctx.fillText('🍲 Soup kitchen — free, vegan, all welcome', 36, 226);
       ctx.fillText('📚 Library circle — charts & numerology, Sundays', 36, 300);
       ctx.fillText('💌 Pen-Pal Post — open a mailbox at random', 36, 374);
@@ -442,8 +442,8 @@
     });
   };
 
-  // Checkerboard floor for the Arcade interior (M2a): deep plum checks
-  // with gold grout — the market-hall floor under the game table.
+  // Checkerboard floor for the parlor interior (M2a): deep plum checks
+  // with gold grout — the hall floor under the game tables.
   CCW.checkerTexture = function (scene, B, name) {
     var P = CCW.PALETTE;
     return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
@@ -469,6 +469,164 @@
         ctx.beginPath(); ctx.moveTo(0, g * cell); ctx.lineTo(w, g * cell); ctx.stroke();
       }
       ctx.globalAlpha = 1;
+    });
+  };
+
+  // Tabletop board for the parlor's board-game tables (checkers +
+  // chess): 8 x 8 plum/cream checks inside a gold frame band.
+  CCW.boardTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = P.gold;
+      ctx.fillRect(0, 0, w, h);
+      var x0 = 26, n = 8, cell = (w - x0 * 2) / n;
+      for (var r = 0; r < n; r++) {
+        for (var c = 0; c < n; c++) {
+          ctx.fillStyle = (r + c) % 2 ? P.plumHouse : P.cream;
+          ctx.fillRect(x0 + c * cell, x0 + r * cell, cell, cell);
+        }
+      }
+      ctx.strokeStyle = P.plumDeep;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(x0, x0); ctx.lineTo(w - x0, x0);
+      ctx.lineTo(w - x0, h - x0); ctx.lineTo(x0, h - x0);
+      ctx.closePath(); ctx.stroke();
+    });
+  };
+
+  // Framed vintage-style game motifs for the Game Parlor walls —
+  // drawn, never photographed: gold frame line on deep plum, the
+  // game's signature shapes in house colors. kind: 'domino',
+  // 'checkers', 'backgammon', 'chess', 'dice', 'mancala'.
+  CCW.gameMotifTexture = function (scene, B, name, kind) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = '#24102c';
+      ctx.fillRect(0, 0, w, h);
+      var cx = w / 2, cy = h / 2;
+      function disc(x, y, r, fill, ring) {
+        ctx.fillStyle = fill;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        if (ring) {
+          ctx.strokeStyle = ring; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.arc(x, y, r - 4, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+      if (kind === 'domino') {
+        ctx.fillStyle = P.cream;
+        ctx.beginPath(); ctx.roundRect(cx - 90, cy - 160, 180, 320, 24); ctx.fill();
+        ctx.fillStyle = P.plumHouse;
+        ctx.fillRect(cx - 90, cy - 4, 180, 8);
+        disc(cx - 42, cy - 92, 16, P.plumHouse);
+        disc(cx + 42, cy - 92, 16, P.plumHouse);
+        disc(cx, cy - 52, 16, P.plumHouse);
+        disc(cx - 42, cy + 82, 16, P.plumHouse);
+        disc(cx + 42, cy + 82, 16, P.plumHouse);
+      } else if (kind === 'checkers') {
+        var bx = cx - 150, by = cy - 150, cell = 75;
+        for (var r = 0; r < 4; r++) {
+          for (var c = 0; c < 4; c++) {
+            ctx.fillStyle = (r + c) % 2 ? P.plumHouse : P.cream;
+            ctx.fillRect(bx + c * cell, by + r * cell, cell, cell);
+          }
+        }
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(bx, by); ctx.lineTo(bx + 300, by);
+        ctx.lineTo(bx + 300, by + 300); ctx.lineTo(bx, by + 300);
+        ctx.closePath(); ctx.stroke();
+        disc(bx + cell * 1.5, by + cell * 0.5, 27, P.coral, P.gold);
+        disc(bx + cell * 2.5, by + cell * 3.5, 27, P.teal, P.gold);
+      } else if (kind === 'backgammon') {
+        ctx.fillStyle = P.plumWall;
+        ctx.fillRect(cx - 160, cy - 120, 320, 240);
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(cx - 160, cy - 120); ctx.lineTo(cx + 160, cy - 120);
+        ctx.lineTo(cx + 160, cy + 120); ctx.lineTo(cx - 160, cy + 120);
+        ctx.closePath(); ctx.stroke();
+        var tw = 320 / 12;
+        for (var i = 0; i < 12; i++) {
+          var x = cx - 160 + i * tw;
+          ctx.fillStyle = i % 2 ? P.goldSoft : P.coral;
+          ctx.beginPath();
+          ctx.moveTo(x, cy - 120); ctx.lineTo(x + tw, cy - 120); ctx.lineTo(x + tw / 2, cy);
+          ctx.closePath(); ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(x, cy + 120); ctx.lineTo(x + tw, cy + 120); ctx.lineTo(x + tw / 2, cy);
+          ctx.closePath(); ctx.fill();
+        }
+        disc(cx - 80, cy - 62, 17, P.cream, P.gold);
+        disc(cx + 54, cy + 62, 17, P.teal, P.gold);
+      } else if (kind === 'chess') {
+        ctx.fillStyle = P.cream;
+        // Pawn.
+        ctx.beginPath(); ctx.arc(cx - 130, cy - 58, 23, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(cx - 156, cy - 30, 52, 10);
+        ctx.beginPath();
+        ctx.moveTo(cx - 144, cy - 22); ctx.lineTo(cx - 116, cy - 22);
+        ctx.lineTo(cx - 100, cy + 38); ctx.lineTo(cx - 160, cy + 38);
+        ctx.closePath(); ctx.fill();
+        ctx.fillRect(cx - 166, cy + 38, 72, 12);
+        // Rook.
+        ctx.fillRect(cx - 20, cy - 20, 40, 58);
+        ctx.fillRect(cx - 27, cy - 46, 54, 26);
+        ctx.fillRect(cx - 27, cy - 60, 12, 14);
+        ctx.fillRect(cx - 6, cy - 60, 12, 14);
+        ctx.fillRect(cx + 15, cy - 60, 12, 14);
+        ctx.fillRect(cx - 30, cy + 38, 60, 12);
+        // King, with its cross.
+        ctx.fillRect(cx + 126, cy - 82, 8, 26);
+        ctx.fillRect(cx + 117, cy - 74, 26, 8);
+        ctx.beginPath();
+        ctx.moveTo(cx + 116, cy - 48); ctx.lineTo(cx + 144, cy - 48);
+        ctx.lineTo(cx + 160, cy + 38); ctx.lineTo(cx + 100, cy + 38);
+        ctx.closePath(); ctx.fill();
+        ctx.fillRect(cx + 94, cy + 38, 72, 12);
+        // The shelf they stand on.
+        ctx.fillStyle = P.gold;
+        ctx.fillRect(76, cy + 62, w - 152, 6);
+      } else if (kind === 'dice') {
+        [[-84, -30, 0.3, 5], [88, 44, -0.22, 3]].forEach(function (d) {
+          ctx.save();
+          ctx.translate(cx + d[0], cy + d[1]);
+          ctx.rotate(d[2]);
+          ctx.fillStyle = P.cream;
+          ctx.beginPath(); ctx.roundRect(-64, -64, 128, 128, 20); ctx.fill();
+          ctx.fillStyle = P.plumHouse;
+          var offs = d[3] === 5
+            ? [[-32, -32], [32, -32], [0, 0], [-32, 32], [32, 32]]
+            : [[-32, -32], [0, 0], [32, 32]];
+          offs.forEach(function (o) {
+            ctx.beginPath(); ctx.arc(o[0], o[1], 13, 0, Math.PI * 2); ctx.fill();
+          });
+          ctx.restore();
+        });
+      } else { // mancala
+        ctx.fillStyle = P.velvetMagenta;
+        ctx.beginPath(); ctx.roundRect(cx - 170, cy - 75, 340, 150, 60); ctx.fill();
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.roundRect(cx - 170, cy - 75, 340, 150, 60); ctx.stroke();
+        [cx - 130, cx + 130].forEach(function (x) {
+          ctx.fillStyle = P.plumDeep;
+          ctx.beginPath(); ctx.ellipse(x, cy, 22, 52, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = P.gold; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.ellipse(x, cy, 22, 52, 0, 0, Math.PI * 2); ctx.stroke();
+        });
+        for (var p = 0; p < 6; p++) {
+          var px = cx - 80 + p * 32;
+          disc(px, cy - 35, 13, P.plumDeep, P.gold);
+          disc(px, cy + 35, 13, P.plumDeep, P.gold);
+        }
+      }
+      // The drawn gold frame line, over everything.
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(18, 18); ctx.lineTo(w - 18, 18);
+      ctx.lineTo(w - 18, h - 18); ctx.lineTo(18, h - 18);
+      ctx.closePath(); ctx.stroke();
     });
   };
 
