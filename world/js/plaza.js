@@ -207,7 +207,7 @@
     var top = add(B.MeshBuilder.CreateBox('parlor-int-table-' + tag + '-top',
       { width: 2.3, height: 0.14, depth: 2.3 }, scene));
     top.position.set(cx, 1.0, cz);
-    top.material = CCW.mat(scene, B, 'parlor-int-table-' + tag + '-top-mat', P.plumHouse);
+    top.material = CCW.mat(scene, B, 'parlor-int-table-' + tag + '-top-mat', P.plumWall);
     var trim = add(B.MeshBuilder.CreateBox('parlor-int-table-' + tag + '-trim',
       { width: 2.5, height: 0.06, depth: 2.5 }, scene));
     trim.position.set(cx, 0.92, cz);
@@ -239,6 +239,31 @@
     var P = CCW.PALETTE;
     var uv = outward(zone);
 
+    // ---- Lighting rig (round 2, 2026-11-03) -------------------------
+    // Round 1 raised the single heart-light (0.9 → 1.4) and the room
+    // still read dim in the live check: one point light cannot carry
+    // a 13 x 14 m room. Round 2 lights the ROOM in layers — a warm
+    // hemisphere wash, a real point light inside each pendant globe,
+    // and the heart-light at 2.0 — and scopes every interior light
+    // to the interior meshes (includedOnlyMeshes, applied at the end
+    // of this build) so the Plaza outside keeps its night. The
+    // wall/table/floor surfaces also lift a step (here + palette.js):
+    // less black-plum, same identity. Lights are not meshes; the
+    // scene census is unchanged.
+    var WALL = '#492261'; // lifted interior plum (walls were plumHouse)
+    // The room's own lights, collected for interior scoping below.
+    var intLights = [];
+    // Zone-group local -> world (generalizes the heart-light's uv
+    // math: the group sits at uv * ZONE_RADIUS with rotation.y =
+    // angle + PI and local -Z pointing away from the Plaza center).
+    function roomWorld(lx, ly, lz) {
+      var a = zone.angleDeg * Math.PI / 180 + Math.PI;
+      var ca = Math.cos(a), sa = Math.sin(a);
+      return new B.Vector3(
+        uv[0] * CCW.ZONE_RADIUS + lx * ca + lz * sa, ly,
+        uv[1] * CCW.ZONE_RADIUS - lx * sa + lz * ca);
+    }
+
     // ---- Room shell (kept from M2a) --------------------------------
     var floor = add(B.MeshBuilder.CreateBox('parlor-int-floor',
       { width: 13.4, height: 0.12, depth: 14.2 }, scene));
@@ -258,19 +283,19 @@
     var backWall = add(B.MeshBuilder.CreateBox('parlor-int-wall-back',
       { width: 14, height: 7, depth: 0.5 }, scene));
     backWall.position.set(0, 3.5, -14.65);
-    backWall.material = CCW.mat(scene, B, 'parlor-int-wall-back-mat', P.plumHouse);
+    backWall.material = CCW.mat(scene, B, 'parlor-int-wall-back-mat', WALL);
     [-6.75, 6.75].forEach(function (x, i) {
       var side = add(B.MeshBuilder.CreateBox('parlor-int-wall-' + (i ? 'right' : 'left'),
         { width: 0.5, height: 7, depth: 14.3 }, scene));
       side.position.set(x, 3.5, -7.5);
-      side.material = CCW.mat(scene, B, 'parlor-int-wall-side-mat-' + i, P.plumHouse);
+      side.material = CCW.mat(scene, B, 'parlor-int-wall-side-mat-' + i, WALL);
     });
 
     // Interior face of the front wall + the door, seen from inside.
     var front = add(B.MeshBuilder.CreateBox('parlor-int-front-panel',
       { width: 13, height: 7, depth: 0.15 }, scene));
     front.position.set(0, 3.5, -0.68);
-    front.material = CCW.mat(scene, B, 'parlor-int-front-mat', P.plumWall);
+    front.material = CCW.mat(scene, B, 'parlor-int-front-mat', WALL);
     var doorFrameIn = add(B.MeshBuilder.CreateBox('parlor-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
@@ -305,17 +330,43 @@
         { diameter: 0.8, segments: 12 }, scene));
       globe.position.set(pos[0], 5.55, pos[1]);
       globe.material = CCW.glowMat(scene, B, 'parlor-int-pendant-globe-mat-' + i, P.goldSoft);
+      // Lighting round 2: the globe carries a real point light, so
+      // the table below it is properly lit, not just drawn lit. The
+      // light sits at the globe (a hair lower, y 5.5) in world space
+      // and is scoped to the interior at the end of the build.
+      var pendantLight = new B.PointLight('parlor-int-pendant-light-' + i,
+        roomWorld(pos[0], 5.5, pos[1]), scene);
+      pendantLight.intensity = 1.1;
+      pendantLight.diffuse = new B.Color3(1.0, 0.76, 0.52);
+      pendantLight.range = 10;
+      intLights.push(pendantLight);
     });
     // The room's warm heart-light. Lights are not parented to the
     // zone group, so this one is placed in world space directly.
     // (World fix pass, 2026-11-03: raised 0.9 → 1.4 and range
     // 26 → 30 — the interior read DIM in a desktop browser; warm
-    // and cozy, and the Plaza's own lights are untouched.)
+    // and cozy, and the Plaza's own lights are untouched. Lighting
+    // round 2, same night: 1.4 → 2.0, now one layer of the room's
+    // rig — see the note at the top of this build — and scoped to
+    // the interior below.)
     var roomLight = new B.PointLight('parlor-int-light',
       new B.Vector3(uv[0] * (CCW.ZONE_RADIUS + 8), 5.4, uv[1] * (CCW.ZONE_RADIUS + 8)), scene);
-    roomLight.intensity = 1.4;
+    roomLight.intensity = 2.0;
     roomLight.diffuse = new B.Color3(1.0, 0.72, 0.5);
     roomLight.range = 30;
+    intLights.push(roomLight);
+
+    // The room's own hemisphere: a warm ambient wash that lifts
+    // every interior surface at once — tabletops, tiles, stools,
+    // walls — with a plum-brown ground bounce off the floor. It is
+    // scoped to the interior meshes at the end of the build; the
+    // Plaza keeps the global night hemisphere untouched.
+    var roomHemi = new B.HemisphericLight('parlor-int-hemi',
+      new B.Vector3(0, 1, 0), scene);
+    roomHemi.intensity = 1.0;
+    roomHemi.diffuse = new B.Color3(1.0, 0.82, 0.62);
+    roomHemi.groundColor = new B.Color3(0.38, 0.20, 0.28);
+    intLights.push(roomHemi);
 
     // ---- Four game tables -------------------------------------------
     // Front pair near the door, back pair under the gallery wall.
@@ -513,6 +564,16 @@
     // No half-turn: the sign's readable -Z face looks into the room,
     // toward a visitor coming from the tables. See header contract.
     returnSign.position.set(4.7, 2.7, -2.35);
+
+    // Scope the room's lights to the room (lighting round 2): every
+    // mesh built above carries the 'parlor-int-' prefix, and
+    // includedOnlyMeshes keeps the interior rig — hemisphere,
+    // pendant points, heart-light — from spilling onto the Plaza,
+    // whose night look stays exactly as it was.
+    var intMeshes = scene.meshes.filter(function (m) {
+      return m.name.indexOf('parlor-int-') === 0;
+    });
+    intLights.forEach(function (l) { l.includedOnlyMeshes = intMeshes; });
 
     return {
       returnPad: returnPad,
