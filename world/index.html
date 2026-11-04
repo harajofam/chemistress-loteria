@@ -10,9 +10,9 @@
   ?v= token. Her phone once kept serving a cached build after a new
   deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
   DEPLOY: increment the token on ALL of these URLs in the same edit.
-  Current token: 2026-11-04-1 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series).
+  Current token: 2026-11-04-2 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2).
 -->
-<link rel="stylesheet" href="css/world.css?v=2026-11-04-1">
+<link rel="stylesheet" href="css/world.css?v=2026-11-04-2">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
@@ -79,6 +79,27 @@ window.setTimeout(function () {
 </nav>
 
 <!--
+  Game offer card (parlor table wiring, 2026-11-04): shown by
+  main.js when a visitor taps a game table or its framed motif in
+  the Game Parlor. Play opens that game's own page (same tab) —
+  the only navigation in the world, and only ever to the five
+  parlor games; "Stay in the parlor" dismisses the card and
+  leaves the visitor right where they stand. A tap on a table
+  never navigates by itself. Bound by cameras.js wireGameCard.
+-->
+<div id="game-card" class="game-card" hidden role="dialog" aria-labelledby="game-card-title">
+  <div class="game-card-box">
+    <p class="game-card-kicker">The Game Parlor</p>
+    <h2 id="game-card-title">Dominoes</h2>
+    <p id="game-card-blurb"></p>
+    <div class="game-card-actions">
+      <button id="game-card-play" type="button" class="btn btn-parlor">▶ Play</button>
+      <button id="game-card-close" type="button" class="btn">Stay in the parlor</button>
+    </div>
+  </div>
+</div>
+
+<!--
   Touch walking controls (M2b): bound by cameras.js wireTouchWalk,
   shown only while Walking mode is selected on a touch device.
   Hold-to-move: pointerdown starts, release/leave/cancel stops.
@@ -101,11 +122,11 @@ window.setTimeout(function () {
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js?v=2026-11-04-1"></script>
-<script src="js/palette.js?v=2026-11-04-1"></script>
-<script src="js/plaza.js?v=2026-11-04-1"></script>
-<script src="js/cameras.js?v=2026-11-04-1"></script>
-<script src="js/main.js?v=2026-11-04-1"></script>
+<script src="vendor/babylon.js?v=2026-11-04-2"></script>
+<script src="js/palette.js?v=2026-11-04-2"></script>
+<script src="js/plaza.js?v=2026-11-04-2"></script>
+<script src="js/cameras.js?v=2026-11-04-2"></script>
+<script src="js/main.js?v=2026-11-04-2"></script>
 <script>
 /* If the library itself failed to load or parse (the old-Safari
    failure shape), say so in plain language instead of sitting blank. */
