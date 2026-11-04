@@ -633,118 +633,183 @@
     });
   };
 
-  // The Theater's screen (M2b, 2026-11-04): the chapel's great cosmic
-  // window drawn as a cinema screen — radiant sun with orbit rings,
-  // planets descending, a crescent moon, dense stars, gold leading,
-  // and an inscribed cartouche naming the house program. Jay's
-  // programming rule (2026-11-04): at idle the screen runs CLASSIC
-  // CINEMA — public-domain old movies from her Chemist Dates
-  // collection, always free; live karaoke / stage nights preempt.
-  // The cartouche names the program only — no film titles in the
-  // glass (titles wait for the PD verification pass + showings mode).
+  // The Theater's screen (M2b, 2026-11-04; RE-DRESSED the same
+  // day; ART-FORM REDIRECT later that day — Jay's explicit choice:
+  // the Theater is the first test of designing BY ART FORM —
+  // SURREALISM + POP ART — instead of chasing photographs, since
+  // iPhone visitors see the world through a 2D magic window
+  // anyway). The glass is now a DREAM: an oversized crescent moon
+  // cropped by the frame's edge, a molten sun with fine orbit
+  // rings, rosettes blown past natural scale, film frames
+  // floating loose in the glass, nebula washes drifting over a
+  // deep violet field. FLORAL as much as cosmic, per her palette
+  // law; the leading stays FINE (gold is a fine-line accent
+  // only; the one cartouche is a small plaque). Jay's
+  // programming rule: at idle the screen is this glass; a chosen
+  // film plays in the big viewer (plaza.js THEATER_INDEX +
+  // main.js — the Archive-CORS finding lives there); live art
+  // preempts everything.
   CCW.cosmicScreenTexture = function (scene, B, name) {
     var P = CCW.PALETTE;
     return CCW.canvasTexture(scene, B, name, 1024, 768, function (ctx, w, h) {
-      var g = ctx.createRadialGradient(w / 2, 300, 60, w / 2, h / 2, 720);
-      g.addColorStop(0, '#2b1450');
-      g.addColorStop(1, '#150826');
+      var g = ctx.createRadialGradient(w / 2, 300, 60, w / 2, h / 2, 780);
+      g.addColorStop(0, '#4a1a63');
+      g.addColorStop(0.55, '#33124e');
+      g.addColorStop(1, '#1d0a38');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
       var rnd = prand(4242);
-      // Glass panes: soft jewel washes behind the leading.
-      var washes = [P.velvetMagenta, P.tealDeep, P.velvetLavender, P.velvetOrange, P.plumWall];
-      for (var i = 0; i < 30; i++) {
+      // Dream washes: big, soft, drifting nebula panes.
+      var washes = [P.pinkHot, P.teal, P.velvetMagenta, P.velvetLavender,
+        P.coral, P.tealDeep, P.velvetOrange];
+      for (var i = 0; i < 40; i++) {
         ctx.fillStyle = washes[i % washes.length];
-        ctx.globalAlpha = 0.30 + rnd() * 0.30;
+        ctx.globalAlpha = 0.26 + rnd() * 0.30;
         ctx.beginPath();
-        ctx.arc(rnd() * w, rnd() * h, 40 + rnd() * 110, 0, Math.PI * 2);
+        ctx.arc(rnd() * w, rnd() * h, 50 + rnd() * 130, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
-      // Crescent moon, upper left.
+      // ---- The dream crown ---------------------------------------
+      // THE MOON, oversized past nature: a great crescent cropped
+      // by the frame's top-left corner, the way moons are in dreams.
       ctx.fillStyle = P.goldSoft;
-      ctx.beginPath(); ctx.arc(150, 140, 46, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#1d0c38';
-      ctx.beginPath(); ctx.arc(176, 122, 42, 0, Math.PI * 2); ctx.fill();
-      // The radiant sun, upper center, with orbit rings.
-      var sx = w / 2, sy = 290;
+      ctx.beginPath(); ctx.arc(96, 84, 118, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#31135a';
+      ctx.beginPath(); ctx.arc(150, 58, 104, 0, Math.PI * 2); ctx.fill();
+      // The molten sun, upper center, with fine orbit rings.
+      var sx = w / 2 + 60, sy = 238;
       [196, 158].forEach(function (r) {
-        ctx.strokeStyle = P.gold; ctx.globalAlpha = 0.55; ctx.lineWidth = 4;
+        ctx.strokeStyle = P.gold; ctx.globalAlpha = 0.6; ctx.lineWidth = 2.5;
         ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.stroke();
       });
       ctx.globalAlpha = 1;
       for (var r2 = 0; r2 < 12; r2++) {
         var a = (r2 / 12) * Math.PI * 2;
-        ctx.strokeStyle = P.gold; ctx.lineWidth = 8;
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.moveTo(sx + Math.cos(a) * 108, sy + Math.sin(a) * 108);
-        ctx.lineTo(sx + Math.cos(a) * 142, sy + Math.sin(a) * 142);
+        ctx.moveTo(sx + Math.cos(a) * 102, sy + Math.sin(a) * 102);
+        ctx.lineTo(sx + Math.cos(a) * 130, sy + Math.sin(a) * 130);
         ctx.stroke();
       }
       ctx.fillStyle = P.gold;
-      ctx.beginPath(); ctx.arc(sx, sy, 96, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx, sy, 90, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = P.coral;
-      ctx.beginPath(); ctx.arc(sx, sy, 64, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx, sy, 59, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = P.cream;
-      ctx.beginPath(); ctx.arc(sx, sy, 30, 0, Math.PI * 2); ctx.fill();
-      // Planets descending from the sun, chapel-window style.
+      ctx.beginPath(); ctx.arc(sx, sy, 27, 0, Math.PI * 2); ctx.fill();
+      // Planets, one wearing a ring too big for it (dream logic).
       var planets = [
-        [sx, 540, 27, P.velvetLavender, true],
-        [sx - 92, 624, 19, P.teal, false],
-        [sx + 84, 648, 15, P.coral, false],
-        [sx - 210, 470, 16, P.pinkHot, false],
-        [sx + 224, 452, 21, P.tealDeep, false]
+        [sx - 300, 190, 15, P.teal, false],
+        [sx + 268, 176, 19, P.velvetLavender, true],
+        [sx + 322, 336, 12, P.pinkHot, false],
+        [sx - 336, 330, 13, P.coral, false]
       ];
       planets.forEach(function (p) {
         ctx.fillStyle = p[3];
         ctx.beginPath(); ctx.arc(p[0], p[1], p[2], 0, Math.PI * 2); ctx.fill();
         if (p[4]) {
-          ctx.strokeStyle = P.goldSoft; ctx.lineWidth = 5;
-          ctx.beginPath(); ctx.ellipse(p[0], p[1], p[2] * 1.8, p[2] * 0.52, -0.4, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = P.goldSoft; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.ellipse(p[0], p[1], p[2] * 2.1, p[2] * 0.6, -0.4, 0, Math.PI * 2); ctx.stroke();
         }
       });
-      for (var s = 0; s < 130; s++) star(ctx, rnd() * w, rnd() * h, 3 + rnd() * 6, P.cream);
-      // Gold leading: an arch over the composition + a pane grid.
-      ctx.strokeStyle = P.gold;
-      ctx.lineWidth = 9;
-      ctx.beginPath();
-      ctx.moveTo(56, h - 24); ctx.lineTo(56, 300);
-      ctx.arc(w / 2, 300, w / 2 - 56, Math.PI, 0);
-      ctx.lineTo(w - 56, h - 24);
-      ctx.stroke();
-      ctx.globalAlpha = 0.5; ctx.lineWidth = 4;
-      [236, 724].forEach(function (x) {
-        ctx.beginPath(); ctx.moveTo(x, 210); ctx.lineTo(x, h - 24); ctx.stroke();
-      });
-      ctx.beginPath(); ctx.moveTo(56, 470); ctx.lineTo(w - 56, 470); ctx.stroke();
+      // Oversized sparkles — stars drawn too large, on purpose.
+      for (var s = 0; s < 26; s++) star(ctx, rnd() * w, rnd() * h * 0.55, 9 + rnd() * 13, P.cream);
+      for (var s2 = 0; s2 < 90; s2++) star(ctx, rnd() * w, rnd() * h * 0.62, 3 + rnd() * 5, P.cream);
+      // ---- The floral field, blown past natural scale ------------
+      function rosette(cx, cy, R, petalA, petalB) {
+        for (var p = 0; p < 8; p++) {
+          var ang = (p / 8) * Math.PI * 2;
+          ctx.fillStyle = p % 2 ? petalA : petalB;
+          ctx.beginPath();
+          ctx.ellipse(cx + Math.cos(ang) * R * 0.58, cy + Math.sin(ang) * R * 0.58,
+            R * 0.36, R * 0.19, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#2d6a4f';
+        ctx.beginPath(); ctx.arc(cx, cy, R * 0.30, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = P.goldSoft;
+        ctx.beginPath(); ctx.arc(cx, cy, R * 0.17, 0, Math.PI * 2); ctx.fill();
+      }
+      rosette(w / 2 - 40, 545, 148, P.pinkHot, P.teal);
+      rosette(150, 585, 84, P.velvetMagenta, P.coral);
+      rosette(w - 140, 590, 88, P.teal, P.velvetLavender);
+      rosette(330, 690, 50, P.coral, P.pinkHot);
+      rosette(w - 320, 692, 50, P.velvetLavender, P.teal);
+      // Leaves and small blossoms scattered through the field.
+      for (var lf = 0; lf < 42; lf++) {
+        var lx = 60 + rnd() * (w - 120), ly = 430 + rnd() * 280;
+        ctx.save();
+        ctx.translate(lx, ly); ctx.rotate(rnd() * Math.PI * 2);
+        ctx.fillStyle = lf % 3 ? '#2d6a4f' : '#3f9e4d';
+        ctx.globalAlpha = 0.75;
+        ctx.beginPath(); ctx.ellipse(0, 0, 20 + rnd() * 14, 8 + rnd() * 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
       ctx.globalAlpha = 1;
-      ctx.lineWidth = 10;
+      for (var bl = 0; bl < 26; bl++) {
+        var bx = 50 + rnd() * (w - 100), by = 420 + rnd() * 300;
+        ctx.fillStyle = [P.pinkHot, P.coral, P.goldSoft, P.velvetLavender][bl % 4];
+        for (var pt = 0; pt < 5; pt++) {
+          var pa = (pt / 5) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.arc(bx + Math.cos(pa) * 8, by + Math.sin(pa) * 8, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = P.cream;
+        ctx.beginPath(); ctx.arc(bx, by, 3.4, 0, Math.PI * 2); ctx.fill();
+      }
+      // Film frames floating loose in the glass (surrealism: the
+      // cinema dreams of itself) — fine gold rectangles, tilted,
+      // sprocket dots along their edges.
+      function filmFrame(cx, cy, fw, fh, rot) {
+        ctx.save();
+        ctx.translate(cx, cy); ctx.rotate(rot);
+        ctx.strokeStyle = P.goldSoft; ctx.lineWidth = 3;
+        ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+        ctx.fillStyle = P.goldSoft;
+        for (var fx = -fw / 2 + 12; fx < fw / 2 - 6; fx += 18) {
+          ctx.fillRect(fx, -fh / 2 + 6, 7, 7);
+          ctx.fillRect(fx, fh / 2 - 13, 7, 7);
+        }
+        ctx.restore();
+      }
+      filmFrame(238, 300, 128, 88, -0.16);
+      filmFrame(w - 218, 428, 108, 76, 0.13);
+      // Fine gold leading: an arch over the composition, a light
+      // pane grid, and a single outer border line (fine lines only).
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(14, 14); ctx.lineTo(w - 14, 14); ctx.lineTo(w - 14, h - 14);
-      ctx.lineTo(14, h - 14); ctx.closePath();
+      ctx.moveTo(52, h - 20); ctx.lineTo(52, 290);
+      ctx.arc(w / 2, 290, w / 2 - 52, Math.PI, 0);
+      ctx.lineTo(w - 52, h - 20);
       ctx.stroke();
-      // The inscribed cartouche: the program's name, in the glass.
-      var cw = 470, chh = 62, cx0 = (w - cw) / 2, cy0 = h - 108;
+      ctx.globalAlpha = 0.55; ctx.lineWidth = 2;
+      [236, 724].forEach(function (x) {
+        ctx.beginPath(); ctx.moveTo(x, 200); ctx.lineTo(x, h - 20); ctx.stroke();
+      });
+      ctx.beginPath(); ctx.moveTo(52, 428); ctx.lineTo(w - 52, 428); ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(12, 12); ctx.lineTo(w - 12, 12); ctx.lineTo(w - 12, h - 12);
+      ctx.lineTo(12, h - 12); ctx.closePath();
+      ctx.stroke();
+      // The cartouche, kept as one small fine-line plaque.
+      var cw = 330, chh = 44, cx0 = (w - cw) / 2, cy0 = h - 76;
       ctx.fillStyle = 'rgba(26,5,31,0.88)';
       ctx.fillRect(cx0, cy0, cw, chh);
-      ctx.strokeStyle = P.gold; ctx.lineWidth = 4;
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(cx0, cy0); ctx.lineTo(cx0 + cw, cy0); ctx.lineTo(cx0 + cw, cy0 + chh);
       ctx.lineTo(cx0, cy0 + chh); ctx.closePath();
       ctx.stroke();
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(cx0 + 7, cy0 + 7); ctx.lineTo(cx0 + cw - 7, cy0 + 7);
-      ctx.lineTo(cx0 + cw - 7, cy0 + chh - 7); ctx.lineTo(cx0 + 7, cy0 + chh - 7);
-      ctx.closePath();
-      ctx.stroke();
       ctx.fillStyle = P.goldSoft;
-      ctx.font = 'bold 30px Georgia, serif';
+      ctx.font = 'bold 22px Georgia, serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('C L A S S I C   C I N E M A', w / 2, cy0 + chh / 2 + 1);
-      star(ctx, cx0 - 26, cy0 + chh / 2, 11, P.gold);
-      star(ctx, cx0 + cw + 26, cy0 + chh / 2, 11, P.gold);
     });
   };
 
@@ -765,44 +830,76 @@
       for (var s = 0; s < 26; s++) star(ctx, rnd() * w, rnd() * h, 3 + rnd() * 4, P.goldSoft);
     });
   };
-
-  // The Theater program board (M2b) — the now-showing notice by the
-  // door. Jay's rule (2026-11-04): idle programming is CLASSIC
-  // CINEMA, public-domain old movies from her Chemist Dates
-  // collection, always free — NOT a streaming service; live karaoke
-  // and stage nights take the screen first. The board posts the
-  // SEVEN titles cleared by the public-domain verification pass
-  // (THEATER-PROGRAM-PD-CHECK.md, 2026-11-04): Charade and His Girl
-  // Friday from the CookBook pairings, three more from Jay's own
-  // watched lists, and two same-spirit additions — each verified
-  // public domain with a playable Internet Archive copy. The other
-  // ten CookBook pairings are still under COPYRIGHT and must never
-  // be named as playing — not here, not on the marquee, not in the
-  // glass. (Playback itself is still the later showings mode, M5.)
+  // The Theater program board (M2b; re-dressed 2026-11-04; POP
+  // ART in the art-form redirect, same day) — the now-showing
+  // board by the door, drawn as a POP POSTER: halftone dot field,
+  // a starburst behind the title, bold color blocks with hard
+  // outlines, Ben-Day bands. Jay's rule (2026-11-04): idle
+  // programming is CLASSIC CINEMA, public-domain old movies,
+  // always free — NOT a streaming service; live karaoke and stage
+  // nights take the screen first. The lawful index is 83 TITLES
+  // (PD checks 1–2 + the 1930–1960 expansion; check 3 added
+  // none) — too many to print, so the board posts the count, the
+  // seven house favorites the program began with (each verbatim
+  // from the check files), and the invitation: the board is
+  // TAPPABLE and opens the full index (plaza.js THEATER_INDEX).
+  // Copyrighted titles must never be named as playing — not
+  // here, not on the marquee, not in the glass; the smoke suite
+  // guards that mechanically.
   CCW.theaterProgramTexture = function (scene, B, name) {
     var P = CCW.PALETTE;
     return CCW.canvasTexture(scene, B, name, 768, 640, function (ctx, w, h) {
-      ctx.fillStyle = '#24102c';
+      // Halftone dot field over plum (pop's print-shop ground).
+      ctx.fillStyle = '#2a0a33';
       ctx.fillRect(0, 0, w, h);
-      ctx.strokeStyle = P.gold; ctx.lineWidth = 8;
+      ctx.fillStyle = 'rgba(255,46,136,0.30)';
+      for (var dy = 14; dy < h; dy += 26) {
+        for (var dx = 14 + ((dy / 26) % 2) * 13; dx < w; dx += 26) {
+          ctx.beginPath(); ctx.arc(dx, dy, 4.4, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      // The starburst behind the title.
+      ctx.save();
+      ctx.translate(w / 2, 118);
+      ctx.fillStyle = P.coral;
       ctx.beginPath();
-      ctx.moveTo(14, 14); ctx.lineTo(w - 14, 14); ctx.lineTo(w - 14, h - 14);
-      ctx.lineTo(14, h - 14); ctx.closePath();
-      ctx.stroke();
-      ctx.fillStyle = P.plumHouse;
-      ctx.fillRect(30, 30, w - 60, 88);
-      ctx.fillStyle = P.goldSoft;
-      ctx.font = 'bold 42px Georgia, serif';
+      for (var sp = 0; sp < 24; sp++) {
+        var ang = (sp / 24) * Math.PI * 2;
+        var rr = sp % 2 ? 62 : 118;
+        var px = Math.cos(ang) * rr * 2.6, py = Math.sin(ang) * rr * 0.78;
+        if (sp === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      // Hard outline frame: thick plum, then gold pinstripe.
+      ctx.strokeStyle = '#1a051f'; ctx.lineWidth = 16;
+      ctx.strokeRect(8, 8, w - 16, h - 16);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2.5;
+      ctx.strokeRect(22, 22, w - 44, h - 44);
+      // Title block: hot pink slab, hard black offset outline.
+      ctx.fillStyle = '#1a051f';
+      ctx.fillRect(58, 52, w - 108, 84);
+      ctx.fillStyle = P.pinkHot;
+      ctx.fillRect(50, 44, w - 108, 84);
+      ctx.fillStyle = '#fdf3e3';
+      ctx.font = 'bold 40px Georgia, serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🎬 NOW SHOWING', w / 2, 88);
+      ctx.fillText('🎬 NOW SHOWING', w / 2, 98);
       ctx.fillStyle = P.gold;
-      ctx.font = 'bold 56px Georgia, serif';
-      ctx.fillText('CLASSIC CINEMA', w / 2, 172);
-      ctx.fillRect(150, 196, w - 300, 3);
-      // The cleared seven — the program of record (PD check,
-      // 2026-11-04). Titles verbatim from the check file.
+      ctx.font = 'bold 54px Georgia, serif';
+      ctx.fillText('CLASSIC CINEMA', w / 2, 186);
+      // Teal count band.
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(96, 208, w - 192, 40);
+      ctx.fillStyle = '#fdf3e3';
+      ctx.font = 'bold 24px Georgia, serif';
+      ctx.fillText('83 public-domain classics · 1930s–1960s', w / 2, 237);
+      ctx.fillStyle = P.teal;
+      ctx.font = 'bold 20px Georgia, serif';
+      ctx.fillText('— HOUSE FAVORITES —', w / 2, 282);
+      // The seven the program began with (PD check, 2026-11-04).
       ctx.fillStyle = P.cream;
-      ctx.font = '29px Georgia, serif';
+      ctx.font = '26px Georgia, serif';
       var program = [
         'Charade (1963)',
         'His Girl Friday (1940)',
@@ -813,14 +910,328 @@
         'Nothing Sacred (1937)'
       ];
       program.forEach(function (title, i) {
-        ctx.fillText(title, w / 2, 244 + i * 40);
+        ctx.fillText(title, w / 2, 316 + i * 31);
       });
+      // The invitation, on a coral pop band.
+      ctx.fillStyle = P.coral;
+      ctx.fillRect(64, 528, w - 128, 62);
+      ctx.strokeStyle = '#1a051f'; ctx.lineWidth = 4;
+      ctx.strokeRect(64, 528, w - 128, 62);
+      ctx.fillStyle = '#1a051f';
+      ctx.font = 'bold 24px Georgia, serif';
+      ctx.fillText('👆 Tap this board for the full index —', w / 2, 552);
+      ctx.fillText('every title free to watch, right here', w / 2, 580);
+      ctx.fillStyle = P.cream;
+      ctx.font = 'italic 21px Georgia, serif';
+      ctx.fillText('Live stage nights take the screen first 💜', w / 2, 620);
+    });
+  };
+
+  // Theater carpet (re-dress 2026-11-04; POP-GRAPHIC in the
+  // art-form redirect, same day): the floor goes BOLD — big
+  // saturated diamond blocks with starburst hearts and halftone
+  // dot rows on deep plum, graphic shapes with strong edges
+  // instead of a woven pile. Her jewel family; gold only as
+  // fine pinstripe grid lines.
+  CCW.theaterCarpetTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
+      ctx.fillStyle = '#2c1138';
+      ctx.fillRect(0, 0, w, h);
+      function diamond(cx, cy, r, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy);
+        ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy);
+        ctx.closePath(); ctx.fill();
+      }
+      function burst(cx, cy, r, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (var sp = 0; sp < 16; sp++) {
+          var ang = (sp / 16) * Math.PI * 2;
+          var rr = sp % 2 ? r * 0.45 : r;
+          var px = cx + Math.cos(ang) * rr, py = cy + Math.sin(ang) * rr;
+          if (sp === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath(); ctx.fill();
+      }
+      // Halftone dot rows in the field's quiet bands.
+      ctx.fillStyle = 'rgba(255,46,136,0.35)';
+      for (var hy = 32; hy < h; hy += 128) {
+        for (var hx = 32 + ((hy / 128) % 2) * 32; hx < w; hx += 64) {
+          ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      // The bold lattice: saturated blocks, starburst hearts.
+      var cols = [P.coral, P.teal, P.velvetMagenta, '#d6336c'];
+      for (var ry = 0; ry < 4; ry++) {
+        for (var rx = 0; rx < 4; rx++) {
+          var cx = 128 + rx * 256, cy = 128 + ry * 256;
+          diamond(cx, cy, 66, 'rgba(61,18,71,0.9)');
+          diamond(cx, cy, 54, cols[(rx + ry) % 4]);
+          diamond(cx, cy, 30, 'rgba(42,10,51,0.85)');
+          burst(cx, cy, 17, P.goldSoft);
+          if (rx < 3) diamond(cx + 128, cy, 18, P.velvetLavender);
+          if (ry < 3) diamond(cx, cy + 128, 18, P.velvetLavender);
+        }
+      }
+      // Fine gold pinstripe grid between the blocks.
+      ctx.strokeStyle = 'rgba(245,197,66,0.35)'; ctx.lineWidth = 2;
+      for (var gLine = 0; gLine <= 4; gLine++) {
+        ctx.beginPath(); ctx.moveTo(gLine * 256, 0); ctx.lineTo(gLine * 256, h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, gLine * 256); ctx.lineTo(w, gLine * 256); ctx.stroke();
+      }
+      // Edge frame: teal line + gold pinstripe.
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 12;
+      ctx.beginPath(); ctx.moveTo(10, 10); ctx.lineTo(w - 10, 10);
+      ctx.lineTo(w - 10, h - 10); ctx.lineTo(10, h - 10); ctx.closePath(); ctx.stroke();
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(30, 30); ctx.lineTo(w - 30, 30);
+      ctx.lineTo(w - 30, h - 30); ctx.lineTo(30, h - 30); ctx.closePath(); ctx.stroke();
+    });
+  };
+
+  // The aisle runner (re-dress 2026-11-04; SURREAL WARP in the
+  // art-form redirect, same day): TRUE CORAL — the house coral
+  // itself — with its medallion chain drawn in exaggerated
+  // perspective: each medallion larger and wider-spaced than the
+  // last as the aisle runs to the screen, so the walk down the
+  // aisle leans forward like a dream of walking. Teal edge bands
+  // with cream diamonds and a gold pinstripe keep the border.
+  CCW.theaterRunnerTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 256, 1024, function (ctx, w, h) {
+      ctx.fillStyle = '#ff7a59'; // the house coral itself (PALETTE.coral)
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(313);
+      for (var i = 0; i < 6000; i++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,190,160,0.16)' : 'rgba(178,44,20,0.16)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.4, 2.4);
+      }
+      function diamond(cx, cy, r, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy);
+        ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy);
+        ctx.closePath(); ctx.fill();
+      }
+      // The warped medallion chain: radius and spacing grow along
+      // the run (the texture's far end sits at the screen).
+      var chain = [
+        [70, 26], [180, 33], [315, 42], [480, 54], [680, 70], [915, 90]
+      ];
+      chain.forEach(function (m) {
+        diamond(w / 2, m[0], m[1], 'rgba(164,19,124,0.55)');
+        diamond(w / 2, m[0], m[1] * 0.68, P.velvetOrange);
+        star(ctx, w / 2, m[0], m[1] * 0.34, P.cream);
+      });
+      // Edge bands: teal stripe + gold pinstripe + cream diamonds.
+      [0, 1].forEach(function (side) {
+        var x0 = side ? w - 34 : 0;
+        ctx.fillStyle = P.tealDeep;
+        ctx.fillRect(x0, 0, 34, h);
+        ctx.fillStyle = P.gold;
+        ctx.fillRect(side ? w - 40 : 38, 0, 3, h);
+        for (var dy = 32; dy < h; dy += 64) {
+          diamond(x0 + 17, dy, 10, P.cream);
+        }
+      });
+    });
+  };
+
+  // The Theater ceiling (ART-FORM REDIRECT, 2026-11-04): a DREAM
+  // star chart — the shared starChartTexture stays untouched for
+  // the Library and Plaza; this is the Theater's own sky. Navy is
+  // still the field (her palette law), but the chart has come
+  // loose: fine-line constellations drawn as connected thread,
+  // nebula wisps in pink and teal, sparkles at impossible sizes,
+  // and one great crescent moon sailing the corner.
+  CCW.theaterCeilingTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      ctx.fillStyle = '#141033';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(777);
+      // Nebula wisps.
+      var wisps = [P.pinkHot, P.teal, P.velvetMagenta, P.velvetLavender];
+      for (var i = 0; i < 16; i++) {
+        ctx.fillStyle = wisps[i % 4];
+        ctx.globalAlpha = 0.10 + rnd() * 0.10;
+        ctx.beginPath();
+        ctx.ellipse(rnd() * w, rnd() * h, 90 + rnd() * 170, 26 + rnd() * 44,
+          rnd() * 0.9 - 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // Star dust.
+      for (var s = 0; s < 260; s++) {
+        ctx.fillStyle = P.cream;
+        ctx.globalAlpha = 0.35 + rnd() * 0.6;
+        ctx.beginPath(); ctx.arc(rnd() * w, rnd() * h, 1 + rnd() * 1.8, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // Fine-line constellations: gold thread between bright stars.
+      function constellation(pts) {
+        ctx.strokeStyle = P.gold; ctx.globalAlpha = 0.75; ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        pts.forEach(function (p, i2) {
+          if (i2 === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+        });
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        pts.forEach(function (p) { star(ctx, p[0], p[1], 9, P.goldSoft); });
+      }
+      constellation([[120, 90], [210, 150], [300, 110], [392, 176], [470, 128]]);
+      constellation([[640, 330], [724, 268], [806, 318], [884, 244], [950, 300]]);
+      constellation([[150, 380], [238, 330], [326, 392]]);
+      // Oversized sparkles, adrift.
+      star(ctx, 560, 140, 22, P.cream);
+      star(ctx, 880, 110, 17, P.goldSoft);
+      star(ctx, 420, 400, 19, P.cream);
+      star(ctx, 90, 250, 15, P.goldSoft);
+      // The great crescent, sailing the corner.
       ctx.fillStyle = P.goldSoft;
+      ctx.beginPath(); ctx.arc(952, 416, 62, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#141033';
+      ctx.beginPath(); ctx.arc(978, 398, 54, 0, Math.PI * 2); ctx.fill();
+    });
+  };
+
+  // The pop poster beside the door (ART-FORM REDIRECT, 2026-11-04):
+  // detail where the viewer stands close — a bold poster twin to
+  // the program board: starburst, halftone dots, film-strip edge,
+  // hard outlines. All text is house program text; no film art is
+  // copied from anywhere (the posters are drawn, like the glass).
+  CCW.theaterPopPosterTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 640, function (ctx, w, h) {
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(0, 0, w, h);
+      // Halftone dots.
+      ctx.fillStyle = 'rgba(253,243,227,0.28)';
+      for (var dy = 16; dy < h; dy += 28) {
+        for (var dx = 16 + ((dy / 28) % 2) * 14; dx < w; dx += 28) {
+          ctx.beginPath(); ctx.arc(dx, dy, 4.6, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      // Film-strip edge, left.
+      ctx.fillStyle = '#1a051f';
+      ctx.fillRect(0, 0, 44, h);
+      ctx.fillStyle = P.cream;
+      for (var fy = 18; fy < h - 10; fy += 44) ctx.fillRect(12, fy, 20, 24);
+      // Starburst behind the headline.
+      ctx.save();
+      ctx.translate(w / 2 + 22, 168);
+      ctx.fillStyle = P.pinkHot;
+      ctx.beginPath();
+      for (var sp = 0; sp < 20; sp++) {
+        var ang = (sp / 20) * Math.PI * 2;
+        var rr = sp % 2 ? 58 : 104;
+        var px = Math.cos(ang) * rr * 1.9, py = Math.sin(ang) * rr * 0.92;
+        if (sp === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      // Headline block.
+      ctx.fillStyle = '#1a051f';
+      ctx.fillRect(76, 108, w - 116, 128);
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = 'bold 44px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('CLASSIC', w / 2 + 22, 158);
+      ctx.fillText('CINEMA', w / 2 + 22, 208);
+      ctx.fillStyle = P.cream;
+      ctx.font = 'bold 30px Georgia, serif';
+      ctx.fillText('★ 83 FILMS ★', w / 2 + 22, 300);
       ctx.font = '26px Georgia, serif';
-      ctx.fillText('Public-domain program · always free', w / 2, 534);
-      ctx.font = 'italic 24px Georgia, serif';
-      ctx.fillText('Live stage nights — karaoke & acting —', w / 2, 570);
-      ctx.fillText('take the screen first 💜', w / 2, 600);
+      ctx.fillText('1930s — 1960s', w / 2 + 22, 342);
+      // Coral band: the promise.
+      ctx.fillStyle = P.coral;
+      ctx.fillRect(66, 396, w - 106, 74);
+      ctx.strokeStyle = '#1a051f'; ctx.lineWidth = 4;
+      ctx.strokeRect(66, 396, w - 106, 74);
+      ctx.fillStyle = '#1a051f';
+      ctx.font = 'bold 31px Georgia, serif';
+      ctx.fillText('FREE FOREVER', w / 2 + 22, 444);
+      ctx.fillStyle = P.cream;
+      ctx.font = 'italic 23px Georgia, serif';
+      ctx.fillText('old movies, always free —', w / 2 + 22, 522);
+      ctx.fillText('tap the board by the door 💜', w / 2 + 22, 554);
+      // Hard outline frame + gold pinstripe.
+      ctx.strokeStyle = '#1a051f'; ctx.lineWidth = 14;
+      ctx.strokeRect(7, 7, w - 14, h - 14);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2.5;
+      ctx.strokeRect(20, 20, w - 40, h - 40);
+    });
+  };
+
+  // A floating film frame (ART-FORM REDIRECT): a drawn film-frame
+  // border with sprocket holes and a TRANSPARENT center — hung in
+  // mid-air beside the screen, the cinema dreaming of itself.
+  // Shared by the two floating frames in the room.
+  CCW.theaterFilmFrameTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 256, 192, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = P.teal;
+      ctx.lineWidth = 14;
+      ctx.strokeRect(10, 10, w - 20, h - 20);
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(24, 24, w - 48, h - 48);
+      ctx.fillStyle = P.cream;
+      for (var fx = 22; fx < w - 24; fx += 30) {
+        ctx.fillRect(fx, 16, 13, 10);
+        ctx.fillRect(fx, h - 26, 13, 10);
+      }
+    });
+  };
+
+  // A floating sparkle sprite (ART-FORM REDIRECT): one four-point
+  // star, cream with a gold heart, on transparency — the
+  // constellations that drift loose in the room's air.
+  CCW.theaterStarTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 128, 128, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      star(ctx, w / 2, h / 2, 52, P.cream);
+      star(ctx, w / 2, h / 2, 24, P.goldSoft);
+    });
+  };
+
+  // The marquee's pop casing (ART-FORM REDIRECT): a coral
+  // starburst field with halftone dots on plum — the NOW SHOWING
+  // label plane sits in front of it, framed like a poster.
+  CCW.theaterMarqueeTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 144, function (ctx, w, h) {
+      ctx.fillStyle = '#3d1247';
+      ctx.fillRect(0, 0, w, h);
+      // Starburst rays from the center.
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      ctx.fillStyle = P.coral;
+      for (var sp = 0; sp < 28; sp++) {
+        var a0 = (sp / 28) * Math.PI * 2, a1 = ((sp + 0.5) / 28) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a0) * w * 0.62, Math.sin(a0) * w * 0.62);
+        ctx.lineTo(Math.cos(a1) * w * 0.62, Math.sin(a1) * w * 0.62);
+        ctx.closePath();
+        ctx.globalAlpha = sp % 2 ? 0.5 : 0.22;
+        ctx.fill();
+      }
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      // Halftone dots along the edges.
+      ctx.fillStyle = 'rgba(253,243,227,0.5)';
+      for (var dx = 20; dx < w; dx += 40) {
+        ctx.beginPath(); ctx.arc(dx, 18, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(dx, h - 18, 4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 3;
+      ctx.strokeRect(6, 6, w - 12, h - 12);
     });
   };
 

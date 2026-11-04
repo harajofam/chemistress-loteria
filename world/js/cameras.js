@@ -544,4 +544,150 @@
       current: function () { return current; }
     };
   };
+
+  /*
+   * The Theater's watch experience (2026-11-04 — Jay's spec: sit
+   * and watch the movies, expand to full screen, zoom out to the
+   * audience; and her standing rule: live art takes the stage).
+   *
+   * Tapping the program board opens the catalog card (#theater-
+   * card): the whole lawful index (plaza.js CCW.THEATER_INDEX —
+   * 83 public-domain titles), grouped by decade, each with a
+   * Watch button. Choosing a title plays it in the big viewer
+   * (the playback itself is injected — main.js owns the video —
+   * so the headless smoke can exercise this state machine against
+   * a fake DOM with recording callbacks). While a film plays, the
+   * watch bar (#theater-bar) offers:
+   *   Sit & watch — glide to a bench seat facing the screen
+   *   Stand up    — glide back to the room's landing
+   *   Full screen — the same film fills the visitor's whole view
+   *   Audience view — the wide shot: screen, benches, everyone
+   *   Live art takes the stage — the film yields; glass returns
+   *   Stop film   — the same yield, without the stage framing
+   * Nothing here navigates anywhere: the Theater keeps everyone
+   * in the room, and the Lotería page is never a destination.
+   *
+   * env: { document, index, play, stop, stage, sit, stand,
+   *        audience, fullscreen } — every action is injected.
+   * Returns { showCatalog, hideCatalog, hideCard, setFullscreen,
+   * state, element } or null when the markup is absent.
+   */
+  CCW.wireTheater = function (env) {
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var card = doc.getElementById('theater-card');
+    var list = doc.getElementById('theater-list');
+    var closeBtn = doc.getElementById('theater-close');
+    var stageBtn = doc.getElementById('theater-stage');
+    var bar = doc.getElementById('theater-bar');
+    var nowEl = doc.getElementById('theater-now');
+    var sitBtn = doc.getElementById('theater-sit');
+    var standBtn = doc.getElementById('theater-stand');
+    var fullBtn = doc.getElementById('theater-full');
+    var audBtn = doc.getElementById('theater-aud');
+    var barStageBtn = doc.getElementById('theater-bar-stage');
+    var stopBtn = doc.getElementById('theater-stop');
+    if (!card || !list || !closeBtn || !stageBtn || !bar || !nowEl ||
+        !sitBtn || !standBtn || !fullBtn || !audBtn || !barStageBtn || !stopBtn) {
+      return null;
+    }
+    var index = Array.isArray(env.index) ? env.index : [];
+    function cb(name) { return typeof env[name] === 'function' ? env[name] : function () {}; }
+    var onPlay = cb('play'), onStop = cb('stop'), onStage = cb('stage'),
+      onSit = cb('sit'), onStand = cb('stand'), onAud = cb('audience'),
+      onFull = cb('fullscreen');
+
+    var mode = 'idle';       // 'idle' (glass) | 'watching'
+    var current = null;      // the playing index entry
+    var seated = false;
+    var fsOn = false;
+
+    function setSeated(on) {
+      seated = !!on;
+      sitBtn.hidden = seated;
+      standBtn.hidden = !seated;
+    }
+    function setFullscreen(on) {
+      fsOn = !!on;
+      fullBtn.textContent = fsOn ? '✕ Exit full screen' : '⛶ Full screen';
+      onFull(fsOn);
+    }
+    function yieldTo(fn) {
+      if (mode !== 'watching') { fn(); return; }
+      if (fsOn) setFullscreen(false);
+      fn();
+      mode = 'idle';
+      current = null;
+      setSeated(false);
+      bar.hidden = true;
+    }
+    function choose(entry) {
+      onPlay(entry);
+      mode = 'watching';
+      current = entry;
+      setSeated(false);
+      nowEl.textContent = 'Now showing: ' + entry.t + ' (' + entry.y + ')' +
+        (entry.whole ? ' · shown whole, as it was made' : '');
+      card.hidden = true;
+      bar.hidden = false;
+    }
+
+    // Build the catalog once: decade groups, one Watch button per
+    // title, in the index's own order inside each decade.
+    var decades = [];
+    var byDecade = {};
+    index.forEach(function (entry) {
+      var d = Math.floor(entry.y / 10) * 10;
+      if (!byDecade[d]) { byDecade[d] = []; decades.push(d); }
+      byDecade[d].push(entry);
+    });
+    decades.sort(function (a, b) { return a - b; });
+    decades.forEach(function (d) {
+      var head = doc.createElement('h3');
+      head.className = 'theater-decade';
+      head.textContent = d + 's';
+      list.appendChild(head);
+      byDecade[d].forEach(function (entry) {
+        var btn = doc.createElement('button');
+        btn.type = 'button';
+        btn.className = 'theater-title';
+        btn.textContent = '▶ ' + entry.t + ' (' + entry.y + ')' +
+          (entry.whole ? ' · play whole' : '');
+        btn.addEventListener('click', function () { choose(entry); });
+        list.appendChild(btn);
+      });
+    });
+
+    closeBtn.addEventListener('click', function () { card.hidden = true; });
+    stageBtn.addEventListener('click', function () {
+      card.hidden = true;
+      yieldTo(onStage);
+    });
+    barStageBtn.addEventListener('click', function () { yieldTo(onStage); });
+    stopBtn.addEventListener('click', function () { yieldTo(onStop); });
+    sitBtn.addEventListener('click', function () { setSeated(true); onSit(); });
+    standBtn.addEventListener('click', function () { setSeated(false); onStand(); });
+    audBtn.addEventListener('click', function () { setSeated(false); onAud(); });
+    fullBtn.addEventListener('click', function () { setFullscreen(!fsOn); });
+
+    return {
+      element: card,
+      showCatalog: function () {
+        card.hidden = false;
+        if (mode === 'watching') bar.hidden = false;
+      },
+      hideCatalog: function () { card.hidden = true; },
+      hideCard: function () { card.hidden = true; },
+      setFullscreen: function (on) {
+        // External sync (the fullscreen overlay's own close button
+        // lives with the video owner in main.js).
+        if (!!on === fsOn) return;
+        fsOn = !!on;
+        fullBtn.textContent = fsOn ? '✕ Exit full screen' : '⛶ Full screen';
+      },
+      state: function () {
+        return { mode: mode, current: current, seated: seated, fullscreen: fsOn };
+      }
+    };
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

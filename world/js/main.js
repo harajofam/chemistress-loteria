@@ -123,10 +123,14 @@
     // The parlor's offer card, wired below once the world exists;
     // a ride starting (pad, button, or step-on) puts it away.
     var gameCard = null;
+    // The Theater's watch controller (catalog + watch bar), wired
+    // below beside the game card; a ride puts its card away too.
+    var theaterCtl = null;
 
     function ride(tele) {
       if (glider.active()) return;
       if (gameCard) gameCard.hide();
+      if (theaterCtl) theaterCtl.hideCard();
       glider.start(scene.activeCamera, tele.destPos, tele.destTarget, 1400,
         function () {
           setStatus(tele.landed || ('You have arrived at ' + tele.label + '.'));
@@ -168,6 +172,145 @@
               gameCard.show(game);
             }));
         });
+      });
+    }
+
+    // ---- The Theater's watch experience (2026-11-04) -------------
+    // Tapping the program board opens the Classic Cinema index
+    // (cameras.js wireTheater runs the catalog). Choosing a title
+    // plays the film in the BIG VIEWER — a plain video element
+    // carrying the Archive.org stream, opened over the room, with
+    // native controls. Stop film, or Live Art Takes The Stage
+    // (Jay's rule: live art preempts the movies), closes it.
+    //
+    // WHY THE VIEWER, NOT THE GLASS (proven in the render harness,
+    // theater-render-check/): the great screen was built first as
+    // a Babylon VideoTexture — and the Archive's file servers send
+    // NO Access-Control-Allow-Origin header, so (1) a CORS-mode
+    // load is rejected outright (Babylon's VideoTexture defaults
+    // its video to crossOrigin 'anonymous'), and (2) a no-CORS
+    // load plays as media but WebGL refuses its frames, leaving
+    // the screen black. A plain <video> element has neither
+    // problem. The one addition that lights the glass for real is
+    // a same-origin film rail on the house server (it re-serves
+    // the Archive stream with the CORS header) — the snippet and
+    // the switch to flip live in THEATER-BUILD-NOTES.md. Until
+    // then the glass stays the room's idle face, and the watch
+    // bar's views (Sit & watch, Audience view) glide the room
+    // camera exactly as Jay specced.
+    var film = null; // { entry } while a film is showing
+    var fsEl = document.getElementById('theater-fs');
+    var fsVideo = document.getElementById('theater-fs-video');
+    var fsClose = document.getElementById('theater-fs-close');
+    function streamUrl(entry) {
+      return 'https://archive.org/download/' + entry.id + '/' + encodeURIComponent(entry.file);
+    }
+    function stopFilm() {
+      if (!film) return;
+      film = null;
+      if (fsEl) fsEl.hidden = true;
+      if (fsVideo) {
+        try {
+          fsVideo.pause();
+          fsVideo.removeAttribute('src');
+          fsVideo.load();
+        } catch (e) {}
+      }
+    }
+    function playFilm(entry) {
+      stopFilm();
+      if (!fsEl || !fsVideo) return;
+      film = { entry: entry };
+      try {
+        fsVideo.src = streamUrl(entry);
+        fsEl.hidden = false;
+        if (theaterCtl) theaterCtl.setFullscreen(true);
+        var pr = fsVideo.play();
+        if (pr && pr.catch) {
+          pr.catch(function () {
+            setStatus('The film is loading — tap ⛶ Full screen if it needs a nudge.');
+          });
+        }
+        setStatus('🎬 Now showing: ' + entry.t + ' (' + entry.y + '). Sit back and enjoy. 💜');
+      } catch (e) {
+        stopFilm();
+        setStatus('The film could not start just now — tap it again in a moment.');
+      }
+    }
+    function openFullscreen() {
+      // The viewer IS the full screen: one element, one stream,
+      // so there is no second player to keep in step. Reopening
+      // it resumes the same film at the same place.
+      if (!film || !fsEl || !fsVideo) {
+        if (theaterCtl) theaterCtl.setFullscreen(false);
+        return;
+      }
+      fsEl.hidden = false;
+      try {
+        var pr = fsVideo.play();
+        if (pr && pr.catch) pr.catch(function () {});
+      } catch (e) {}
+    }
+    function closeFullscreen() {
+      if (!fsEl || fsEl.hidden) return;
+      fsEl.hidden = true;
+      // The film keeps playing while the visitor looks around the
+      // room — the watch bar's Full screen button brings the
+      // viewer back, same film, same place.
+      if (theaterCtl) theaterCtl.setFullscreen(false);
+    }
+    if (fsClose) fsClose.addEventListener('click', closeFullscreen);
+
+    // A free glide to one of the Theater's stored views (bench
+    // seat / room landing / audience wide shot).
+    function rideView(view, landedStatus) {
+      if (!view || glider.active()) return;
+      if (gameCard) gameCard.hide();
+      if (theaterCtl) theaterCtl.hideCard();
+      glider.start(scene.activeCamera,
+        new B.Vector3(view.position[0], view.position[1], view.position[2]),
+        new B.Vector3(view.target[0], view.target[1], view.target[2]),
+        1400, function () { setStatus(landedStatus); });
+      glideCooldownUntil = performance.now() + 2200;
+    }
+
+    theaterCtl = CCW.wireTheater({
+      document: document,
+      index: CCW.THEATER_INDEX || [],
+      play: function (entry) { playFilm(entry); },
+      stop: function () {
+        stopFilm();
+        setStatus('The film rests — the theater is quiet again, and the glass glows on. 💜');
+      },
+      stage: function () {
+        stopFilm();
+        setStatus('🎭 Live art takes the stage — the screen is yours. The films wait for another night.');
+      },
+      sit: function () {
+        var v = world.theater && world.theater.views;
+        if (v) rideView(v.seat, '🪑 Settled into a bench — the film is yours. Stand up any time.');
+      },
+      stand: function () {
+        var v = world.theater && world.theater.views;
+        if (v) rideView(v.landing, 'Back on your feet in the Theater.');
+      },
+      audience: function () {
+        var v = world.theater && world.theater.views;
+        if (v) rideView(v.audience,
+          '👥 The whole room together: the glowing screen, the benches, everyone watching.');
+      },
+      fullscreen: function (on) { if (on) openFullscreen(); else closeFullscreen(); }
+    });
+    // The program board (and its frame) are tap targets: a tap
+    // opens the index card — never a navigation; the films play
+    // inside this room.
+    if (world.theater && theaterCtl) {
+      world.theater.boardMeshes.forEach(function (mesh) {
+        mesh.actionManager = new B.ActionManager(scene);
+        mesh.actionManager.registerAction(
+          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
+            theaterCtl.showCatalog();
+          }));
       });
     }
 

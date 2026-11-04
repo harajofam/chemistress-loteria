@@ -684,9 +684,11 @@
   }
 
   // One velvet bench: plum plinth, velvet seat + tilted backrest,
-  // plum arms. Seat top sits at y = 0.40; the backrest leans away
-  // from the screen (toward the door) for a cinema slouch.
-  function theaterBench(scene, B, add, x, z, velvet, tag) {
+  // plum arms, and (re-dress, 2026-11-04 — Jay's density standard:
+  // cushions, like her photos) a contrasting velvet cushion resting
+  // against the backrest. Seat top sits at y = 0.40; the backrest
+  // leans away from the screen (toward the door) for a cinema slouch.
+  function theaterBench(scene, B, add, x, z, velvet, pillow, tag) {
     var P = CCW.PALETTE;
     var plinth = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-plinth',
       { width: 4.3, height: 0.18, depth: 1.02 }, scene));
@@ -707,31 +709,90 @@
       arm.position.set(x + dx, 0.55, z);
       arm.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-arm-mat-' + i, P.plumHouse);
     });
+    var cushion = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-cushion',
+      { width: 0.52, height: 0.46, depth: 0.14 }, scene));
+    cushion.position.set(x + (tag.slice(-1) === 'l' ? -0.9 : 0.9), 0.66, z + 0.38);
+    cushion.rotation.x = 0.18;
+    cushion.rotation.y = tag.slice(-1) === 'l' ? 0.12 : -0.12;
+    cushion.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-cushion-mat', pillow);
+  }
+
+  // One corner plant in a plum-plum pot (the Library's pattern:
+  // pot + leaf crown + three leaf planes) — density per Jay's
+  // realism direction; the Theater gets a pair flanking the screen.
+  function theaterPlant(scene, B, add, x, z, leafTex, tag) {
+    var P = CCW.PALETTE;
+    var pot = add(B.MeshBuilder.CreateCylinder('theater-int-plant-' + tag + '-pot',
+      { diameterTop: 0.42, diameterBottom: 0.32, height: 0.52, tessellation: 10 }, scene));
+    pot.position.set(x, 0.26, z);
+    pot.material = CCW.mat(scene, B, 'theater-int-plant-' + tag + '-pot-mat', '#7a2d5a');
+    var crown = add(B.MeshBuilder.CreateSphere('theater-int-plant-' + tag + '-crown',
+      { diameter: 0.62, segments: 10 }, scene));
+    crown.position.set(x, 0.72, z);
+    crown.scaling.y = 0.75;
+    crown.material = CCW.mat(scene, B, 'theater-int-plant-' + tag + '-crown-mat', '#2d6a4f');
+    for (var i = 0; i < 3; i++) {
+      var leaf = add(B.MeshBuilder.CreatePlane('theater-int-plant-' + tag + '-leaf-' + i,
+        { width: 0.85, height: 0.85 }, scene));
+      leaf.position.set(x + (i - 1) * 0.22, 0.95 + (i % 2) * 0.14, z + (i === 1 ? 0.1 : -0.05));
+      leaf.rotation.y = (i - 1) * 0.7;
+      leaf.rotation.x = -0.25;
+      leaf.material = CCW.texMat(scene, B, 'theater-int-plant-' + tag + '-leaf-mat-' + i,
+        leafTex, { alpha: true });
+    }
   }
 
   /*
-   * THE THEATER (M2b interior 1 of 5, 2026-11-04): the chapel's
-   * great cosmic stained-glass wall arranged as a SCREEN — a gold-
-   * framed cosmic window (drawn, procedural: radiant sun, planets,
-   * crescent moon, gold leading, an inscribed CLASSIC CINEMA
-   * cartouche) glowing over four rows of jewel-velvet benches, a
-   * coral center aisle, low globe lamps, floral sidelights, a star-
-   * chart ceiling, and a now-showing program board by the door.
+   * THE THEATER (M2b interior 1 of 5, 2026-11-04; RE-DRESSED +
+   * WATCH BUILD the same day): the chapel's great stained-glass
+   * wall arranged as a SCREEN — floral as much as cosmic (drawn,
+   * procedural: rosettes and blossoms under a sun/moon/planet
+   * crown, FINE gold leading, one small cartouche plaque) glowing
+   * over four rows of jewel-velvet benches, a true-coral center
+   * aisle, shaded globe lamps and pendants, floral sidelights, a
+   * star-chart ceiling, a low stage with a mic stand, and the
+   * program board by the door.
    *
-   * PROGRAMMING (Jay's rule, 2026-11-04 — dressing only this pass):
-   * the Theater is for live art first; karaoke and acting on stage
-   * preempt everything. When nobody is performing, the screen runs
-   * CLASSIC CINEMA — public-domain old movies from Jay's Chemist
-   * Dates collection, always free. NOT a streaming service, not
-   * generic background streaming. The program board by the door posts the program of
-   * record: the SEVEN titles cleared by the public-domain
-   * verification pass (THEATER-PROGRAM-PD-CHECK.md, landed
-   * 2026-11-04 — two from the CookBook pairings, three from Jay's
-   * watched lists, two same-spirit additions, each verified public
-   * domain with a playable Internet Archive copy). The other ten
-   * CookBook pairings are still under copyright and are NOT named
-   * anywhere in the room. Actual playback is the later showings
-   * mode (M5) — this pass plays nothing.
+   * RE-DRESS (Jay's palette + realism corrections, 2026-11-04 —
+   * the Library is the standard): HOT PINK panelled walls, BRIGHT;
+   * teal as the trim voice (frames, wainscot line, aisle edges);
+   * plum kept to furniture and the screen's shadow-gap frame; gold
+   * survives ONLY as fine lines (glass leading, pinstripes,
+   * lettering, the return ring). No large flat surfaces: panelled
+   * walls, a patterned cinema carpet, a woven coral runner.
+   * Density: cushions on every bench, plants flanking the screen,
+   * hanging globe pendants. Softer warm light (below).
+   *
+   * ART-FORM REDIRECT (Jay's explicit choice, later 2026-11-04):
+   * the Theater is the FIRST TEST of designing by art form —
+   * SURREALISM + POP ART — instead of chasing photographs (her
+   * reasoning: iPhone visitors see a 2D magic window anyway, so
+   * flat/graphic/dreamlike reads INTENTIONAL). The palette law
+   * and her photo LAYOUT are unchanged; the rendering language
+   * changed: the glass is a dream (oversized moon, blown-scale
+   * rosettes, film frames floating in the glass), the ceiling
+   * chart has come loose (thread constellations, a sailing
+   * crescent), impossible things hang in the air (the dream
+   * layer below), the aisle medallions warp larger toward the
+   * screen, and the signage went POP (halftone, starbursts, hard
+   * outlines — board, poster, marquee, carpet). Detail
+   * concentrates where visitors stand close: board + poster.
+   *
+   * PROGRAMMING (Jay's rule, 2026-11-04): the Theater is for live
+   * art first; karaoke and acting on stage preempt everything.
+   * When nobody is performing, the screen runs CLASSIC CINEMA —
+   * public-domain old movies, always free. NOT a streaming
+   * service, not generic background streaming. The lawful index is
+   * CCW.THEATER_INDEX (83 titles: PD checks 1 + 2 + the 1930–1960
+   * expansion; check 3 added none — each verified public domain
+   * with a playable Internet Archive copy, resolved to a streamable
+   * file at build time). Copyrighted titles are NOT named anywhere
+   * in the room (the smoke suite guards this mechanically). The
+   * program board is TAPPABLE: it opens the index (cameras.js
+   * wireTheater); choosing a title plays it in the big viewer
+   * (main.js — the Archive-CORS finding lives there), with Sit
+   * & Watch / Full Screen / Audience View — Jay's watch spec,
+   * 2026-11-04.
    *
    * ARRIVAL (a deliberate fork, flagged for Jay in
    * THEATER-BUILD-NOTES.md): the generic zone threshold lands
@@ -755,10 +816,115 @@
    * the front benches, so the window reads as the room's light
    * source. Global lights and Plaza materials are untouched.
    */
+  /*
+   * THE CLASSIC CINEMA INDEX (the watch build, 2026-11-04): the
+   * Theater's lawful program — 83 public-domain titles, each one
+   * cleared by the verification passes (THEATER-PROGRAM-PD-
+   * CHECK.md: 7 · -CHECK-2.md: 9 · THEATER-INDEX-EXPANSION-1930-
+   * 1960.md: 67 · check 3 added none) and resolved at build time
+   * to a specific streamable Internet Archive file (H.264 mp4,
+   * codec-probed). The `whole` flag marks the two titles whose
+   * clearance file says to show them whole, as released.
+   * Nothing under copyright is listed — world-smoke8.js guards
+   * the count, the Archive ids, and the absence of copyrighted
+   * titles mechanically. Ordered by year; cameras.js groups by
+   * decade.
+   */
+  CCW.THEATER_INDEX = [
+    { t: 'Behind Office Doors', y: 1931, id: 'behind-office-doors-1931', file: 'Behind Office Doors (1931).mp4' },
+    { t: 'Kept Husbands', y: 1931, id: 'kept-husbands-1931', file: 'Kept Husbands (1931).mp4' },
+    { t: 'Lonely Wives', y: 1931, id: 'lonely-wives-1931', file: 'Lonely Wives (1931).mp4' },
+    { t: 'Millie', y: 1931, id: 'Millie1931', file: 'Millie1931.mp4' },
+    { t: 'Svengali', y: 1931, id: 'svengali-1931', file: 'Svengali (1931).mp4' },
+    { t: 'The Front Page', y: 1931, id: 'front-page-1931', file: 'Front Page (1931).ia.mp4' },
+    { t: 'The Lady Refuses', y: 1931, id: 'the-lady-refuses-1931_202408', file: 'The Lady Refuses (1931).mp4' },
+    { t: 'A Farewell to Arms', y: 1932, id: 'farewell_to_arms', file: 'farewell_to_arms.mp4' },
+    { t: 'Bird of Paradise', y: 1932, id: 'BirdOfParadise', file: 'BirdofParadise1932film.mp4' },
+    { t: 'Rain', y: 1932, id: 'rain1932', file: 'Rain.mp4' },
+    { t: 'The Most Dangerous Game', y: 1932, id: 'TheMostDangerousGame', file: 'TheMostDangerousGame.mp4' },
+    { t: 'White Zombie', y: 1932, id: 'VictorHalperinsWhiteZombie1932', file: 'WhiteZombie.mp4' },
+    { t: 'The Emperor Jones', y: 1933, id: 'TheEmpererJones', file: 'TheEmpererJones.mp4' },
+    { t: 'The Vampire Bat', y: 1933, id: 'The_Vampire_Bat_1933', file: 'TheVampireBat.mp4' },
+    { t: 'Of Human Bondage', y: 1934, id: 'humanbondage', file: 'HUMANBONDAGE.mp4' },
+    { t: 'Becky Sharp', y: 1935, id: 'Becky_Sharp_', file: 'Becky_Sharp.mp4' },
+    { t: 'A Star Is Born', y: 1937, id: 'a-star-is-born-1937-720p-blu-rayx-64', file: 'A Star Is Born (1937) WEBM.mp4' },
+    { t: 'Nothing Sacred', y: 1937, id: 'nothingsacred1937', file: 'Nothing Sacred (1937).mp4' },
+    { t: 'Swing High, Swing Low', y: 1937, id: 'shsl0096766', file: 'shsl0096766.mp4' },
+    { t: 'Letter of Introduction', y: 1938, id: 'letter-of-introduction-4-k', file: 'LetterOfIntroduction4K.mp4' },
+    { t: 'Sinners in Paradise', y: 1938, id: 'sinners-in-paradise-1938', file: 'Sinners in Paradise (1938).mp4' },
+    { t: 'The Rage of Paris', y: 1938, id: 'RageofParis', file: 'RageofParis.mp4' },
+    { t: 'Eternally Yours', y: 1939, id: 'EternallyYours', file: 'Eternally_Yours.mp4' },
+    { t: 'Gulliver\'s Travels', y: 1939, id: 'gullivers-travels-1939-fleischer', file: 'Gulliver\'s Travels (1939).mp4' },
+    { t: 'Love Affair', y: 1939, id: 'love-affair-1939-by-leo-mccarey', file: 'Love.Affair.1939.1080p.BluRay.x264.AAC-[YTS.MX].mp4' },
+    { t: 'Made for Each Other', y: 1939, id: 'madefor_each_other', file: 'made_for_each_other.mp4' },
+    { t: 'The Gorilla', y: 1939, id: 'TheGorilla720p1939', file: 'TheGorilla720p.mp4' },
+    { t: 'The Little Princess', y: 1939, id: 'TheLittlePrincess1939', file: 'The_Little_Princess.mp4' },
+    { t: 'His Girl Friday', y: 1940, id: 'his_girl_friday', file: 'his_girl_friday.mp4' },
+    { t: 'Santa Fe Trail', y: 1940, id: 'Santa_Fe_Trail', file: 'Santa_Fe_Trail.mp4' },
+    { t: 'Second Chorus', y: 1940, id: 'second_chorus_1940', file: 'second_chorus.mp4' },
+    { t: 'The Devil Bat', y: 1940, id: 'Devil_Bat_1940', file: 'Devil_Bat_1940.mp4' },
+    { t: 'Meet John Doe', y: 1941, id: 'meet_john_doe_ipod', file: 'video.mp4' },
+    { t: 'Penny Serenade', y: 1941, id: 'penny_serenade', file: 'penny_serenade.mp4' },
+    { t: 'Pot o\' Gold', y: 1941, id: 'pot_o_gold', file: 'pot_o_gold.mp4' },
+    { t: 'Topper Returns', y: 1941, id: 'Topper_Returns_41', file: 'Topper_Returns_41.mp4' },
+    { t: 'Bowery at Midnight', y: 1942, id: 'bowery-at-midnight-1942-restored-movie-720p-hd', file: 'bowery at midnight-1942-restored movie-720p-hd.mp4' },
+    { t: 'Jungle Book', y: 1942, id: 'JungleBook', file: 'Jungle_Book.mp4' },
+    { t: 'The Outlaw', y: 1943, id: 'the-outlaw-1943-by-howard-hughes', file: 'The.Outlaw.1943.1080p.BluRay.x264-[YTS.AM].mp4' },
+    { t: 'And Then There Were None', y: 1945, id: 'and-then-there-were-none-1945', file: 'And Then There Were None (1945).mp4' },
+    { t: 'Blood on the Sun', y: 1945, id: 'Blood_on_the_Sun', file: 'Blood_on_the_Sun_1945.mp4' },
+    { t: 'Captain Kidd', y: 1945, id: 'CaptainKidd_', file: 'CaptainKidd.mp4' },
+    { t: 'Detour', y: 1945, id: 'Detour_66', file: 'DetourPresentedByMoviePowder.mp4' },
+    { t: 'Scarlet Street', y: 1945, id: 'scarlet_street_ipod', file: 'Scarlet_Street.mp4' },
+    { t: 'The Stork Club', y: 1945, id: 'the_stork_club', file: 'the_stork_club.mp4' },
+    { t: 'The Strange Love of Martha Ivers', y: 1946, id: 'Martha_Ivers', file: 'Martha_Ivers.mp4' },
+    { t: 'The Stranger', y: 1946, id: 'TheStranger_0', file: 'The_Stranger.mp4' },
+    { t: 'Angel and the Badman', y: 1947, id: 'angel_and_the_badman', file: 'angel_and_the_badman.mp4' },
+    { t: 'Calendar Girl', y: 1947, id: 'calendar_girl', file: 'calendar_girl.mp4' },
+    { t: 'Dishonored Lady', y: 1947, id: 'dishonored_lady', file: 'dishonored_lady.mp4' },
+    { t: 'My Favorite Brunette', y: 1947, id: 'MyFavoriteBrunette1947', file: 'MyFavoriteBrunette1947.mp4' },
+    { t: 'My Dear Secretary', y: 1948, id: 'mydearsecretary1948kirkdouglas', file: 'My Dear Secretary (1948) KIRK DOUGLAS.mp4' },
+    { t: 'The Amazing Mr. X', y: 1948, id: 'TheAmazingMr.X1948Avi', file: 'The_Amazing_Mr_X.mp4' },
+    { t: 'Africa Screams', y: 1949, id: 'AfricaScreams512kb', file: 'Africa_Screams_512kb.mp4' },
+    { t: 'The Inspector General', y: 1949, id: 'the_inspector_general', file: 'the_inspector_general.mp4' },
+    { t: 'Cyrano de Bergerac', y: 1950, id: 'cyrano-de-bergerac-1950-jose-ferrer', file: 'Cyrano de Bergerac (1950) JOSE FERRER.ia.mp4' },
+    { t: 'D.O.A.', y: 1950, id: 'D.o.a.VideoQualityUpgrade', file: 'D.o.a.VideoQualityUpgrade.mp4' },
+    { t: 'Quicksand', y: 1950, id: 'Quicksand_clear', file: 'Quicksand.mp4' },
+    { t: 'The Jackie Robinson Story', y: 1950, id: 'Jackie_Robinson_Story_The', file: 'jrs.mp4' },
+    { t: 'Three Husbands', y: 1950, id: 'three-husbands-1950-classic-film-noir-comedy-eve-arden', file: 'Three Husbands (1950 Classic, Film noir, Comedy, Eve Arden).mp4' },
+    { t: 'Go for Broke!', y: 1951, id: 'GoForBroke', file: 'Go_for_Broke.mp4' },
+    { t: 'Mr. Imperium', y: 1951, id: 'Mr.Imperium', file: 'Mr.Imperium.mp4' },
+    { t: 'Royal Wedding', y: 1951, id: 'RoyalWedding720p1951', file: 'RoyalWedding720p.mp4' },
+    { t: 'The Painted Hills', y: 1951, id: 'lassie-the-painted-hills-1951', file: 'Lassie - The Painted Hills (1951).mp4' },
+    { t: 'Three Guys Named Mike', y: 1951, id: 'ThreeGuysNamedMike1951', file: 'ThreeGuysNamedMike1951.mp4' },
+    { t: 'Jack and the Beanstalk', y: 1952, id: 'cco_jackandthebeanstalk', file: 'ccoPublicDomainJack_and_the_Beanstalk.mp4', whole: 1 },
+    { t: 'Kansas City Confidential', y: 1952, id: 'Kansas_City_Confidential_1952', file: 'Kansas_City_Confidential.mp4' },
+    { t: 'Road to Bali', y: 1952, id: 'road-to-bali-1952-by-hal-walker', file: 'Road.To.Bali.1952.1080p.BluRay.x264-[YTS.LT].mp4' },
+    { t: 'Fear and Desire', y: 1953, id: 'FearAndDesire1953', file: 'Fear and Desire (1953).mp4' },
+    { t: 'The Bigamist', y: 1953, id: 'bigamist_the', file: 'the_bigamist.mp4' },
+    { t: 'The Hitch-Hiker', y: 1953, id: 'Hitch_Hiker', file: 'Hitch-Hiker.mp4' },
+    { t: 'The Joe Louis Story', y: 1953, id: 'TheJoeLouisStory', file: 'TheJoeLouisStory.mp4' },
+    { t: 'Salt of the Earth', y: 1954, id: 'salt-of-the-earth-1954', file: 'Salt of the Earth (1954).mp4' },
+    { t: 'Rage at Dawn', y: 1955, id: 'RageatDawn', file: 'RageatDawn.mp4' },
+    { t: 'Indestructible Man', y: 1956, id: 'PhantasmagoriaTheater-IndestructibleMan1956303-3', file: 'PhantasmagoriaTheater-IndestructibleMan1956303_512kb.mp4' },
+    { t: 'The Screaming Skull', y: 1958, id: 'TheScreamingSkull', file: 'TheScreamingSkull.mp4' },
+    { t: 'A Bucket of Blood', y: 1959, id: 'ABucketOfBlood1959', file: 'A_Bucket_Of_Blood.mp4' },
+    { t: 'Attack of the Giant Leeches', y: 1959, id: 'cco_attackofthegiantleeches', file: 'ccoPublicDomainAttack_of_the_Giant_Leeches.mp4' },
+    { t: 'Teenagers from Outer Space', y: 1959, id: 'TeenagersFromOuterSpace', file: 'TeenagersFromOuterSpace.mp4' },
+    { t: 'The Bat', y: 1959, id: 'the-bat-1959-dvd-mkv', file: 'The Bat (1959) {tmdb-35813} {edition-Fullscreen} [DVD][AC3 1.0][MPEG2].mp4' },
+    { t: 'The Wasp Woman', y: 1959, id: 'the-wasp-woman-1959', file: 'The Wasp Woman (1959) Roger Corman - Horror, Sci-Fi Full Length Movie-JpPAN6frZmU.mp4' },
+    { t: 'The Little Shop of Horrors', y: 1960, id: 'the-little-shop-of-horrors-1960-by-roger-corman', file: 'The.Little.Shop.Of.Horrors.1960.1080p.BluRay.x264-[YTS.LT].mp4' },
+    { t: 'Charade', y: 1963, id: 'charade_202604', file: 'Charade.mp4', whole: 1 }
+  ];
+
   function buildTheaterInterior(scene, B, zone, add) {
     var P = CCW.PALETTE;
     var uv = outward(zone);
-    var WALL = '#492261'; // the parlor's lifted interior plum
+    // REALISM (the Library standard): no large flat surfaces —
+    // the walls wear the house's drawn hot-pink panelling (shared
+    // with the Library), the floor a patterned cinema carpet, the
+    // aisle a woven coral runner. Textures created once, shared.
+    var wallTex = CCW.libraryWallTexture(scene, B, 'theater-int-wall-tex');
+    var leafTex = CCW.leafTexture(scene, B, 'theater-int-leaf-tex');
 
     var intLights = [];
     // Zone-group local -> world (the parlor's roomWorld math).
@@ -769,81 +935,95 @@
         uv[0] * CCW.ZONE_RADIUS + lx * ca + lz * sa, ly,
         uv[1] * CCW.ZONE_RADIUS - lx * sa + lz * ca);
     }
+    function worldArr(v) { return [v.x, v.y, v.z]; }
 
     // ---- Room shell (the parlor's volume, dressed for cinema) -----
     var floor = add(B.MeshBuilder.CreateBox('theater-int-floor',
       { width: 13.4, height: 0.12, depth: 14.2 }, scene));
     floor.position.set(0, -0.06, -7.5);
     floor.material = CCW.texMat(scene, B, 'theater-int-floor-mat',
-      CCW.carpetTexture(scene, B, 'theater-int-floor-tex'), {});
+      CCW.theaterCarpetTexture(scene, B, 'theater-int-floor-tex'), {});
     floor.receiveShadows = true;
 
-    // Ceiling: the numerology lounge's navy star chart.
+    // Ceiling: the Theater's own DREAM star chart (art-form
+    // redirect) — navy stays the field (her palette law), but the
+    // chart has come loose: thread constellations, nebula wisps,
+    // a sailing crescent. The shared starChartTexture is untouched
+    // (Library + Plaza keep theirs).
     var ceiling = add(B.MeshBuilder.CreateBox('theater-int-ceiling',
       { width: 13.6, height: 0.25, depth: 14.4 }, scene));
     ceiling.position.set(0, 7.12, -7.5);
     ceiling.material = CCW.texMat(scene, B, 'theater-int-ceiling-mat',
-      CCW.starChartTexture(scene, B, 'theater-int-ceiling-tex'), {});
+      CCW.theaterCeilingTexture(scene, B, 'theater-int-ceiling-tex'), {});
 
     var backWall = add(B.MeshBuilder.CreateBox('theater-int-wall-back',
       { width: 14, height: 7, depth: 0.5 }, scene));
     backWall.position.set(0, 3.5, -14.65);
-    backWall.material = CCW.mat(scene, B, 'theater-int-wall-back-mat', WALL);
+    backWall.material = CCW.texMat(scene, B, 'theater-int-wall-back-mat', wallTex, {});
     [-6.75, 6.75].forEach(function (x, i) {
       var side = add(B.MeshBuilder.CreateBox('theater-int-wall-' + (i ? 'right' : 'left'),
         { width: 0.5, height: 7, depth: 14.3 }, scene));
       side.position.set(x, 3.5, -7.5);
-      side.material = CCW.mat(scene, B, 'theater-int-wall-side-mat-' + i, WALL);
+      side.material = CCW.texMat(scene, B, 'theater-int-wall-side-mat-' + i, wallTex, {});
     });
 
     // Interior face of the front wall + the door, seen from inside.
     var front = add(B.MeshBuilder.CreateBox('theater-int-front-panel',
       { width: 13, height: 7, depth: 0.15 }, scene));
     front.position.set(0, 3.5, -0.68);
-    front.material = CCW.mat(scene, B, 'theater-int-front-mat', WALL);
+    front.material = CCW.texMat(scene, B, 'theater-int-front-mat', wallTex, {});
     var doorFrameIn = add(B.MeshBuilder.CreateBox('theater-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
-    doorFrameIn.material = CCW.mat(scene, B, 'theater-int-door-frame-mat', P.gold);
+    doorFrameIn.material = CCW.mat(scene, B, 'theater-int-door-frame-mat', P.tealDeep);
     var doorGlowIn = add(B.MeshBuilder.CreatePlane('theater-int-door-glow',
       { width: 3.4, height: 4.6 }, scene));
     // No half-turn: the readable -Z face points into the room.
     doorGlowIn.position.set(0, 2.3, -0.86);
-    doorGlowIn.material = CCW.mat(scene, B, 'theater-int-door-glow-mat', P.gold,
-      { emissive: P.gold });
+    doorGlowIn.material = CCW.mat(scene, B, 'theater-int-door-glow-mat', P.coral,
+      { emissive: P.coral });
 
-    // Gold wainscot line around the room.
+    // Teal wainscot line around the room (a line, not a surface —
+    // the first build's gold wainscot is gone, per the correction).
     var wainsBack = add(B.MeshBuilder.CreateBox('theater-int-wainscot-back',
       { width: 12.9, height: 0.14, depth: 0.08 }, scene));
     wainsBack.position.set(0, 1.02, -14.36);
-    wainsBack.material = CCW.mat(scene, B, 'theater-int-wainscot-back-mat', P.gold);
+    wainsBack.material = CCW.mat(scene, B, 'theater-int-wainscot-back-mat', P.tealDeep);
     [-6.46, 6.46].forEach(function (x, i) {
       var wains = add(B.MeshBuilder.CreateBox('theater-int-wainscot-' + (i ? 'right' : 'left'),
         { width: 0.08, height: 0.14, depth: 13.7 }, scene));
       wains.position.set(x, 1.02, -7.5);
-      wains.material = CCW.mat(scene, B, 'theater-int-wainscot-side-mat-' + i, P.gold);
+      wains.material = CCW.mat(scene, B, 'theater-int-wainscot-side-mat-' + i, P.tealDeep);
     });
 
     // ---- The screen: the great window, arranged for showings ------
+    // The frame is now a thin plum shadow-gap around the glass —
+    // the first build's thick gold frame is gone; the glass itself
+    // carries the fine gold leading. main.js swaps this mesh's
+    // material to the film while a title plays; the glass material
+    // below is the idle state it returns to.
     var screenFrame = add(B.MeshBuilder.CreateBox('theater-int-screen-frame',
-      { width: 7.6, height: 5.6, depth: 0.12 }, scene));
-    screenFrame.position.set(0, 3.1, -14.35);
-    screenFrame.material = CCW.mat(scene, B, 'theater-int-screen-frame-mat', P.gold);
+      { width: 7.3, height: 5.5, depth: 0.1 }, scene));
+    screenFrame.position.set(0, 3.1, -14.34);
+    screenFrame.material = CCW.mat(scene, B, 'theater-int-screen-frame-mat', P.plumHouse);
     var screen = add(B.MeshBuilder.CreatePlane('theater-int-screen',
       { width: 6.9, height: 5.2 }, scene));
     screen.rotation.y = Math.PI; // readable -Z face toward the seats
     screen.position.set(0, 3.1, -14.27);
-    screen.material = CCW.texMat(scene, B, 'theater-int-screen-mat',
+    var glassMaterial = CCW.texMat(scene, B, 'theater-int-screen-mat',
       CCW.cosmicScreenTexture(scene, B, 'theater-int-screen-tex'), { emissive: true });
+    screen.material = glassMaterial;
 
     // Lancet sidelights flanking the screen — one floral glass,
     // shared by both lancets and the side-wall panels below.
+    // Frames are teal now (the correction): a thin colored edge,
+    // not a gold slab.
     var glassTex = CCW.stainedGlassTexture(scene, B, 'theater-int-glass-tex', 'floral');
     [-5.15, 5.15].forEach(function (x, i) {
       var lf = add(B.MeshBuilder.CreateBox('theater-int-lancet-frame-' + i,
         { width: 1.9, height: 4.5, depth: 0.1 }, scene));
       lf.position.set(x, 3.1, -14.35);
-      lf.material = CCW.mat(scene, B, 'theater-int-lancet-frame-mat-' + i, P.gold);
+      lf.material = CCW.mat(scene, B, 'theater-int-lancet-frame-mat-' + i, P.tealDeep);
       var lg = add(B.MeshBuilder.CreatePlane('theater-int-lancet-' + i,
         { width: 1.65, height: 4.2 }, scene));
       lg.rotation.y = Math.PI;
@@ -852,11 +1032,14 @@
         { emissive: true, alpha: true });
     });
 
-    // The marquee over the screen: the program's name in lights.
+    // The marquee over the screen: the program's name in lights —
+    // the casing is POP now (art-form redirect): a coral starburst
+    // field in a textured box, gold LETTERING in front of it.
     var marqueeTrim = add(B.MeshBuilder.CreateBox('theater-int-marquee-trim',
       { width: 7.4, height: 1.0, depth: 0.1 }, scene));
     marqueeTrim.position.set(0, 6.42, -14.34);
-    marqueeTrim.material = CCW.mat(scene, B, 'theater-int-marquee-trim-mat', P.gold);
+    marqueeTrim.material = CCW.texMat(scene, B, 'theater-int-marquee-trim-mat',
+      CCW.theaterMarqueeTexture(scene, B, 'theater-int-marquee-trim-tex'), {});
     var marquee = add(CCW.makeLabel(scene, B, 'theater-int-marquee',
       ['NOW SHOWING', 'Classic Cinema — old movies, always free'], 7.0, 0.85,
       { fg: P.goldSoft }));
@@ -864,13 +1047,15 @@
     marquee.position.set(0, 6.42, -14.27);
 
     // ---- The program board, by the door ----------------------------
-    // The posted program (Jay's rule): the seven PD-cleared titles
-    // from the verification pass, and what preempts them. The board
-    // is tall — it carries the full program list.
+    // The posted program (Jay's rule) — and, since the watch build,
+    // a DOOR: the board is tappable and opens the full 83-title
+    // index (its meshes ride out in this build's return value;
+    // main.js hangs the pick, cameras.js wireTheater runs the
+    // catalog). Teal frame now, per the correction.
     var progFrame = add(B.MeshBuilder.CreateBox('theater-int-program-frame',
       { width: 3.4, height: 2.87, depth: 0.1 }, scene));
     progFrame.position.set(-4.3, 3.3, -0.80);
-    progFrame.material = CCW.mat(scene, B, 'theater-int-program-frame-mat', P.gold);
+    progFrame.material = CCW.mat(scene, B, 'theater-int-program-frame-mat', P.tealDeep);
     var progBoard = add(B.MeshBuilder.CreatePlane('theater-int-program-board',
       { width: 3.2, height: 2.67 }, scene));
     // No half-turn: on the front wall the readable -Z face already
@@ -881,44 +1066,164 @@
 
     // ---- Seating: four rows of jewel-velvet benches -----------------
     // Two benches per row on a coral center aisle; velvet steps
-    // magenta → lavender → teal → burnt orange toward the screen.
+    // orange → teal → lavender → magenta toward the door, each
+    // bench with a contrasting cushion (the density standard).
     var rowVelvets = [P.velvetOrange, P.velvetTeal, P.velvetLavender, P.velvetMagenta];
+    var rowPillows = [P.velvetTeal, P.velvetMagenta, P.velvetOrange, P.velvetLavender];
     [-12.1, -10.2, -8.3, -6.4].forEach(function (z, r) {
-      theaterBench(scene, B, add, -3.05, z, rowVelvets[r], 'r' + r + '-l');
-      theaterBench(scene, B, add, 3.05, z, rowVelvets[r], 'r' + r + '-r');
+      theaterBench(scene, B, add, -3.05, z, rowVelvets[r], rowPillows[r], 'r' + r + '-l');
+      theaterBench(scene, B, add, 3.05, z, rowVelvets[r], rowPillows[r], 'r' + r + '-r');
     });
 
-    // The aisle: coral runner with gold edges, door to screen.
+    // The aisle: the woven coral runner with teal edges, door to
+    // screen (true coral now — see the runner texture's note).
     var runner = add(B.MeshBuilder.CreateBox('theater-int-aisle-runner',
       { width: 1.6, height: 0.03, depth: 10.7 }, scene));
     runner.position.set(0, 0.018, -8.55);
-    runner.material = CCW.mat(scene, B, 'theater-int-aisle-runner-mat', P.coral);
+    runner.material = CCW.texMat(scene, B, 'theater-int-aisle-runner-mat',
+      CCW.theaterRunnerTexture(scene, B, 'theater-int-aisle-runner-tex'), {});
     [-0.84, 0.84].forEach(function (x, i) {
       var trim = add(B.MeshBuilder.CreateBox('theater-int-aisle-trim-' + i,
         { width: 0.06, height: 0.035, depth: 10.7 }, scene));
       trim.position.set(x, 0.02, -8.55);
-      trim.material = CCW.mat(scene, B, 'theater-int-aisle-trim-mat-' + i, P.gold);
+      trim.material = CCW.mat(scene, B, 'theater-int-aisle-trim-mat-' + i, P.tealDeep);
     });
 
-    // Low globe lamps marking the aisle ends.
+    // Low globe lamps marking the aisle ends. The first build's
+    // globes were unlit gold — flat discs. These are smaller and
+    // SHADED: a cream globe with a warm ember emissive, lit by the
+    // room, so they read as round lamps, not coins.
     [[-1.35, -5.5], [1.35, -5.5], [-1.35, -13.2], [1.35, -13.2]].forEach(function (pos, i) {
       var post = add(B.MeshBuilder.CreateCylinder('theater-int-lamp-' + i + '-post',
         { diameter: 0.09, height: 1.05, tessellation: 8 }, scene));
       post.position.set(pos[0], 0.53, pos[1]);
       post.material = CCW.mat(scene, B, 'theater-int-lamp-post-mat-' + i, P.plumHouse);
       var globe = add(B.MeshBuilder.CreateSphere('theater-int-lamp-' + i + '-globe',
-        { diameter: 0.42, segments: 12 }, scene));
-      globe.position.set(pos[0], 1.25, pos[1]);
-      globe.material = CCW.glowMat(scene, B, 'theater-int-lamp-globe-mat-' + i, P.goldSoft);
+        { diameter: 0.30, segments: 12 }, scene));
+      globe.position.set(pos[0], 1.22, pos[1]);
+      globe.material = CCW.mat(scene, B, 'theater-int-lamp-globe-mat-' + i, '#ffe9c4',
+        { emissive: '#c97a3d' });
     });
 
-    // Framed floral sidelights on both side walls.
+    // Two hanging globe pendants over the back rows (her chapel
+    // photo's globe lights): thin plum cords, shaded warm globes.
+    [-2.6, 2.6].forEach(function (x, i) {
+      var cord = add(B.MeshBuilder.CreateCylinder('theater-int-pendant-' + i + '-cord',
+        { diameter: 0.045, height: 1.7, tessellation: 6 }, scene));
+      cord.position.set(x, 6.15, -9.2);
+      cord.material = CCW.mat(scene, B, 'theater-int-pendant-cord-mat-' + i, P.plumHouse);
+      var pglobe = add(B.MeshBuilder.CreateSphere('theater-int-pendant-' + i + '-globe',
+        { diameter: 0.38, segments: 12 }, scene));
+      pglobe.position.set(x, 5.2, -9.2);
+      pglobe.material = CCW.mat(scene, B, 'theater-int-pendant-globe-mat-' + i, '#ffe9c4',
+        { emissive: '#c97a3d' });
+    });
+
+    // ---- The stage, in front of the screen --------------------------
+    // Live art's home (Jay's rule: karaoke and acting preempt the
+    // films): a low carpeted platform between the screen and the
+    // front row, a mic stand waiting on it, and two small shaded
+    // footlight globes at its front corners.
+    var stage = add(B.MeshBuilder.CreateBox('theater-int-stage',
+      { width: 6.4, height: 0.28, depth: 1.5 }, scene));
+    stage.position.set(0, 0.14, -13.45);
+    stage.material = CCW.texMat(scene, B, 'theater-int-stage-mat',
+      CCW.theaterCarpetTexture(scene, B, 'theater-int-stage-tex'), {});
+    var micPole = add(B.MeshBuilder.CreateCylinder('theater-int-stage-mic-pole',
+      { diameter: 0.035, height: 1.5, tessellation: 6 }, scene));
+    micPole.position.set(1.8, 1.03, -13.35);
+    micPole.material = CCW.mat(scene, B, 'theater-int-stage-mic-pole-mat', P.plumHouse);
+    var micHead = add(B.MeshBuilder.CreateSphere('theater-int-stage-mic-head',
+      { diameter: 0.11, segments: 8 }, scene));
+    micHead.position.set(1.8, 1.82, -13.35);
+    micHead.material = CCW.mat(scene, B, 'theater-int-stage-mic-head-mat', '#3a3a44');
+    [-2.9, 2.9].forEach(function (x, i) {
+      var foot = add(B.MeshBuilder.CreateSphere('theater-int-stage-footlight-' + i,
+        { diameter: 0.17, segments: 10 }, scene));
+      foot.position.set(x, 0.37, -12.78);
+      foot.material = CCW.mat(scene, B, 'theater-int-stage-footlight-mat-' + i, '#ffe9c4',
+        { emissive: '#c97a3d' });
+    });
+
+    // Plants flanking the screen (the density standard — her
+    // rooms are full of green).
+    theaterPlant(scene, B, add, -5.95, -13.55, leafTex, 'l');
+    theaterPlant(scene, B, add, 5.95, -13.55, leafTex, 'r');
+
+    // ---- The dream layer (ART-FORM REDIRECT, 2026-11-04) ---------
+    // Surrealism, hung in the room's air: scale and gravity stop
+    // behaving. An oversized crescent moon sails under the ceiling
+    // (a cream disc eclipsed by a navy shadow disc — the crescent
+    // is the overlap), sparkles drift loose at impossible sizes,
+    // two empty film frames float tilted beside the screen, and
+    // two fine gold constellation rings turn slowly nowhere. All
+    // of it is FINE-LINE or flat graphic — the palette law holds;
+    // only the physics is dreaming.
+    var moon = add(B.MeshBuilder.CreateDisc('theater-int-moon',
+      { radius: 0.85, tessellation: 36 }, scene));
+    moon.rotation.x = Math.PI / 2;
+    moon.position.set(2.9, 6.62, -12.4);
+    moon.material = CCW.mat(scene, B, 'theater-int-moon-mat', '#ffeec2',
+      { emissive: '#d9a441' });
+    moon.material.backFaceCulling = false;
+    var moonShadow = add(B.MeshBuilder.CreateDisc('theater-int-moon-shadow',
+      { radius: 0.74, tessellation: 36 }, scene));
+    moonShadow.rotation.x = Math.PI / 2;
+    moonShadow.position.set(3.22, 6.58, -12.55);
+    moonShadow.material = CCW.mat(scene, B, 'theater-int-moon-shadow-mat', '#141033');
+    moonShadow.material.backFaceCulling = false;
+    var starTex = CCW.theaterStarTexture(scene, B, 'theater-int-star-tex');
+    [[-3.4, 4.7, -11.6, 0.4], [3.9, 5.4, -8.4, -0.35], [-1.7, 5.9, -5.2, 0.8]]
+      .forEach(function (st, i) {
+        var starM = add(B.MeshBuilder.CreatePlane('theater-int-star-' + i,
+          { width: 0.62, height: 0.62 }, scene));
+        starM.position.set(st[0], st[1], st[2]);
+        starM.rotation.z = st[3];
+        starM.material = CCW.texMat(scene, B, 'theater-int-star-mat-' + i, starTex,
+          { emissive: true, alpha: true });
+        starM.material.backFaceCulling = false;
+      });
+    var frameTex = CCW.theaterFilmFrameTexture(scene, B, 'theater-int-filmframe-tex');
+    [[4.75, 4.5, -12.95, -0.32, 0.10], [-4.8, 3.5, -12.3, 0.28, -0.09]]
+      .forEach(function (ff, i) {
+        var frame = add(B.MeshBuilder.CreatePlane('theater-int-filmframe-' + i,
+          { width: 1.5, height: 1.125 }, scene));
+        frame.position.set(ff[0], ff[1], ff[2]);
+        frame.rotation.y = ff[3];
+        frame.rotation.z = ff[4];
+        frame.material = CCW.texMat(scene, B, 'theater-int-filmframe-mat-' + i, frameTex,
+          { emissive: true, alpha: true });
+        frame.material.backFaceCulling = false;
+      });
+    [[0.9, 6.0, -10.6, 0.5], [-3.2, 6.2, -7.6, -0.4]].forEach(function (rg, i) {
+      var ring = add(B.MeshBuilder.CreateTorus('theater-int-constellation-' + i,
+        { diameter: 1.0, thickness: 0.016, tessellation: 40 }, scene));
+      ring.position.set(rg[0], rg[1], rg[2]);
+      ring.rotation.x = rg[3];
+      ring.rotation.y = 0.3;
+      ring.material = CCW.glowMat(scene, B, 'theater-int-constellation-mat-' + i, P.gold);
+    });
+
+    // The pop poster beside the door (the program board's poster
+    // twin — detail where visitors stand close, per the redirect).
+    var posterFrame = add(B.MeshBuilder.CreateBox('theater-int-poster-frame',
+      { width: 2.0, height: 2.6, depth: 0.09 }, scene));
+    posterFrame.position.set(4.35, 3.05, -0.80);
+    posterFrame.material = CCW.mat(scene, B, 'theater-int-poster-frame-mat', P.tealDeep);
+    var poster = add(B.MeshBuilder.CreatePlane('theater-int-poster',
+      { width: 1.8, height: 2.4 }, scene));
+    // No half-turn: front-wall rule, as the program board.
+    poster.position.set(4.35, 3.05, -0.87);
+    poster.material = CCW.texMat(scene, B, 'theater-int-poster-mat',
+      CCW.theaterPopPosterTexture(scene, B, 'theater-int-poster-tex'), {});
+
+    // Framed floral sidelights on both side walls (teal frames).
     [-7.0, -11.0].forEach(function (z, i) {
       var lf = add(B.MeshBuilder.CreateBox('theater-int-sidelight-left-frame-' + i,
         { width: 1.86, height: 2.76, depth: 0.09 }, scene));
       lf.rotation.y = -Math.PI / 2;
       lf.position.set(-6.44, 3.6, z);
-      lf.material = CCW.mat(scene, B, 'theater-int-sidelight-left-frame-mat-' + i, P.gold);
+      lf.material = CCW.mat(scene, B, 'theater-int-sidelight-left-frame-mat-' + i, P.tealDeep);
       var la = add(B.MeshBuilder.CreatePlane('theater-int-sidelight-left-' + i,
         { width: 1.7, height: 2.6 }, scene));
       la.rotation.y = -Math.PI / 2; // readable face toward +X
@@ -929,7 +1234,7 @@
         { width: 1.86, height: 2.76, depth: 0.09 }, scene));
       rf.rotation.y = Math.PI / 2;
       rf.position.set(6.44, 3.6, z);
-      rf.material = CCW.mat(scene, B, 'theater-int-sidelight-right-frame-mat-' + i, P.gold);
+      rf.material = CCW.mat(scene, B, 'theater-int-sidelight-right-frame-mat-' + i, P.tealDeep);
       var ra = add(B.MeshBuilder.CreatePlane('theater-int-sidelight-right-' + i,
         { width: 1.7, height: 2.6 }, scene));
       ra.rotation.y = Math.PI / 2; // readable face toward -X
@@ -939,7 +1244,9 @@
     });
 
     // ---- Return pad, inside by the door (the parlor's set) ---------
-    var padTex = CCW.padTexture(scene, B, 'theater-int-pad-tex', P.gold);
+    // Coral pad face now (the correction); the thin gold RING stays
+    // — a ring is a fine line, the sanctioned exception.
+    var padTex = CCW.padTexture(scene, B, 'theater-int-pad-tex', P.coral);
     var returnPad = add(B.MeshBuilder.CreateDisc('theater-int-return-pad',
       { radius: 1.5, tessellation: 28 }, scene));
     returnPad.rotation.x = Math.PI / 2;
@@ -957,25 +1264,29 @@
     returnSign.position.set(4.7, 2.7, -2.35);
 
     // ---- The room's lights ------------------------------------------
-    // A low warm hemisphere wash over the seats…
+    // Softer and warmer than the first build, and BRIGHTER (the
+    // realism pass: the first build's 0.45 hemi under a yellow-
+    // leaning house light is what washed the coral aisle pale).
+    // A warm hemisphere wash over the seats…
     var houseHemi = new B.HemisphericLight('theater-int-hemi',
       new B.Vector3(0, 1, 0), scene);
-    houseHemi.intensity = 0.45;
-    houseHemi.diffuse = new B.Color3(0.92, 0.78, 0.66);
-    houseHemi.groundColor = new B.Color3(0.30, 0.16, 0.30);
+    houseHemi.intensity = 0.65;
+    houseHemi.diffuse = new B.Color3(1.0, 0.84, 0.70);
+    houseHemi.groundColor = new B.Color3(0.34, 0.18, 0.30);
     intLights.push(houseHemi);
-    // …the screen's own glow, spilling rose-gold onto the front rows…
+    // …the screen's own glow, spilling rose onto the front rows…
     var screenLight = new B.PointLight('theater-int-screen-light',
       roomWorld(0, 3.4, -12.2), scene);
     screenLight.intensity = 1.0;
     screenLight.diffuse = new B.Color3(1.0, 0.72, 0.78);
     screenLight.range = 16;
     intLights.push(screenLight);
-    // …and a soft house light over the middle rows.
+    // …and a soft house light over the middle rows (cooled a touch
+    // from the first build's amber, so the coral reads true).
     var houseLight = new B.PointLight('theater-int-house-light',
       roomWorld(0, 5.6, -7.5), scene);
-    houseLight.intensity = 0.5;
-    houseLight.diffuse = new B.Color3(1.0, 0.76, 0.52);
+    houseLight.intensity = 0.55;
+    houseLight.diffuse = new B.Color3(1.0, 0.82, 0.64);
     houseLight.range = 15;
     intLights.push(houseLight);
 
@@ -992,12 +1303,39 @@
       }
     });
 
+    var entranceView = {
+      position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
+      target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
+    };
     return {
       returnPad: returnPad,
       returnRing: returnRing,
-      entrance: {
-        position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
-        target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
+      entrance: entranceView,
+      // The watch build's surface (surfaced by buildWorld as
+      // world.theater): the tappable program board, the screen and
+      // its idle glass material, and the camera views Jay asked
+      // for — a bench seat facing the screen, and the wide
+      // audience shot: high in the door-side corner, looking
+      // diagonally down the room so the glowing screen, every
+      // bench row, and the coral aisle share one frame (her spec:
+      // "zoom out and watch everyone in the theater watching it
+      // with you"). All positions sit inside the room's camera
+      // clamp box.
+      watch: {
+        boardMeshes: [progFrame, progBoard],
+        screen: screen,
+        glassMaterial: glassMaterial,
+        views: {
+          landing: entranceView,
+          seat: {
+            position: worldArr(roomWorld(1.15, 1.32, -10.2)),
+            target: worldArr(roomWorld(0, 3.05, -14.27))
+          },
+          audience: {
+            position: worldArr(roomWorld(-5.65, 5.6, -2.2)),
+            target: worldArr(roomWorld(0.8, 1.6, -12.5))
+          }
+        }
       }
     };
   }
@@ -1754,6 +2092,7 @@
       var tInterior = buildTheaterInterior(scene, B, zone, add);
       result.threshold = tInterior.entrance;
       result.interiorReturn = { mesh: tInterior.returnPad, ringMesh: tInterior.returnRing };
+      result.theaterWatch = tInterior.watch;
     }
     if (zone.id === 'library') {
       // The Library (M2b): same arrival pattern — the Plaza pad
@@ -1849,11 +2188,13 @@
 
   /*
    * Build the dressed Plaza into `scene`.
-   * Returns { zones, portalMeshes, teleports, gameTargets } where
-   * each teleport is { mesh, ringMesh, destPos, destTarget, label,
-   * landed } and each game target is { id, name, blurb, path,
+   * Returns { zones, portalMeshes, teleports, gameTargets, theater }
+   * where each teleport is { mesh, ringMesh, destPos, destTarget,
+   * label, landed }, each game target is { id, name, blurb, path,
    * meshes } — the Game Parlor's tap-to-play wiring data (see
-   * buildParlorInterior).
+   * buildParlorInterior) — and `theater` is the Theater's watch
+   * surface (board meshes, screen, glass material, camera views;
+   * see buildTheaterInterior).
    */
   CCW.buildWorld = function (scene, B) {
     var P = CCW.PALETTE;
@@ -1970,11 +2311,13 @@
 
     // Zones + teleport wiring data.
     var zones = {}, portalMeshes = [], teleports = [], gameTargets = [];
+    var theaterWatch = null;
     CCW.ZONES.forEach(function (zone) {
       var built = buildZone(scene, B, zone);
       zones[zone.id] = built;
       portalMeshes = portalMeshes.concat(built.portalMeshes);
       if (built.gameTargets) gameTargets = gameTargets.concat(built.gameTargets);
+      if (built.theaterWatch) theaterWatch = built.theaterWatch;
 
       // Plaza-side pad: ride out to this zone's door.
       var uv = outward(zone);
@@ -2025,6 +2368,7 @@
       }
     });
 
-    return { zones: zones, portalMeshes: portalMeshes, teleports: teleports, gameTargets: gameTargets };
+    return { zones: zones, portalMeshes: portalMeshes, teleports: teleports,
+      gameTargets: gameTargets, theater: theaterWatch };
   };
 })(typeof window !== 'undefined' ? window : globalThis);
