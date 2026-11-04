@@ -1002,6 +1002,620 @@
     };
   }
 
+  // Place a mesh at a rotated offset around a furniture center:
+  // (ox, oz) is the offset in the piece's own frame, phi its yaw
+  // in the room. Mirrors the builders' roomWorld rotation math.
+  function rotPlace(mesh, cx, y, cz, phi, ox, oz) {
+    var c = Math.cos(phi), s = Math.sin(phi);
+    mesh.position.set(cx + ox * c + oz * s, y, cz - ox * s + oz * c);
+    mesh.rotation.y = phi;
+    return mesh;
+  }
+
+  // One solo reading armchair: plum plinth, jewel-velvet seat and
+  // leaning back, plum arms, a contrasting throw pillow. Built in
+  // its own frame (facing -Z, back at +Z), then yawed by phi.
+  function libraryArmchair(scene, B, add, cx, cz, phi, velvet, pillow, tag) {
+    var P = CCW.PALETTE;
+    var plinth = add(B.MeshBuilder.CreateBox('library-int-nook-' + tag + '-plinth',
+      { width: 0.98, height: 0.14, depth: 0.92 }, scene));
+    rotPlace(plinth, cx, 0.07, cz, phi, 0, 0);
+    plinth.material = CCW.mat(scene, B, 'library-int-nook-' + tag + '-plinth-mat', P.plumHouse);
+    var seat = add(B.MeshBuilder.CreateBox('library-int-nook-' + tag + '-seat',
+      { width: 0.95, height: 0.2, depth: 0.88 }, scene));
+    rotPlace(seat, cx, 0.30, cz, phi, 0, 0);
+    seat.material = CCW.mat(scene, B, 'library-int-nook-' + tag + '-seat-mat', velvet);
+    var back = add(B.MeshBuilder.CreateBox('library-int-nook-' + tag + '-back',
+      { width: 0.95, height: 1.0, depth: 0.16 }, scene));
+    rotPlace(back, cx, 0.88, cz, phi, 0, 0.44);
+    back.rotation.x = 0.08; // a reader's lean (local pitch, then yaw)
+    back.material = CCW.mat(scene, B, 'library-int-nook-' + tag + '-back-mat', velvet);
+    [-0.47, 0.47].forEach(function (ox, i) {
+      var arm = add(B.MeshBuilder.CreateBox('library-int-nook-' + tag + '-arm-' + i,
+        { width: 0.15, height: 0.32, depth: 0.85 }, scene));
+      rotPlace(arm, cx, 0.56, cz, phi, ox, 0);
+      arm.material = CCW.mat(scene, B, 'library-int-nook-' + tag + '-arm-mat-' + i, P.plumHouse);
+    });
+    var pil = add(B.MeshBuilder.CreateBox('library-int-nook-' + tag + '-pillow',
+      { width: 0.42, height: 0.42, depth: 0.13 }, scene));
+    rotPlace(pil, cx, 0.62, cz, phi, 0, 0.30);
+    pil.rotation.x = 0.15;
+    pil.material = CCW.mat(scene, B, 'library-int-nook-' + tag + '-pillow-mat', pillow);
+  }
+
+  // One floor-to-ceiling bookcase: TEAL frame box (her library
+  // photo: teal bookcases against hot pink walls) + a spines plane
+  // carrying the drawn bookcase texture. Position/rotation are set
+  // on BOTH by the caller, like the parlor's framed motifs.
+  function libraryShelfUnit(scene, B, add, tag, seed) {
+    var frame = add(B.MeshBuilder.CreateBox('library-int-shelf-' + tag + '-frame',
+      { width: 3.5, height: 5.7, depth: 0.12 }, scene));
+    frame.material = CCW.mat(scene, B, 'library-int-shelf-' + tag + '-frame-mat', CCW.PALETTE.tealDeep);
+    var art = add(B.MeshBuilder.CreatePlane('library-int-shelf-' + tag,
+      { width: 3.3, height: 5.5 }, scene));
+    art.material = CCW.texMat(scene, B, 'library-int-shelf-' + tag + '-mat',
+      CCW.libraryShelvesTexture(scene, B, 'library-int-shelf-' + tag + '-tex', seed), {});
+    return { frame: frame, art: art };
+  }
+
+  // A named-section plaque: teal trim box + gold lettering (the
+  // house signage voice; trim is teal per Jay's 2026-11-04 palette
+  // correction), placed by the caller (position/rotation on both,
+  // like the shelf units).
+  function libraryPlaque(scene, B, add, tag, lines, w, h) {
+    var trim = add(B.MeshBuilder.CreateBox('library-int-plaque-' + tag + '-trim',
+      { width: w + 0.2, height: h + 0.15, depth: 0.1 }, scene));
+    trim.material = CCW.mat(scene, B, 'library-int-plaque-' + tag + '-trim-mat', CCW.PALETTE.tealDeep);
+    var label = add(CCW.makeLabel(scene, B, 'library-int-plaque-' + tag,
+      lines, w, h, { fg: CCW.PALETTE.goldSoft }));
+    return { trim: trim, label: label };
+  }
+
+  /*
+   * THE LIBRARY (M2b interior 2 of 5, 2026-11-04): design §3.5 made
+   * physical — a quiet room of floor-to-ceiling bookcases in Jay's
+   * palette, stocked with HER work. Named shelf sections carry
+   * plaques: the CHEAT CODE saga (the place of honor, center of the
+   * back wall), the Chemist Dates CookBook, Your Bible, the Course
+   * Shelf (Skool lessons live there later — signage only this
+   * pass), and Public-Domain Classics — free to read & hear (Jay's
+   * shelf, added 2026-11-04 with her collection policy: public-
+   * domain books + her own works can be fully hosted/read/listened
+   * to; in-copyright books are recommendations only, and their
+   * Bookshop/Libro.fm links live outside the world). NO external
+   * links are wired anywhere in this room in this pass.
+   *
+   * Also here: a Currently Reading display cabinet by the door
+   * (lavender, after her herb cabinet — interior ref 05), a Launch
+   * Corner celebrating her publishing rhythm ("New chapters land
+   * here first" — generic saga branding, no chapter number, since
+   * chapters publish daily), a rolling ladder against the shelves,
+   * a long reading table, and three solo reading nooks (velvet
+   * armchair + side table + warm lamp each). The full saga
+   * presentation waits for her finished book design (Jay,
+   * 2026-11-04): for now the saga shelf is its home.
+   *
+   * ARRIVAL: the Parlor/Theater pattern — the Plaza pad lands
+   * INSIDE the room, just past the door, facing the shelves and
+   * the saga plaque; the room's return pad rides home. No other
+   * zone's pads or thresholds change.
+   *
+   * LIGHTING (the parlor round-3 lesson, applied from the start):
+   * a warm rig scoped to the library meshes only — hemisphere
+   * wash + a soft center light + a real point light in each
+   * reading lamp — and every library material's
+   * maxSimultaneousLights raised at creation to the scene light
+   * count, or the rig never renders. Globals and the Plaza /
+   * Parlor / Theater materials are untouched.
+   */
+  function buildLibraryInterior(scene, B, zone, add) {
+    var P = CCW.PALETTE;
+    var uv = outward(zone);
+    // JAY'S PALETTE CORRECTION (2026-11-04, from her own photos):
+    // HOT PINK / CORAL walls dominant; teal the second voice
+    // (bookcases, trim lines); plum only as velvet furniture; navy
+    // only as the star-chart ceiling field; gold is a FINE-LINE
+    // accent only (thin edges, lettering, pad rings) — never thick
+    // frames, wainscot, or large surfaces. The room is BRIGHT.
+    var WALL = P.pinkHot;
+    // REALISM (Jay's direction, 2026-11-04): no large flat-color
+    // surfaces — the walls wear drawn pink panelling, the floor an
+    // ornate rug pattern, the tables wood grain. Textures are
+    // created once here and shared by every surface that uses
+    // them (phone performance: reuse, don't proliferate).
+    var wallTex = CCW.libraryWallTexture(scene, B, 'library-int-wall-tex');
+    var woodTex = CCW.woodTexture(scene, B, 'library-int-wood-tex');
+    var leafTex = CCW.leafTexture(scene, B, 'library-int-leaf-tex');
+    var chartTex = CCW.starChartTexture(scene, B, 'library-int-chart-tex');
+
+    var intLights = [];
+    function roomWorld(lx, ly, lz) {
+      var a = zone.angleDeg * Math.PI / 180 + Math.PI;
+      var ca = Math.cos(a), sa = Math.sin(a);
+      return new B.Vector3(
+        uv[0] * CCW.ZONE_RADIUS + lx * ca + lz * sa, ly,
+        uv[1] * CCW.ZONE_RADIUS - lx * sa + lz * ca);
+    }
+
+    // ---- Room shell (the shared interior volume) ------------------
+    var floor = add(B.MeshBuilder.CreateBox('library-int-floor',
+      { width: 13.4, height: 0.12, depth: 14.2 }, scene));
+    floor.position.set(0, -0.06, -7.5);
+    floor.material = CCW.texMat(scene, B, 'library-int-floor-mat',
+      CCW.libraryFloorTexture(scene, B, 'library-int-floor-tex'), {});
+    floor.receiveShadows = true;
+
+    // Ceiling: the star chart — this room holds the numerology nook.
+    var ceiling = add(B.MeshBuilder.CreateBox('library-int-ceiling',
+      { width: 13.6, height: 0.25, depth: 14.4 }, scene));
+    ceiling.position.set(0, 7.12, -7.5);
+    ceiling.material = CCW.texMat(scene, B, 'library-int-ceiling-mat',
+      CCW.starChartTexture(scene, B, 'library-int-ceiling-tex'), {});
+
+    var backWall = add(B.MeshBuilder.CreateBox('library-int-wall-back',
+      { width: 14, height: 7, depth: 0.5 }, scene));
+    backWall.position.set(0, 3.5, -14.65);
+    backWall.material = CCW.texMat(scene, B, 'library-int-wall-back-mat', wallTex, {});
+    [-6.75, 6.75].forEach(function (x, i) {
+      var side = add(B.MeshBuilder.CreateBox('library-int-wall-' + (i ? 'right' : 'left'),
+        { width: 0.5, height: 7, depth: 14.3 }, scene));
+      side.position.set(x, 3.5, -7.5);
+      side.material = CCW.texMat(scene, B, 'library-int-wall-side-mat-' + i, wallTex, {});
+    });
+
+    // Interior face of the front wall + the door, seen from inside.
+    var front = add(B.MeshBuilder.CreateBox('library-int-front-panel',
+      { width: 13, height: 7, depth: 0.15 }, scene));
+    front.position.set(0, 3.5, -0.68);
+    front.material = CCW.texMat(scene, B, 'library-int-front-mat', wallTex, {});
+    var doorFrameIn = add(B.MeshBuilder.CreateBox('library-int-door-frame',
+      { width: 4.0, height: 5.2, depth: 0.12 }, scene));
+    doorFrameIn.position.set(0, 2.6, -0.78);
+    doorFrameIn.material = CCW.mat(scene, B, 'library-int-door-frame-mat', P.tealDeep);
+    var doorGlowIn = add(B.MeshBuilder.CreatePlane('library-int-door-glow',
+      { width: 3.4, height: 4.6 }, scene));
+    // No half-turn: the readable -Z face points into the room.
+    doorGlowIn.position.set(0, 2.3, -0.86);
+    doorGlowIn.material = CCW.mat(scene, B, 'library-int-door-glow-mat', P.velvetLavender,
+      { emissive: P.velvetLavender });
+
+    // Teal wainscot line around the room (a line, not a surface —
+    // palette correction: no gold wainscot).
+    var wainsBack = add(B.MeshBuilder.CreateBox('library-int-wainscot-back',
+      { width: 12.9, height: 0.14, depth: 0.08 }, scene));
+    wainsBack.position.set(0, 1.02, -14.36);
+    wainsBack.material = CCW.mat(scene, B, 'library-int-wainscot-back-mat', P.tealDeep);
+    [-6.46, 6.46].forEach(function (x, i) {
+      var wains = add(B.MeshBuilder.CreateBox('library-int-wainscot-' + (i ? 'right' : 'left'),
+        { width: 0.08, height: 0.14, depth: 13.7 }, scene));
+      wains.position.set(x, 1.02, -7.5);
+      wains.material = CCW.mat(scene, B, 'library-int-wainscot-side-mat-' + i, P.tealDeep);
+    });
+
+    // The quiet-room sign over the door, inside.
+    var signTrim = add(B.MeshBuilder.CreateBox('library-int-sign-trim',
+      { width: 5.0, height: 1.05, depth: 0.1 }, scene));
+    signTrim.position.set(0, 5.95, -0.80);
+    signTrim.material = CCW.mat(scene, B, 'library-int-sign-trim-mat', P.tealDeep);
+    var sign = add(CCW.makeLabel(scene, B, 'library-int-sign',
+      ['The Library', 'Low voices, good books'], 4.7, 0.9, { fg: P.goldSoft }));
+    // No half-turn: on the front wall the readable -Z face already
+    // points into the room.
+    sign.position.set(0, 5.95, -0.87);
+
+    // ---- The back wall: her works, floor to ceiling ---------------
+    // CookBook (left) · CHEAT CODE saga (center, the place of
+    // honor) · Your Bible (right), each with its plaque above.
+    var backSections = [
+      { tag: 'cookbook', x: -4.35, seed: 21, lines: ['Chemist Dates', 'The CookBook'] },
+      { tag: 'saga', x: 0, seed: 7, lines: ['CHEAT CODE', 'The Saga'] },
+      { tag: 'bible', x: 4.35, seed: 33, lines: ['Your Bible', 'Passages & practice'] }
+    ];
+    backSections.forEach(function (sec) {
+      var unit = libraryShelfUnit(scene, B, add, sec.tag, sec.seed);
+      unit.frame.position.set(sec.x, 2.85, -14.33);
+      unit.art.rotation.y = Math.PI; // readable face toward the room
+      unit.art.position.set(sec.x, 2.85, -14.26);
+      var plaque = libraryPlaque(scene, B, add, sec.tag, sec.lines, 3.4, 0.8);
+      plaque.trim.position.set(sec.x, 6.18, -14.34);
+      plaque.label.rotation.y = Math.PI;
+      plaque.label.position.set(sec.x, 6.18, -14.27);
+    });
+
+    // ---- The side walls: courses, classics, and the stacks --------
+    // Left wall: the Course Shelf + a general stacks unit behind
+    // it. Right wall: Public-Domain Classics + its stacks unit.
+    var sideSections = [
+      { tag: 'courses', side: -1, z: -9.0, seed: 45,
+        lines: ['Course Shelf', 'Skool lessons live here soon'] },
+      { tag: 'stacks-l', side: -1, z: -12.65, seed: 58, lines: null },
+      { tag: 'classics', side: 1, z: -9.0, seed: 63,
+        lines: ['Public-Domain Classics', 'free to read & hear'] },
+      { tag: 'stacks-r', side: 1, z: -12.65, seed: 79, lines: null }
+    ];
+    sideSections.forEach(function (sec) {
+      var rot = sec.side < 0 ? -Math.PI / 2 : Math.PI / 2;
+      var unit = libraryShelfUnit(scene, B, add, sec.tag, sec.seed);
+      unit.frame.rotation.y = rot;
+      unit.frame.position.set(sec.side * 6.44, 2.85, sec.z);
+      unit.art.rotation.y = rot; // readable face toward the room center
+      unit.art.position.set(sec.side * 6.37, 2.85, sec.z);
+      if (sec.lines) {
+        var plaque = libraryPlaque(scene, B, add, sec.tag, sec.lines, 3.8, 0.85);
+        plaque.trim.rotation.y = rot;
+        plaque.trim.position.set(sec.side * 6.44, 6.18, sec.z);
+        plaque.label.rotation.y = rot;
+        plaque.label.position.set(sec.side * 6.37, 6.18, sec.z);
+      }
+    });
+
+    // ---- By the door: Currently Reading + the Launch Corner -------
+    var dispFrame = add(B.MeshBuilder.CreateBox('library-int-display-frame',
+      { width: 2.9, height: 2.5, depth: 0.1 }, scene));
+    dispFrame.position.set(-4.3, 3.2, -0.80);
+    dispFrame.material = CCW.mat(scene, B, 'library-int-display-frame-mat', P.velvetLavender);
+    var disp = add(B.MeshBuilder.CreatePlane('library-int-display',
+      { width: 2.7, height: 2.3 }, scene));
+    // No half-turn: front wall (see the door glow note above).
+    disp.position.set(-4.3, 3.2, -0.87);
+    disp.material = CCW.texMat(scene, B, 'library-int-display-mat',
+      CCW.libraryDisplayTexture(scene, B, 'library-int-display-tex'), {});
+
+    var launchFrame = add(B.MeshBuilder.CreateBox('library-int-launch-frame',
+      { width: 2.9, height: 2.5, depth: 0.1 }, scene));
+    launchFrame.position.set(4.3, 3.2, -0.80);
+    launchFrame.material = CCW.mat(scene, B, 'library-int-launch-frame-mat', P.plumHouse);
+    var launch = add(B.MeshBuilder.CreatePlane('library-int-launch',
+      { width: 2.7, height: 2.3 }, scene));
+    launch.position.set(4.3, 3.2, -0.87);
+    launch.material = CCW.texMat(scene, B, 'library-int-launch-mat',
+      CCW.libraryLaunchTexture(scene, B, 'library-int-launch-tex'), {});
+
+    // ---- The rolling ladder, leaning on the back shelves ----------
+    [-2.45, -1.70].forEach(function (x, i) {
+      var rail = add(B.MeshBuilder.CreateBox('library-int-ladder-rail-' + i,
+        { width: 0.07, height: 6.0, depth: 0.06 }, scene));
+      rail.position.set(x, 2.95, -13.98);
+      rail.rotation.x = -0.06; // the top rests toward the shelves
+      rail.material = CCW.mat(scene, B, 'library-int-ladder-rail-mat-' + i, '#6b4423');
+    });
+    [-2.4, -1.6, -0.8, 0, 0.8, 1.6, 2.4].forEach(function (t, i) {
+      var rung = add(B.MeshBuilder.CreateCylinder('library-int-ladder-rung-' + i,
+        { diameter: 0.045, height: 0.71, tessellation: 8 }, scene));
+      rung.rotation.z = Math.PI / 2;
+      rung.position.set(-2.075, 2.95 + t * Math.cos(0.06), -13.98 - t * Math.sin(0.06));
+      rung.material = CCW.mat(scene, B, 'library-int-ladder-rung-mat-' + i, '#6b4423');
+    });
+
+    // ---- The long reading table ------------------------------------
+    var tableTop = add(B.MeshBuilder.CreateBox('library-int-table-top',
+      { width: 3.6, height: 0.12, depth: 1.5 }, scene));
+    tableTop.position.set(0, 0.98, -8);
+    tableTop.material = CCW.texMat(scene, B, 'library-int-table-top-mat', woodTex, {});
+    var tableTrim = add(B.MeshBuilder.CreateBox('library-int-table-trim',
+      { width: 3.8, height: 0.05, depth: 1.7 }, scene));
+    tableTrim.position.set(0, 0.90, -8);
+    tableTrim.material = CCW.mat(scene, B, 'library-int-table-trim-mat', P.tealDeep);
+    [-1.55, 1.55].forEach(function (x, i) {
+      var leg = add(B.MeshBuilder.CreateBox('library-int-table-leg-' + i,
+        { width: 0.14, height: 0.86, depth: 1.3 }, scene));
+      leg.position.set(x, 0.44, -8);
+      leg.material = CCW.mat(scene, B, 'library-int-table-leg-mat-' + i, '#4a2c14');
+    });
+    // Books left open on the table, mid-read.
+    [[-1.05, -8.15, 0.2, P.velvetMagenta], [1.15, -7.85, -0.15, P.velvetTeal],
+     [0.35, -8.3, 0.5, '#7a2d5a']].forEach(function (cfg, i) {
+      var book = add(B.MeshBuilder.CreateBox('library-int-table-book-' + i,
+        { width: 0.5, height: 0.09, depth: 0.36 }, scene));
+      book.position.set(cfg[0], 1.085, cfg[1]);
+      book.rotation.y = cfg[2];
+      book.material = CCW.mat(scene, B, 'library-int-table-book-mat-' + i, cfg[3]);
+    });
+    // The table's centerpiece (her photo): a glass terrarium
+    // globe with pink blooms over green, on a dark wood stand —
+    // it takes the table lamp's place at the table's center.
+    var terraStand = add(B.MeshBuilder.CreateCylinder('library-int-terrarium-stand',
+      { diameter: 0.3, height: 0.07, tessellation: 12 }, scene));
+    terraStand.position.set(0, 1.075, -8);
+    terraStand.material = CCW.mat(scene, B, 'library-int-terrarium-stand-mat', '#4a2c14');
+    var terraLeaf = add(B.MeshBuilder.CreateSphere('library-int-terrarium-leaf',
+      { diameter: 0.34, segments: 10 }, scene));
+    terraLeaf.position.set(0, 1.27, -8);
+    terraLeaf.scaling.y = 0.7;
+    terraLeaf.material = CCW.mat(scene, B, 'library-int-terrarium-leaf-mat', '#2d6a4f');
+    var terraBloom = add(B.MeshBuilder.CreateSphere('library-int-terrarium-bloom',
+      { diameter: 0.17, segments: 10 }, scene));
+    terraBloom.position.set(0.05, 1.42, -8);
+    terraBloom.material = CCW.mat(scene, B, 'library-int-terrarium-bloom-mat', P.pinkHot);
+    var terraGlass = add(B.MeshBuilder.CreateSphere('library-int-terrarium-glass',
+      { diameter: 0.52, segments: 14 }, scene));
+    terraGlass.position.set(0, 1.37, -8);
+    terraGlass.material = CCW.mat(scene, B, 'library-int-terrarium-glass-mat', P.cream,
+      { alpha: 0.30 });
+
+    // Four reading chairs around the table.
+    // Her photo's chairs: teal + magenta velvet around the table.
+    var chairVelvets = [P.velvetTeal, P.velvetMagenta, P.velvetMagenta, P.velvetTeal];
+    [[-0.95, -6.8, 0], [0.95, -6.8, 0], [-0.95, -9.2, Math.PI], [0.95, -9.2, Math.PI]]
+      .forEach(function (cfg, i) {
+        var cx = cfg[0], cz = cfg[1], phi = cfg[2], tag = 'library-int-rchair-' + i;
+        var base = add(B.MeshBuilder.CreateBox(tag + '-base',
+          { width: 0.42, height: 0.5, depth: 0.42 }, scene));
+        rotPlace(base, cx, 0.25, cz, phi, 0, 0);
+        base.material = CCW.mat(scene, B, tag + '-base-mat', P.plumHouse);
+        var seat = add(B.MeshBuilder.CreateBox(tag + '-seat',
+          { width: 0.62, height: 0.09, depth: 0.55 }, scene));
+        rotPlace(seat, cx, 0.55, cz, phi, 0, 0);
+        seat.material = CCW.mat(scene, B, tag + '-seat-mat', chairVelvets[i]);
+        var back = add(B.MeshBuilder.CreateBox(tag + '-back',
+          { width: 0.62, height: 0.72, depth: 0.09 }, scene));
+        rotPlace(back, cx, 0.93, cz, phi, 0, 0.28);
+        back.material = CCW.mat(scene, B, tag + '-back-mat', chairVelvets[i]);
+      });
+
+    // ---- Three solo reading nooks -----------------------------------
+    // Armchair + side table (with a book waiting) + a floor lamp
+    // whose globe carries a real, room-scoped point light.
+    var nooks = [
+      { tag: 'a', x: -4.85, z: -4.4, phi: -Math.PI / 2, velvet: P.velvetMagenta,
+        pillow: P.velvetOrange, tableZ: -3.3, lampX: -5.6, lampZ: -5.2, bookRot: 0.3 },
+      { tag: 'b', x: 4.85, z: -4.4, phi: Math.PI / 2, velvet: P.velvetTeal,
+        pillow: P.coral, tableZ: -3.3, lampX: 5.6, lampZ: -5.2, bookRot: -0.2 },
+      { tag: 'c', x: -4.85, z: -11.9, phi: -Math.PI / 2, velvet: P.velvetLavender,
+        pillow: P.teal, tableZ: -10.8, lampX: -5.6, lampZ: -12.7, bookRot: 0.45 }
+    ];
+    nooks.forEach(function (nk) {
+      libraryArmchair(scene, B, add, nk.x, nk.z, nk.phi, nk.velvet, nk.pillow, nk.tag);
+      var tTop = add(B.MeshBuilder.CreateCylinder('library-int-nook-' + nk.tag + '-table-top',
+        { diameter: 0.55, height: 0.05, tessellation: 14 }, scene));
+      tTop.position.set(nk.x, 0.58, nk.tableZ);
+      tTop.material = CCW.texMat(scene, B, 'library-int-nook-' + nk.tag + '-table-top-mat', woodTex, {});
+      var tLeg = add(B.MeshBuilder.CreateCylinder('library-int-nook-' + nk.tag + '-table-leg',
+        { diameter: 0.07, height: 0.55, tessellation: 8 }, scene));
+      tLeg.position.set(nk.x, 0.28, nk.tableZ);
+      tLeg.material = CCW.mat(scene, B, 'library-int-nook-' + nk.tag + '-table-leg-mat', P.plumHouse);
+      var book = add(B.MeshBuilder.CreateBox('library-int-nook-' + nk.tag + '-book',
+        { width: 0.34, height: 0.06, depth: 0.26 }, scene));
+      book.position.set(nk.x, 0.635, nk.tableZ);
+      book.rotation.y = nk.bookRot;
+      book.material = CCW.mat(scene, B, 'library-int-nook-' + nk.tag + '-book-mat', nk.pillow);
+      var pole = add(B.MeshBuilder.CreateCylinder('library-int-nook-' + nk.tag + '-lamp-pole',
+        { diameter: 0.06, height: 1.5, tessellation: 8 }, scene));
+      pole.position.set(nk.lampX, 0.75, nk.lampZ);
+      pole.material = CCW.mat(scene, B, 'library-int-nook-' + nk.tag + '-lamp-pole-mat', P.plumHouse);
+      var globe = add(B.MeshBuilder.CreateSphere('library-int-nook-' + nk.tag + '-lamp-globe',
+        { diameter: 0.36, segments: 12 }, scene));
+      globe.position.set(nk.lampX, 1.62, nk.lampZ);
+      globe.material = CCW.glowMat(scene, B, 'library-int-nook-' + nk.tag + '-lamp-globe-mat', P.goldSoft);
+      var lampLight = new B.PointLight('library-int-lamp-light-' + nk.tag,
+        roomWorld(nk.lampX, 1.7, nk.lampZ), scene);
+      lampLight.intensity = 0.5;
+      lampLight.diffuse = new B.Color3(1.0, 0.78, 0.55);
+      lampLight.range = 6.5;
+      intLights.push(lampLight);
+    });
+
+    // ---- Photo-layout dressing (Jay's vibrant + photo-layout
+    // direction, 2026-11-04) --------------------------------------
+    // Her library photo, mirrored: a gallery of dark astrology
+    // charts in dark frames over the side-wall nooks; a wooden
+    // sideboard under the left charts carrying the scholar's
+    // objects (telescope, bust, jars); trailing plants spilling
+    // over the back shelves; and two glass globe pendants —
+    // one warm, one pink — hanging over the reading table.
+    [-1, 1].forEach(function (side) {
+      var rot = side < 0 ? -Math.PI / 2 : Math.PI / 2;
+      var stag = side < 0 ? 'l' : 'r';
+      var gFrame = add(B.MeshBuilder.CreateBox('library-int-chart-' + stag + '-frame',
+        { width: 2.1, height: 1.6, depth: 0.09 }, scene));
+      gFrame.rotation.y = rot;
+      gFrame.position.set(side * 6.44, 3.85, -4.4);
+      gFrame.material = CCW.mat(scene, B, 'library-int-chart-' + stag + '-frame-mat', P.plumHouse);
+      var gArt = add(B.MeshBuilder.CreatePlane('library-int-chart-' + stag + '-art',
+        { width: 1.95, height: 1.45 }, scene));
+      gArt.rotation.y = rot;
+      gArt.position.set(side * 6.37, 3.85, -4.4);
+      gArt.material = CCW.texMat(scene, B, 'library-int-chart-' + stag + '-art-mat', chartTex, {});
+      var sFrame = add(B.MeshBuilder.CreateBox('library-int-chart-' + stag + '-small-frame',
+        { width: 1.15, height: 0.9, depth: 0.09 }, scene));
+      sFrame.rotation.y = rot;
+      sFrame.position.set(side * 6.44, 3.2, -2.0);
+      sFrame.material = CCW.mat(scene, B, 'library-int-chart-' + stag + '-small-frame-mat', P.plumHouse);
+      var sArt = add(B.MeshBuilder.CreatePlane('library-int-chart-' + stag + '-small-art',
+        { width: 1.0, height: 0.75 }, scene));
+      sArt.rotation.y = rot;
+      sArt.position.set(side * 6.37, 3.2, -2.0);
+      sArt.material = CCW.texMat(scene, B, 'library-int-chart-' + stag + '-small-art-mat', chartTex, {});
+    });
+    // The scholar's sideboard (left wall, under the charts).
+    var deskBody = add(B.MeshBuilder.CreateBox('library-int-sideboard-body',
+      { width: 0.55, height: 0.78, depth: 1.9 }, scene));
+    deskBody.position.set(-6.19, 0.39, -2.2);
+    deskBody.material = CCW.mat(scene, B, 'library-int-sideboard-body-mat', '#4a2c14');
+    var deskTop = add(B.MeshBuilder.CreateBox('library-int-sideboard-top',
+      { width: 0.65, height: 0.06, depth: 2.0 }, scene));
+    deskTop.position.set(-6.17, 0.81, -2.2);
+    deskTop.material = CCW.texMat(scene, B, 'library-int-sideboard-top-mat', woodTex, {});
+    var scopeMount = add(B.MeshBuilder.CreateBox('library-int-desk-telescope-mount',
+      { width: 0.16, height: 0.16, depth: 0.16 }, scene));
+    scopeMount.position.set(-6.17, 0.92, -2.78);
+    scopeMount.material = CCW.mat(scene, B, 'library-int-desk-telescope-mount-mat', P.plumHouse);
+    var scopeTube = add(B.MeshBuilder.CreateCylinder('library-int-desk-telescope-tube',
+      { diameter: 0.09, height: 0.85, tessellation: 10 }, scene));
+    scopeTube.position.set(-6.10, 1.28, -2.78);
+    scopeTube.rotation.z = 0.5; // tipped up toward the room's stars
+    scopeTube.material = CCW.mat(scene, B, 'library-int-desk-telescope-tube-mat', '#b08d2f');
+    var bustBase = add(B.MeshBuilder.CreateCylinder('library-int-desk-bust-base',
+      { diameter: 0.2, height: 0.22, tessellation: 10 }, scene));
+    bustBase.position.set(-6.17, 0.95, -1.68);
+    bustBase.material = CCW.mat(scene, B, 'library-int-desk-bust-base-mat', P.plumHouse);
+    var bustHead = add(B.MeshBuilder.CreateSphere('library-int-desk-bust-head',
+      { diameter: 0.3, segments: 12 }, scene));
+    bustHead.position.set(-6.17, 1.22, -1.68);
+    bustHead.material = CCW.mat(scene, B, 'library-int-desk-bust-head-mat', P.cream);
+    [[-2.38, '#17a398'], [-2.20, P.velvetLavender]].forEach(function (jc, i) {
+      var jar = add(B.MeshBuilder.CreateCylinder('library-int-desk-jar-' + i,
+        { diameter: 0.13, height: 0.24, tessellation: 10 }, scene));
+      jar.position.set(-6.17, 0.96, jc[0]);
+      jar.material = CCW.mat(scene, B, 'library-int-desk-jar-mat-' + i, jc[1]);
+      var lid = add(B.MeshBuilder.CreateCylinder('library-int-desk-jar-' + i + '-lid',
+        { diameter: 0.14, height: 0.04, tessellation: 10 }, scene));
+      lid.position.set(-6.17, 1.10, jc[0]);
+      lid.material = CCW.mat(scene, B, 'library-int-desk-jar-lid-mat-' + i, P.goldSoft);
+    });
+    // Trailing plants spilling over the back shelves.
+    [-4.35, 4.35].forEach(function (px, i) {
+      var trail = add(B.MeshBuilder.CreatePlane('library-int-trail-' + i,
+        { width: 0.95, height: 0.8 }, scene));
+      trail.position.set(px, 5.55, -14.05);
+      trail.rotation.y = Math.PI;
+      trail.rotation.x = 0.35;
+      trail.material = CCW.texMat(scene, B, 'library-int-trail-mat-' + i, leafTex, { alpha: true });
+    });
+    // Two hanging globe pendants over the reading table.
+    [-0.95, 0.95].forEach(function (px, i) {
+      var cord = add(B.MeshBuilder.CreateCylinder('library-int-pendant-' + i + '-cord',
+        { diameter: 0.025, height: 1.9, tessellation: 6 }, scene));
+      cord.position.set(px, 6.05, -8);
+      cord.material = CCW.mat(scene, B, 'library-int-pendant-cord-mat-' + i, P.plumHouse);
+      var globe = add(B.MeshBuilder.CreateSphere('library-int-pendant-' + i + '-globe',
+        { diameter: 0.44, segments: 12 }, scene));
+      globe.position.set(px, 4.95, -8);
+      globe.material = CCW.glowMat(scene, B, 'library-int-pendant-globe-mat-' + i,
+        i ? '#ff7ab0' : P.goldSoft);
+    });
+
+    // ---- Density (Jay's realism direction, 2026-11-04) ----------
+    // Her rooms are FULL, not sparse: plants flanking the reading
+    // table, a small plant and candles ON the table, cushions on
+    // the reading chairs, and a stack of books waiting mid-read.
+    function cornerPlant(px, pz, tag) {
+      var pot = add(B.MeshBuilder.CreateCylinder('library-int-plant-' + tag + '-pot',
+        { diameterTop: 0.44, diameterBottom: 0.34, height: 0.52, tessellation: 12 }, scene));
+      pot.position.set(px, 0.26, pz);
+      pot.material = CCW.mat(scene, B, 'library-int-plant-' + tag + '-pot-mat', P.coral);
+      var crown = add(B.MeshBuilder.CreateSphere('library-int-plant-' + tag + '-crown',
+        { diameter: 0.3, segments: 8 }, scene));
+      crown.position.set(px, 0.60, pz);
+      crown.material = CCW.mat(scene, B, 'library-int-plant-' + tag + '-crown-mat', '#1e5c46');
+      for (var li = 0; li < 3; li++) {
+        var leaf = add(B.MeshBuilder.CreatePlane('library-int-plant-' + tag + '-leaf-' + li,
+          { width: 1.15, height: 1.15 }, scene));
+        leaf.position.set(px, 1.12, pz);
+        leaf.rotation.y = li * Math.PI / 3;
+        leaf.material = CCW.texMat(scene, B, 'library-int-plant-' + tag + '-leaf-mat-' + li,
+          leafTex, { alpha: true });
+      }
+    }
+    cornerPlant(-3.4, -10.8, 'l');
+    cornerPlant(3.4, -10.8, 'r');
+    // A small plant on the reading table itself.
+    var tPot = add(B.MeshBuilder.CreateCylinder('library-int-table-plant-pot',
+      { diameterTop: 0.17, diameterBottom: 0.12, height: 0.18, tessellation: 10 }, scene));
+    tPot.position.set(0.78, 1.13, -8.28);
+    tPot.material = CCW.mat(scene, B, 'library-int-table-plant-pot-mat', P.coral);
+    [0, Math.PI / 2].forEach(function (ry, li) {
+      var tLeaf = add(B.MeshBuilder.CreatePlane('library-int-table-plant-leaf-' + li,
+        { width: 0.52, height: 0.52 }, scene));
+      tLeaf.position.set(0.78, 1.40, -8.28);
+      tLeaf.rotation.y = ry;
+      tLeaf.material = CCW.texMat(scene, B, 'library-int-table-plant-leaf-mat-' + li,
+        leafTex, { alpha: true });
+    });
+    // Two candles on the table (emissive flames — no new lights,
+    // the lamp rig already warms the table).
+    [-1.45, 1.45].forEach(function (cx, i) {
+      var candle = add(B.MeshBuilder.CreateCylinder('library-int-candle-' + i,
+        { diameter: 0.09, height: 0.22, tessellation: 10 }, scene));
+      candle.position.set(cx, 1.15, -8);
+      candle.material = CCW.mat(scene, B, 'library-int-candle-mat-' + i, P.cream);
+      var flame = add(B.MeshBuilder.CreateSphere('library-int-candle-' + i + '-flame',
+        { diameter: 0.085, segments: 8 }, scene));
+      flame.position.set(cx, 1.33, -8);
+      flame.material = CCW.glowMat(scene, B, 'library-int-candle-flame-mat-' + i, P.goldSoft);
+    });
+    // Cushions on the four reading chairs, each in the next
+    // chair's velvet.
+    [[-0.95, -6.8, 0], [0.95, -6.8, 0], [-0.95, -9.2, Math.PI], [0.95, -9.2, Math.PI]]
+      .forEach(function (cfg, i) {
+        var cush = add(B.MeshBuilder.CreateBox('library-int-rchair-' + i + '-cushion',
+          { width: 0.44, height: 0.09, depth: 0.38 }, scene));
+        rotPlace(cush, cfg[0], 0.645, cfg[1], cfg[2], 0, 0);
+        cush.material = CCW.mat(scene, B, 'library-int-rchair-' + i + '-cushion-mat',
+          chairVelvets[(i + 1) % 4]);
+      });
+    // A stack of two books on the table, mid-read.
+    var stack1 = add(B.MeshBuilder.CreateBox('library-int-table-stack-0',
+      { width: 0.46, height: 0.08, depth: 0.33 }, scene));
+    stack1.position.set(-0.55, 1.08, -7.62);
+    stack1.rotation.y = 0.15;
+    stack1.material = CCW.mat(scene, B, 'library-int-table-stack-mat-0', P.velvetOrange);
+    var stack2 = add(B.MeshBuilder.CreateBox('library-int-table-stack-1',
+      { width: 0.40, height: 0.07, depth: 0.29 }, scene));
+    stack2.position.set(-0.53, 1.155, -7.63);
+    stack2.rotation.y = -0.1;
+    stack2.material = CCW.mat(scene, B, 'library-int-table-stack-mat-1', '#274b8f');
+
+    // ---- Return pad, inside by the door (the interiors' set) -------
+    var padTex = CCW.padTexture(scene, B, 'library-int-pad-tex', P.velvetLavender);
+    var returnPad = add(B.MeshBuilder.CreateDisc('library-int-return-pad',
+      { radius: 1.5, tessellation: 28 }, scene));
+    returnPad.rotation.x = Math.PI / 2;
+    returnPad.position.set(4.7, 0.04, -2.3);
+    returnPad.material = CCW.texMat(scene, B, 'library-int-return-pad-mat', padTex,
+      { alpha: true, emissive: true });
+    var returnRing = add(B.MeshBuilder.CreateTorus('library-int-return-ring',
+      { diameter: 3.0, thickness: 0.07, tessellation: 32 }, scene));
+    returnRing.rotation.x = Math.PI / 2;
+    returnRing.position.set(4.7, 0.05, -2.3);
+    returnRing.material = CCW.glowMat(scene, B, 'library-int-return-ring-mat', P.gold);
+    var returnSign = add(CCW.makeLabel(scene, B, 'library-int-return-sign',
+      ['↩ The Plaza'], 2.2, 0.55, { fg: P.goldSoft }));
+    // No half-turn: the sign's readable -Z face looks into the room.
+    returnSign.position.set(4.7, 2.7, -2.35);
+
+    // ---- The room's lights ------------------------------------------
+    // A warm hemisphere wash, lifted a touch, with the center
+    // point eased down (Jay's realism direction: softer, warmer
+    // light with gentle falloff, not flat even light)…
+    var roomHemi = new B.HemisphericLight('library-int-hemi',
+      new B.Vector3(0, 1, 0), scene);
+    roomHemi.intensity = 0.7;
+    roomHemi.diffuse = new B.Color3(1.0, 0.82, 0.62);
+    roomHemi.groundColor = new B.Color3(0.38, 0.20, 0.28);
+    intLights.push(roomHemi);
+    // …a soft center light over the reading table…
+    var roomLight = new B.PointLight('library-int-light',
+      roomWorld(0, 5.4, -7.5), scene);
+    roomLight.intensity = 0.6;
+    roomLight.diffuse = new B.Color3(1.0, 0.76, 0.52);
+    roomLight.range = 17;
+    intLights.push(roomLight);
+    // (…and one point light per reading lamp, pushed above.)
+
+    // Scope the rig to the room + lift the light cap (see header).
+    var intMeshes = scene.meshes.filter(function (m) {
+      return m.name.indexOf('library-int-') === 0;
+    });
+    intLights.forEach(function (l) { l.includedOnlyMeshes = intMeshes; });
+    var sceneLightCount = scene.lights.length;
+    intMeshes.forEach(function (m) {
+      if (m.material && m.material.maxSimultaneousLights !== undefined &&
+          m.material.maxSimultaneousLights < sceneLightCount) {
+        m.material.maxSimultaneousLights = sceneLightCount;
+      }
+    });
+
+    return {
+      returnPad: returnPad,
+      returnRing: returnRing,
+      entrance: {
+        position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
+        target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
+      }
+    };
+  }
+
   function buildZone(scene, B, zone) {
     var P = CCW.PALETTE;
     var theta = zone.angleDeg * Math.PI / 180;
@@ -1140,6 +1754,15 @@
       var tInterior = buildTheaterInterior(scene, B, zone, add);
       result.threshold = tInterior.entrance;
       result.interiorReturn = { mesh: tInterior.returnPad, ringMesh: tInterior.returnRing };
+    }
+    if (zone.id === 'library') {
+      // The Library (M2b): same arrival pattern — the Plaza pad
+      // lands INSIDE, just past the door, facing the shelves; the
+      // room's own return pad rides home. See
+      // buildLibraryInterior's header.
+      var libInterior = buildLibraryInterior(scene, B, zone, add);
+      result.threshold = libInterior.entrance;
+      result.interiorReturn = { mesh: libInterior.returnPad, ringMesh: libInterior.returnRing };
     }
     return result;
   }
@@ -1380,7 +2003,9 @@
           ? 'You are in the Game Parlor. Classic games, played together.'
           : zone.id === 'theater'
             ? 'You are in the Theater. The great window glows — Classic Cinema is showing.'
-            : 'You are at the ' + zone.name + '.'
+            : zone.id === 'library'
+              ? 'You are in the Library. Low voices, good books.'
+              : 'You are at the ' + zone.name + '.'
       });
       teleports.push({
         mesh: built.returnPad, ringMesh: null,

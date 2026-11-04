@@ -824,6 +824,410 @@
     });
   };
 
+  // Library bookcase (M2b interior 2 of 5, 2026-11-04): a tall
+  // floor-to-ceiling shelf unit — a TEAL bookcase (Jay's palette
+  // correction, 2026-11-04: teal is the second voice; her library
+  // photo is teal bookcases on hot pink walls) with five rows of
+  // jewel-tone spines. Gold appears ONLY as fine lines here: the
+  // spines' banding, the shelf boards' front edge, the case's
+  // inner pinstripe. Maximalist shelf dressing (a leaning book, a
+  // small plant, a small globe) is worked into the rows. `seed`
+  // varies the deal so no two units read as copies. Drawn, never
+  // photographed.
+  CCW.libraryShelvesTexture = function (scene, B, name, seed) {
+    var P = CCW.PALETTE;
+    var tones = [P.velvetMagenta, P.velvetLavender, P.velvetTeal, P.velvetOrange,
+      P.pinkHot, P.tealDeep, P.coral, '#7a2d5a', '#274b8f', '#8f2727', '#2d6a4f', '#d6336c'];
+    return CCW.canvasTexture(scene, B, name, 768, 1024, function (ctx, w, h) {
+      ctx.fillStyle = '#0d3d38';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(seed || 11);
+      // The ARCH (Jay's photo-layout direction, 2026-11-04: her
+      // bookcases are ARCHED): pink spandrels in the top corners,
+      // a teal arch band with a gold pinstripe along its curve,
+      // and a small gold star at the arch's crown.
+      ctx.fillStyle = P.pinkHot;
+      ctx.fillRect(0, 0, w, 200);
+      ctx.fillStyle = '#0d3d38';
+      ctx.beginPath();
+      ctx.moveTo(24, 200); ctx.lineTo(24, 118);
+      ctx.ellipse(w / 2, 118, w / 2 - 24, 104, 0, Math.PI, 0);
+      ctx.lineTo(w - 24, 200); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = P.teal; ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.moveTo(30, 200); ctx.lineTo(30, 118);
+      ctx.ellipse(w / 2, 118, w / 2 - 30, 98, 0, Math.PI, 0);
+      ctx.lineTo(w - 30, 200);
+      ctx.stroke();
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(w / 2, 118, w / 2 - 44, 84, 0, Math.PI, 0);
+      ctx.stroke();
+      star(ctx, w / 2, 62, 13, P.goldSoft);
+      var rows = 5, top = 200, rowH = (h - top - 26) / rows;
+      for (var r = 0; r < rows; r++) {
+        var y0 = top + r * rowH;
+        // The shelf's back panel: teal, a shade up from the case.
+        ctx.fillStyle = '#12574e';
+        ctx.fillRect(26, y0, w - 52, rowH - 14);
+        var x = 40;
+        var dressAt = 1 + Math.floor(rnd() * 4); // which slot dresses up
+        var slot = 0;
+        while (x < w - 70) {
+          slot++;
+          if (slot === dressAt && r % 2 === 0) {
+            // A little gold globe on a stand.
+            ctx.fillStyle = P.gold;
+            ctx.beginPath(); ctx.arc(x + 26, y0 + rowH - 74, 24, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = P.tealDeep;
+            ctx.beginPath(); ctx.arc(x + 20, y0 + rowH - 80, 15, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = P.gold;
+            ctx.fillRect(x + 22, y0 + rowH - 48, 8, 26);
+            ctx.fillRect(x + 8, y0 + rowH - 24, 36, 5);
+            x += 66;
+            continue;
+          }
+          if (slot === dressAt && r % 2 === 1) {
+            // A small potted plant.
+            ctx.fillStyle = P.coral;
+            ctx.beginPath();
+            ctx.moveTo(x + 8, y0 + rowH - 52); ctx.lineTo(x + 44, y0 + rowH - 52);
+            ctx.lineTo(x + 38, y0 + rowH - 20); ctx.lineTo(x + 14, y0 + rowH - 20);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#17a398';
+            for (var lf = 0; lf < 6; lf++) {
+              ctx.beginPath();
+              ctx.ellipse(x + 26 + (rnd() * 30 - 15), y0 + rowH - 66 - rnd() * 22,
+                13, 5.5, rnd() * 2 - 1, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            x += 62;
+            continue;
+          }
+          var sw = 24 + rnd() * 26;
+          var lean = rnd() > 0.93;
+          ctx.save();
+          if (lean) { ctx.translate(x + sw / 2, y0 + rowH - 16); ctx.rotate(0.10); ctx.translate(-(x + sw / 2), -(y0 + rowH - 16)); }
+          ctx.fillStyle = tones[Math.floor(rnd() * tones.length)];
+          var bh = rowH - 44 - rnd() * 26;
+          ctx.fillRect(x, y0 + rowH - 16 - bh, sw, bh);
+          // Spine detail (Jay's realism direction, 2026-11-04): a
+          // shaded left edge, a lit right edge, and pale title
+          // marks, so the spines read as individual books.
+          ctx.fillStyle = 'rgba(0,0,0,0.20)';
+          ctx.fillRect(x, y0 + rowH - 16 - bh, 3.5, bh);
+          ctx.fillStyle = 'rgba(255,255,255,0.10)';
+          ctx.fillRect(x + sw - 3, y0 + rowH - 16 - bh, 2, bh);
+          if (rnd() > 0.4 && sw > 27) {
+            ctx.fillStyle = 'rgba(253,243,227,0.8)';
+            var tw = sw * 0.52;
+            ctx.fillRect(x + (sw - tw) / 2, y0 + rowH - 16 - bh + 27, tw, 3.4);
+            ctx.fillRect(x + (sw - tw) / 2, y0 + rowH - 16 - bh + 37, tw * 0.7, 3.4);
+          }
+          ctx.fillStyle = P.goldSoft;
+          ctx.globalAlpha = 0.85;
+          ctx.fillRect(x + 3, y0 + rowH - 16 - bh + 12, sw - 6, 4);
+          ctx.fillRect(x + 3, y0 + rowH - 34, sw - 6, 4);
+          ctx.globalAlpha = 1;
+          if (rnd() > 0.62) { ctx.beginPath(); ctx.arc(x + sw / 2, y0 + rowH - 16 - bh / 2, 6, 0, Math.PI * 2); ctx.fill(); }
+          ctx.restore();
+          x += sw + 5 + rnd() * 9;
+        }
+        // The shelf board: dark wood with a gold front edge,
+        // and a soft shadow line above it (realism pass).
+        ctx.fillStyle = 'rgba(0,0,0,0.30)';
+        ctx.fillRect(26, y0 + rowH - 19, w - 52, 3);
+        ctx.fillStyle = '#4a2c14';
+        ctx.fillRect(20, y0 + rowH - 16, w - 40, 13);
+        ctx.fillStyle = P.gold;
+        ctx.fillRect(20, y0 + rowH - 16, w - 40, 3);
+      }
+      // The case frame, drawn over the rows: a teal edge with a
+      // single gold pinstripe inside it (fine-line gold only).
+      ctx.strokeStyle = P.teal;
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(12, 12); ctx.lineTo(w - 12, 12); ctx.lineTo(w - 12, h - 12);
+      ctx.lineTo(12, h - 12); ctx.closePath();
+      ctx.stroke();
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(24, 24); ctx.lineTo(w - 24, 24); ctx.lineTo(w - 24, h - 24);
+      ctx.lineTo(24, h - 24); ctx.closePath();
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+  };
+
+  // The Library's Currently Reading display (M2b): a lavender
+  // cabinet front — the styling nods to Jay's lavender herb cabinet
+  // (interior ref 05) — with the three house works drawn as covers
+  // standing upright. Signage only: the shelf that keeps a member's
+  // place ties to the Hub in a later pass.
+  CCW.libraryDisplayTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 768, 640, function (ctx, w, h) {
+      ctx.fillStyle = '#37255c';
+      ctx.fillRect(0, 0, w, h);
+      // Cabinet arch, in lavender + gold.
+      ctx.strokeStyle = P.velvetLavender;
+      ctx.lineWidth = 26;
+      ctx.beginPath();
+      ctx.moveTo(46, h - 30); ctx.lineTo(46, 190);
+      ctx.arc(w / 2, 190, w / 2 - 46, Math.PI, 0);
+      ctx.lineTo(w - 46, h - 30);
+      ctx.stroke();
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(46, h - 30); ctx.lineTo(46, 190);
+      ctx.arc(w / 2, 190, w / 2 - 46, Math.PI, 0);
+      ctx.lineTo(w - 46, h - 30);
+      ctx.stroke();
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = 'bold 40px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('✦ CURRENTLY READING ✦', w / 2, 108);
+      ctx.fillRect(190, 132, w - 380, 3);
+      // Three house covers standing on the cabinet shelf.
+      var covers = [
+        { t: ['CHEAT', 'CODE'], sub: 'the saga', c: P.velvetMagenta },
+        { t: ['CHEMIST', 'DATES'], sub: 'cookbook', c: P.velvetTeal },
+        { t: ['YOUR', 'BIBLE'], sub: 'passages', c: P.velvetOrange }
+      ];
+      covers.forEach(function (cv, i) {
+        var x = 96 + i * 202, y = 196, cw = 168, chh = 252;
+        ctx.fillStyle = cv.c;
+        ctx.beginPath(); ctx.roundRect(x, y, cw, chh, 10); ctx.fill();
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.roundRect(x + 7, y + 7, cw - 14, chh - 14, 8); ctx.stroke();
+        star(ctx, x + cw / 2, y + 52, 15, P.goldSoft);
+        ctx.fillStyle = P.cream;
+        ctx.font = 'bold 30px Georgia, serif';
+        ctx.fillText(cv.t[0], x + cw / 2, y + 118);
+        ctx.fillText(cv.t[1], x + cw / 2, y + 154);
+        ctx.fillStyle = P.goldSoft;
+        ctx.font = 'italic 23px Georgia, serif';
+        ctx.fillText(cv.sub, x + cw / 2, y + 204);
+      });
+      ctx.fillStyle = '#4a2c14';
+      ctx.fillRect(70, 462, w - 140, 8);
+      ctx.fillStyle = P.cream;
+      ctx.font = '27px Georgia, serif';
+      ctx.fillText('The house shelf — her own works, kept here', w / 2, 528);
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = 'italic 25px Georgia, serif';
+      ctx.fillText("Members' places are kept at the Hub 💜", w / 2, 570);
+    });
+  };
+
+  // The Launch Corner board (M2b): the Library celebrates Jay's
+  // publishing rhythm — new chapters land here first. Generic saga
+  // branding on purpose: chapters publish daily, so the board names
+  // no chapter number and never goes stale.
+  CCW.libraryLaunchTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 768, 640, function (ctx, w, h) {
+      ctx.fillStyle = '#24102c';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(314);
+      for (var s = 0; s < 40; s++) star(ctx, rnd() * w, rnd() * h, 3 + rnd() * 5, P.goldSoft);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(14, 14); ctx.lineTo(w - 14, 14); ctx.lineTo(w - 14, h - 14);
+      ctx.lineTo(14, h - 14); ctx.closePath();
+      ctx.stroke();
+      ctx.fillStyle = P.plumHouse;
+      ctx.fillRect(30, 30, w - 60, 88);
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = 'bold 42px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🚀 THE LAUNCH CORNER', w / 2, 88);
+      ctx.fillStyle = P.gold;
+      ctx.font = 'bold 62px Georgia, serif';
+      ctx.fillText('NEW CHAPTERS', w / 2, 196);
+      ctx.fillStyle = P.cream;
+      ctx.font = 'italic bold 44px Georgia, serif';
+      ctx.fillText('land here first ✨', w / 2, 256);
+      ctx.fillRect(150, 292, w - 300, 3);
+      ctx.font = '30px Georgia, serif';
+      ctx.fillText('CHEAT CODE — the saga grows', w / 2, 356);
+      ctx.fillText('chapter by chapter, day by day.', w / 2, 398);
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = '27px Georgia, serif';
+      ctx.fillText('Fresh pages from Jay, celebrated', w / 2, 478);
+      ctx.fillText('in this corner before anywhere else 💜', w / 2, 518);
+      star(ctx, w / 2, 574, 14, P.gold);
+    });
+  };
+
+  // REALISM PASS textures (Jay's realism direction, 2026-11-04:
+  // no large flat-color surfaces — detailed procedural texture on
+  // walls, floors, wood, and foliage instead). All canvases stay
+  // at or under 1024px and are created once, then shared.
+
+  // The Library's walls: HOT PINK panelling — tonal variation and
+  // speckle in the pink, drawn panel mouldings (inset rectangles
+  // with a shadow line and a pale highlight line), and a deeper
+  // pink wainscot band along the bottom closed by a teal moulding
+  // line with a gold pinstripe (fine-line gold only).
+  CCW.libraryWallTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      ctx.fillStyle = P.pinkHot;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(97);
+      // Tonal variation: soft vertical bands + speckle.
+      for (var b = 0; b < 8; b++) {
+        ctx.fillStyle = b % 2 ? 'rgba(255,255,255,0.05)' : 'rgba(120,0,60,0.06)';
+        ctx.fillRect(b * w / 8, 0, w / 8, h);
+      }
+      for (var s = 0; s < 2600; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,190,220,0.10)' : 'rgba(140,0,70,0.10)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+      }
+      // Panel mouldings: four panels across the upper wall.
+      function strokeR(x, y, rw, rh) {
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + rw, y); ctx.lineTo(x + rw, y + rh);
+        ctx.lineTo(x, y + rh); ctx.closePath();
+        ctx.stroke();
+      }
+      var pw = w / 4;
+      for (var p = 0; p < 4; p++) {
+        var x0 = p * pw + 26, x1 = (p + 1) * pw - 26, y0 = 34, y1 = h * 0.70;
+        ctx.strokeStyle = 'rgba(140,0,70,0.55)'; ctx.lineWidth = 7;
+        strokeR(x0, y0, x1 - x0, y1 - y0);
+        ctx.strokeStyle = 'rgba(255,190,220,0.65)'; ctx.lineWidth = 3;
+        strokeR(x0 + 6, y0 + 6, x1 - x0 - 12, y1 - y0 - 12);
+        ctx.strokeStyle = 'rgba(140,0,70,0.35)'; ctx.lineWidth = 3;
+        strokeR(x0 + 15, y0 + 15, x1 - x0 - 30, y1 - y0 - 30);
+      }
+      // Wainscot band (bottom ~24%): deeper pink, teal moulding
+      // line on top, gold pinstripe under it, vertical grooves.
+      var wy = h * 0.76;
+      ctx.fillStyle = '#d6336c';
+      ctx.fillRect(0, wy, w, h - wy);
+      for (var g = 0; g < 16; g++) {
+        ctx.fillStyle = 'rgba(120,0,60,0.28)';
+        ctx.fillRect(g * w / 16 + 8, wy + 14, 4, h - wy - 24);
+      }
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(0, wy - 7, w, 7);
+      ctx.fillStyle = P.gold;
+      ctx.fillRect(0, wy, w, 2.5);
+    });
+  };
+
+  // The Library's floor: an ornate patterned rug-carpet in her
+  // pink / orange / purple family over the deep plum field — a
+  // diamond-chain border, teal and gold line work (fine lines),
+  // and a big center medallion. One texture, no repeat.
+  CCW.libraryFloorTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
+      ctx.fillStyle = '#2a0a33';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(53);
+      for (var s = 0; s < 5200; s++) {
+        ctx.fillStyle = rnd() > 0.6 ? 'rgba(245,197,66,0.13)' : 'rgba(255,122,176,0.10)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.4, 2.4);
+      }
+      // Border: teal frame line, diamond chain, gold pinstripe.
+      function strokeR2(x, y, rw, rh) {
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + rw, y); ctx.lineTo(x + rw, y + rh);
+        ctx.lineTo(x, y + rh); ctx.closePath();
+        ctx.stroke();
+      }
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 10;
+      strokeR2(46, 46, w - 92, h - 92);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 3;
+      strokeR2(66, 66, w - 132, h - 132);
+      ctx.fillStyle = P.coral;
+      var step = 64;
+      function diamond(cx, cy, r, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy);
+        ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy);
+        ctx.closePath(); ctx.fill();
+      }
+      for (var d = 96; d < w - 80; d += step) {
+        diamond(d, 56, 11, P.pinkHot); diamond(d, h - 56, 11, P.pinkHot);
+        diamond(56, d, 11, P.pinkHot); diamond(w - 56, d, 11, P.pinkHot);
+      }
+      // Corner motifs.
+      [[120, 120], [w - 120, 120], [120, h - 120], [w - 120, h - 120]].forEach(function (c) {
+        diamond(c[0], c[1], 30, P.teal);
+        diamond(c[0], c[1], 17, P.velvetOrange);
+        diamond(c[0], c[1], 8, P.cream);
+      });
+      // Center medallion: concentric diamonds + a gold star heart.
+      diamond(w / 2, h / 2, 235, 'rgba(164,19,124,0.55)');
+      diamond(w / 2, h / 2, 185, 'rgba(255,46,136,0.5)');
+      diamond(w / 2, h / 2, 132, 'rgba(18,194,178,0.45)');
+      diamond(w / 2, h / 2, 84, 'rgba(198,90,30,0.6)');
+      star(ctx, w / 2, h / 2, 44, P.goldSoft);
+      star(ctx, w / 2, h / 2, 22, P.cream);
+      // Small satellite diamonds around the medallion.
+      [[0.5, 0.22], [0.5, 0.78], [0.22, 0.5], [0.78, 0.5]].forEach(function (f) {
+        diamond(f[0] * w, f[1] * h, 20, P.velvetLavender);
+        diamond(f[0] * w, f[1] * h, 10, P.goldSoft);
+      });
+    });
+  };
+
+  // Wood grain for the reading tables (drawn streaks + knots).
+  CCW.woodTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = '#6b4423';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(71);
+      for (var i = 0; i < 90; i++) {
+        var y = rnd() * h, amp = 2 + rnd() * 5, dark = rnd() > 0.42;
+        ctx.strokeStyle = dark ? 'rgba(58,32,12,0.35)' : 'rgba(150,102,52,0.30)';
+        ctx.lineWidth = 1 + rnd() * 2.4;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        for (var x = 0; x <= w; x += 32) ctx.lineTo(x, y + Math.sin(x / 60 + i) * amp);
+        ctx.stroke();
+      }
+      for (var k = 0; k < 3; k++) {
+        var kx = 60 + rnd() * (w - 120), ky = 60 + rnd() * (h - 120);
+        for (var r = 12; r > 2; r -= 3) {
+          ctx.strokeStyle = 'rgba(58,32,12,0.4)';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.ellipse(kx, ky, r * 1.5, r, 0.3, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+    });
+  };
+
+  // A leaf-cluster sprite for the corner plants: layered drawn
+  // leaves on transparency (texMat alpha carries the cut-out).
+  CCW.leafTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      var rnd = prand(131);
+      var greens = ['#2d6a4f', '#17a398', '#3f9e4d', '#1e5c46', '#57b25e'];
+      for (var i = 0; i < 26; i++) {
+        var a = rnd() * Math.PI * 2, dist = 18 + rnd() * 78;
+        var cx = w / 2 + Math.cos(a) * dist, cy = h / 2 + Math.sin(a) * dist * 0.92;
+        var len = 30 + rnd() * 38, wid = len * 0.36;
+        ctx.save();
+        ctx.translate(cx, cy); ctx.rotate(a + 0.7);
+        ctx.fillStyle = greens[Math.floor(rnd() * greens.length)];
+        ctx.beginPath(); ctx.ellipse(0, 0, len / 2, wid / 2, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(230,255,235,0.5)'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(-len / 2 + 4, 0); ctx.lineTo(len / 2 - 4, 0); ctx.stroke();
+        ctx.restore();
+      }
+    });
+  };
+
   // Teleport pad face: accent disc, gold ring, gold star.
   CCW.padTexture = function (scene, B, name, accentHexColor) {
     var P = CCW.PALETTE;

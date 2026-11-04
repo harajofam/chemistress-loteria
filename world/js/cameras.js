@@ -279,6 +279,12 @@
         // the clamp box sits just inside its walls and door.
         angleDeg: 120, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
         minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
+      },
+      { // The Library, angleDeg 60 (M2b interior 2 of 5): same room
+        // volume as the Theater, so the same gate/clamp numbers in
+        // its own local frame.
+        angleDeg: 60, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
+        minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
       }
     ]
   };
