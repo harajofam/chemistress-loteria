@@ -633,6 +633,197 @@
     });
   };
 
+  // The Theater's screen (M2b, 2026-11-04): the chapel's great cosmic
+  // window drawn as a cinema screen — radiant sun with orbit rings,
+  // planets descending, a crescent moon, dense stars, gold leading,
+  // and an inscribed cartouche naming the house program. Jay's
+  // programming rule (2026-11-04): at idle the screen runs CLASSIC
+  // CINEMA — public-domain old movies from her Chemist Dates
+  // collection, always free; live karaoke / stage nights preempt.
+  // The cartouche names the program only — no film titles in the
+  // glass (titles wait for the PD verification pass + showings mode).
+  CCW.cosmicScreenTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 768, function (ctx, w, h) {
+      var g = ctx.createRadialGradient(w / 2, 300, 60, w / 2, h / 2, 720);
+      g.addColorStop(0, '#2b1450');
+      g.addColorStop(1, '#150826');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(4242);
+      // Glass panes: soft jewel washes behind the leading.
+      var washes = [P.velvetMagenta, P.tealDeep, P.velvetLavender, P.velvetOrange, P.plumWall];
+      for (var i = 0; i < 30; i++) {
+        ctx.fillStyle = washes[i % washes.length];
+        ctx.globalAlpha = 0.30 + rnd() * 0.30;
+        ctx.beginPath();
+        ctx.arc(rnd() * w, rnd() * h, 40 + rnd() * 110, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // Crescent moon, upper left.
+      ctx.fillStyle = P.goldSoft;
+      ctx.beginPath(); ctx.arc(150, 140, 46, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1d0c38';
+      ctx.beginPath(); ctx.arc(176, 122, 42, 0, Math.PI * 2); ctx.fill();
+      // The radiant sun, upper center, with orbit rings.
+      var sx = w / 2, sy = 290;
+      [196, 158].forEach(function (r) {
+        ctx.strokeStyle = P.gold; ctx.globalAlpha = 0.55; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      for (var r2 = 0; r2 < 12; r2++) {
+        var a = (r2 / 12) * Math.PI * 2;
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(sx + Math.cos(a) * 108, sy + Math.sin(a) * 108);
+        ctx.lineTo(sx + Math.cos(a) * 142, sy + Math.sin(a) * 142);
+        ctx.stroke();
+      }
+      ctx.fillStyle = P.gold;
+      ctx.beginPath(); ctx.arc(sx, sy, 96, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = P.coral;
+      ctx.beginPath(); ctx.arc(sx, sy, 64, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = P.cream;
+      ctx.beginPath(); ctx.arc(sx, sy, 30, 0, Math.PI * 2); ctx.fill();
+      // Planets descending from the sun, chapel-window style.
+      var planets = [
+        [sx, 540, 27, P.velvetLavender, true],
+        [sx - 92, 624, 19, P.teal, false],
+        [sx + 84, 648, 15, P.coral, false],
+        [sx - 210, 470, 16, P.pinkHot, false],
+        [sx + 224, 452, 21, P.tealDeep, false]
+      ];
+      planets.forEach(function (p) {
+        ctx.fillStyle = p[3];
+        ctx.beginPath(); ctx.arc(p[0], p[1], p[2], 0, Math.PI * 2); ctx.fill();
+        if (p[4]) {
+          ctx.strokeStyle = P.goldSoft; ctx.lineWidth = 5;
+          ctx.beginPath(); ctx.ellipse(p[0], p[1], p[2] * 1.8, p[2] * 0.52, -0.4, 0, Math.PI * 2); ctx.stroke();
+        }
+      });
+      for (var s = 0; s < 130; s++) star(ctx, rnd() * w, rnd() * h, 3 + rnd() * 6, P.cream);
+      // Gold leading: an arch over the composition + a pane grid.
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(56, h - 24); ctx.lineTo(56, 300);
+      ctx.arc(w / 2, 300, w / 2 - 56, Math.PI, 0);
+      ctx.lineTo(w - 56, h - 24);
+      ctx.stroke();
+      ctx.globalAlpha = 0.5; ctx.lineWidth = 4;
+      [236, 724].forEach(function (x) {
+        ctx.beginPath(); ctx.moveTo(x, 210); ctx.lineTo(x, h - 24); ctx.stroke();
+      });
+      ctx.beginPath(); ctx.moveTo(56, 470); ctx.lineTo(w - 56, 470); ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(14, 14); ctx.lineTo(w - 14, 14); ctx.lineTo(w - 14, h - 14);
+      ctx.lineTo(14, h - 14); ctx.closePath();
+      ctx.stroke();
+      // The inscribed cartouche: the program's name, in the glass.
+      var cw = 470, chh = 62, cx0 = (w - cw) / 2, cy0 = h - 108;
+      ctx.fillStyle = 'rgba(26,5,31,0.88)';
+      ctx.fillRect(cx0, cy0, cw, chh);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx0, cy0); ctx.lineTo(cx0 + cw, cy0); ctx.lineTo(cx0 + cw, cy0 + chh);
+      ctx.lineTo(cx0, cy0 + chh); ctx.closePath();
+      ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx0 + 7, cy0 + 7); ctx.lineTo(cx0 + cw - 7, cy0 + 7);
+      ctx.lineTo(cx0 + cw - 7, cy0 + chh - 7); ctx.lineTo(cx0 + 7, cy0 + chh - 7);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = 'bold 30px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('C L A S S I C   C I N E M A', w / 2, cy0 + chh / 2 + 1);
+      star(ctx, cx0 - 26, cy0 + chh / 2, 11, P.gold);
+      star(ctx, cx0 + cw + 26, cy0 + chh / 2, 11, P.gold);
+    });
+  };
+
+  // Theater carpet (M2b): deep plum pile with a gold star speckle —
+  // the aisle runner and velvet carry the color; the floor stays low.
+  CCW.carpetTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = '#2c1138';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(808);
+      for (var i = 0; i < 900; i++) {
+        ctx.fillStyle = rnd() > 0.5 ? P.goldSoft : P.cream;
+        ctx.globalAlpha = 0.03 + rnd() * 0.07;
+        ctx.beginPath(); ctx.arc(rnd() * w, rnd() * h, 1 + rnd() * 2, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      for (var s = 0; s < 26; s++) star(ctx, rnd() * w, rnd() * h, 3 + rnd() * 4, P.goldSoft);
+    });
+  };
+
+  // The Theater program board (M2b) — the now-showing notice by the
+  // door. Jay's rule (2026-11-04): idle programming is CLASSIC
+  // CINEMA, public-domain old movies from her Chemist Dates
+  // collection, always free — NOT a streaming service; live karaoke
+  // and stage nights take the screen first. The board posts the
+  // SEVEN titles cleared by the public-domain verification pass
+  // (THEATER-PROGRAM-PD-CHECK.md, 2026-11-04): Charade and His Girl
+  // Friday from the CookBook pairings, three more from Jay's own
+  // watched lists, and two same-spirit additions — each verified
+  // public domain with a playable Internet Archive copy. The other
+  // ten CookBook pairings are still under COPYRIGHT and must never
+  // be named as playing — not here, not on the marquee, not in the
+  // glass. (Playback itself is still the later showings mode, M5.)
+  CCW.theaterProgramTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 768, 640, function (ctx, w, h) {
+      ctx.fillStyle = '#24102c';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(14, 14); ctx.lineTo(w - 14, 14); ctx.lineTo(w - 14, h - 14);
+      ctx.lineTo(14, h - 14); ctx.closePath();
+      ctx.stroke();
+      ctx.fillStyle = P.plumHouse;
+      ctx.fillRect(30, 30, w - 60, 88);
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = 'bold 42px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎬 NOW SHOWING', w / 2, 88);
+      ctx.fillStyle = P.gold;
+      ctx.font = 'bold 56px Georgia, serif';
+      ctx.fillText('CLASSIC CINEMA', w / 2, 172);
+      ctx.fillRect(150, 196, w - 300, 3);
+      // The cleared seven — the program of record (PD check,
+      // 2026-11-04). Titles verbatim from the check file.
+      ctx.fillStyle = P.cream;
+      ctx.font = '29px Georgia, serif';
+      var program = [
+        'Charade (1963)',
+        'His Girl Friday (1940)',
+        'Penny Serenade (1941)',
+        'And Then There Were None (1945)',
+        'Made for Each Other (1939)',
+        'Love Affair (1939)',
+        'Nothing Sacred (1937)'
+      ];
+      program.forEach(function (title, i) {
+        ctx.fillText(title, w / 2, 244 + i * 40);
+      });
+      ctx.fillStyle = P.goldSoft;
+      ctx.font = '26px Georgia, serif';
+      ctx.fillText('Public-domain program · always free', w / 2, 534);
+      ctx.font = 'italic 24px Georgia, serif';
+      ctx.fillText('Live stage nights — karaoke & acting —', w / 2, 570);
+      ctx.fillText('take the screen first 💜', w / 2, 600);
+    });
+  };
+
   // Teleport pad face: accent disc, gold ring, gold star.
   CCW.padTexture = function (scene, B, name, accentHexColor) {
     var P = CCW.PALETTE;

@@ -619,6 +619,325 @@
     };
   }
 
+  // One velvet bench: plum plinth, velvet seat + tilted backrest,
+  // plum arms. Seat top sits at y = 0.40; the backrest leans away
+  // from the screen (toward the door) for a cinema slouch.
+  function theaterBench(scene, B, add, x, z, velvet, tag) {
+    var P = CCW.PALETTE;
+    var plinth = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-plinth',
+      { width: 4.3, height: 0.18, depth: 1.02 }, scene));
+    plinth.position.set(x, 0.09, z);
+    plinth.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-plinth-mat', P.plumHouse);
+    var seat = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-seat',
+      { width: 4.4, height: 0.22, depth: 1.05 }, scene));
+    seat.position.set(x, 0.29, z);
+    seat.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-seat-mat', velvet);
+    var back = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-back',
+      { width: 4.4, height: 0.85, depth: 0.16 }, scene));
+    back.position.set(x, 0.72, z + 0.55);
+    back.rotation.x = 0.10;
+    back.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-back-mat', velvet);
+    [-2.05, 2.05].forEach(function (dx, i) {
+      var arm = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-arm-' + i,
+        { width: 0.16, height: 0.34, depth: 0.95 }, scene));
+      arm.position.set(x + dx, 0.55, z);
+      arm.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-arm-mat-' + i, P.plumHouse);
+    });
+  }
+
+  /*
+   * THE THEATER (M2b interior 1 of 5, 2026-11-04): the chapel's
+   * great cosmic stained-glass wall arranged as a SCREEN — a gold-
+   * framed cosmic window (drawn, procedural: radiant sun, planets,
+   * crescent moon, gold leading, an inscribed CLASSIC CINEMA
+   * cartouche) glowing over four rows of jewel-velvet benches, a
+   * coral center aisle, low globe lamps, floral sidelights, a star-
+   * chart ceiling, and a now-showing program board by the door.
+   *
+   * PROGRAMMING (Jay's rule, 2026-11-04 — dressing only this pass):
+   * the Theater is for live art first; karaoke and acting on stage
+   * preempt everything. When nobody is performing, the screen runs
+   * CLASSIC CINEMA — public-domain old movies from Jay's Chemist
+   * Dates collection, always free. NOT a streaming service, not
+   * generic background streaming. The program board by the door posts the program of
+   * record: the SEVEN titles cleared by the public-domain
+   * verification pass (THEATER-PROGRAM-PD-CHECK.md, landed
+   * 2026-11-04 — two from the CookBook pairings, three from Jay's
+   * watched lists, two same-spirit additions, each verified public
+   * domain with a playable Internet Archive copy). The other ten
+   * CookBook pairings are still under copyright and are NOT named
+   * anywhere in the room. Actual playback is the later showings
+   * mode (M5) — this pass plays nothing.
+   *
+   * ARRIVAL (a deliberate fork, flagged for Jay in
+   * THEATER-BUILD-NOTES.md): the generic zone threshold lands
+   * OUTSIDE at radius 19.6 facing the solid facade — the screen and
+   * seats are invisible from there, and the task for this room
+   * requires the landing to read "theater" at a glance. Following
+   * the Game Parlor pattern, the Plaza pad therefore lands INSIDE,
+   * behind the back row, facing the glowing screen; the room's own
+   * return pad rides home. No pad or threshold coordinates of any
+   * other zone change, and no Plaza pad moves.
+   *
+   * LIGHTING (the parlor round-3 lesson, applied from the start):
+   * the room's rig is scoped to the room's meshes
+   * (includedOnlyMeshes) and every interior material's
+   * maxSimultaneousLights is raised to the scene light count at the
+   * end of the build — without the raise, Babylon's default cap of
+   * 4 is filled by the global night lights and the rig never
+   * renders. Intensities are in the parlor's MEASURED range: the
+   * screen itself is emissive, and the screen-light (a rose-gold
+   * point light just in front of the glass) spills its glow onto
+   * the front benches, so the window reads as the room's light
+   * source. Global lights and Plaza materials are untouched.
+   */
+  function buildTheaterInterior(scene, B, zone, add) {
+    var P = CCW.PALETTE;
+    var uv = outward(zone);
+    var WALL = '#492261'; // the parlor's lifted interior plum
+
+    var intLights = [];
+    // Zone-group local -> world (the parlor's roomWorld math).
+    function roomWorld(lx, ly, lz) {
+      var a = zone.angleDeg * Math.PI / 180 + Math.PI;
+      var ca = Math.cos(a), sa = Math.sin(a);
+      return new B.Vector3(
+        uv[0] * CCW.ZONE_RADIUS + lx * ca + lz * sa, ly,
+        uv[1] * CCW.ZONE_RADIUS - lx * sa + lz * ca);
+    }
+
+    // ---- Room shell (the parlor's volume, dressed for cinema) -----
+    var floor = add(B.MeshBuilder.CreateBox('theater-int-floor',
+      { width: 13.4, height: 0.12, depth: 14.2 }, scene));
+    floor.position.set(0, -0.06, -7.5);
+    floor.material = CCW.texMat(scene, B, 'theater-int-floor-mat',
+      CCW.carpetTexture(scene, B, 'theater-int-floor-tex'), {});
+    floor.receiveShadows = true;
+
+    // Ceiling: the numerology lounge's navy star chart.
+    var ceiling = add(B.MeshBuilder.CreateBox('theater-int-ceiling',
+      { width: 13.6, height: 0.25, depth: 14.4 }, scene));
+    ceiling.position.set(0, 7.12, -7.5);
+    ceiling.material = CCW.texMat(scene, B, 'theater-int-ceiling-mat',
+      CCW.starChartTexture(scene, B, 'theater-int-ceiling-tex'), {});
+
+    var backWall = add(B.MeshBuilder.CreateBox('theater-int-wall-back',
+      { width: 14, height: 7, depth: 0.5 }, scene));
+    backWall.position.set(0, 3.5, -14.65);
+    backWall.material = CCW.mat(scene, B, 'theater-int-wall-back-mat', WALL);
+    [-6.75, 6.75].forEach(function (x, i) {
+      var side = add(B.MeshBuilder.CreateBox('theater-int-wall-' + (i ? 'right' : 'left'),
+        { width: 0.5, height: 7, depth: 14.3 }, scene));
+      side.position.set(x, 3.5, -7.5);
+      side.material = CCW.mat(scene, B, 'theater-int-wall-side-mat-' + i, WALL);
+    });
+
+    // Interior face of the front wall + the door, seen from inside.
+    var front = add(B.MeshBuilder.CreateBox('theater-int-front-panel',
+      { width: 13, height: 7, depth: 0.15 }, scene));
+    front.position.set(0, 3.5, -0.68);
+    front.material = CCW.mat(scene, B, 'theater-int-front-mat', WALL);
+    var doorFrameIn = add(B.MeshBuilder.CreateBox('theater-int-door-frame',
+      { width: 4.0, height: 5.2, depth: 0.12 }, scene));
+    doorFrameIn.position.set(0, 2.6, -0.78);
+    doorFrameIn.material = CCW.mat(scene, B, 'theater-int-door-frame-mat', P.gold);
+    var doorGlowIn = add(B.MeshBuilder.CreatePlane('theater-int-door-glow',
+      { width: 3.4, height: 4.6 }, scene));
+    // No half-turn: the readable -Z face points into the room.
+    doorGlowIn.position.set(0, 2.3, -0.86);
+    doorGlowIn.material = CCW.mat(scene, B, 'theater-int-door-glow-mat', P.gold,
+      { emissive: P.gold });
+
+    // Gold wainscot line around the room.
+    var wainsBack = add(B.MeshBuilder.CreateBox('theater-int-wainscot-back',
+      { width: 12.9, height: 0.14, depth: 0.08 }, scene));
+    wainsBack.position.set(0, 1.02, -14.36);
+    wainsBack.material = CCW.mat(scene, B, 'theater-int-wainscot-back-mat', P.gold);
+    [-6.46, 6.46].forEach(function (x, i) {
+      var wains = add(B.MeshBuilder.CreateBox('theater-int-wainscot-' + (i ? 'right' : 'left'),
+        { width: 0.08, height: 0.14, depth: 13.7 }, scene));
+      wains.position.set(x, 1.02, -7.5);
+      wains.material = CCW.mat(scene, B, 'theater-int-wainscot-side-mat-' + i, P.gold);
+    });
+
+    // ---- The screen: the great window, arranged for showings ------
+    var screenFrame = add(B.MeshBuilder.CreateBox('theater-int-screen-frame',
+      { width: 7.6, height: 5.6, depth: 0.12 }, scene));
+    screenFrame.position.set(0, 3.1, -14.35);
+    screenFrame.material = CCW.mat(scene, B, 'theater-int-screen-frame-mat', P.gold);
+    var screen = add(B.MeshBuilder.CreatePlane('theater-int-screen',
+      { width: 6.9, height: 5.2 }, scene));
+    screen.rotation.y = Math.PI; // readable -Z face toward the seats
+    screen.position.set(0, 3.1, -14.27);
+    screen.material = CCW.texMat(scene, B, 'theater-int-screen-mat',
+      CCW.cosmicScreenTexture(scene, B, 'theater-int-screen-tex'), { emissive: true });
+
+    // Lancet sidelights flanking the screen — one floral glass,
+    // shared by both lancets and the side-wall panels below.
+    var glassTex = CCW.stainedGlassTexture(scene, B, 'theater-int-glass-tex', 'floral');
+    [-5.15, 5.15].forEach(function (x, i) {
+      var lf = add(B.MeshBuilder.CreateBox('theater-int-lancet-frame-' + i,
+        { width: 1.9, height: 4.5, depth: 0.1 }, scene));
+      lf.position.set(x, 3.1, -14.35);
+      lf.material = CCW.mat(scene, B, 'theater-int-lancet-frame-mat-' + i, P.gold);
+      var lg = add(B.MeshBuilder.CreatePlane('theater-int-lancet-' + i,
+        { width: 1.65, height: 4.2 }, scene));
+      lg.rotation.y = Math.PI;
+      lg.position.set(x, 3.1, -14.28);
+      lg.material = CCW.texMat(scene, B, 'theater-int-lancet-mat-' + i, glassTex,
+        { emissive: true, alpha: true });
+    });
+
+    // The marquee over the screen: the program's name in lights.
+    var marqueeTrim = add(B.MeshBuilder.CreateBox('theater-int-marquee-trim',
+      { width: 7.4, height: 1.0, depth: 0.1 }, scene));
+    marqueeTrim.position.set(0, 6.42, -14.34);
+    marqueeTrim.material = CCW.mat(scene, B, 'theater-int-marquee-trim-mat', P.gold);
+    var marquee = add(CCW.makeLabel(scene, B, 'theater-int-marquee',
+      ['NOW SHOWING', 'Classic Cinema — old movies, always free'], 7.0, 0.85,
+      { fg: P.goldSoft }));
+    marquee.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
+    marquee.position.set(0, 6.42, -14.27);
+
+    // ---- The program board, by the door ----------------------------
+    // The posted program (Jay's rule): the seven PD-cleared titles
+    // from the verification pass, and what preempts them. The board
+    // is tall — it carries the full program list.
+    var progFrame = add(B.MeshBuilder.CreateBox('theater-int-program-frame',
+      { width: 3.4, height: 2.87, depth: 0.1 }, scene));
+    progFrame.position.set(-4.3, 3.3, -0.80);
+    progFrame.material = CCW.mat(scene, B, 'theater-int-program-frame-mat', P.gold);
+    var progBoard = add(B.MeshBuilder.CreatePlane('theater-int-program-board',
+      { width: 3.2, height: 2.67 }, scene));
+    // No half-turn: on the front wall the readable -Z face already
+    // points into the room (the parlor's front-wall rule).
+    progBoard.position.set(-4.3, 3.3, -0.87);
+    progBoard.material = CCW.texMat(scene, B, 'theater-int-program-mat',
+      CCW.theaterProgramTexture(scene, B, 'theater-int-program-tex'), {});
+
+    // ---- Seating: four rows of jewel-velvet benches -----------------
+    // Two benches per row on a coral center aisle; velvet steps
+    // magenta → lavender → teal → burnt orange toward the screen.
+    var rowVelvets = [P.velvetOrange, P.velvetTeal, P.velvetLavender, P.velvetMagenta];
+    [-12.1, -10.2, -8.3, -6.4].forEach(function (z, r) {
+      theaterBench(scene, B, add, -3.05, z, rowVelvets[r], 'r' + r + '-l');
+      theaterBench(scene, B, add, 3.05, z, rowVelvets[r], 'r' + r + '-r');
+    });
+
+    // The aisle: coral runner with gold edges, door to screen.
+    var runner = add(B.MeshBuilder.CreateBox('theater-int-aisle-runner',
+      { width: 1.6, height: 0.03, depth: 10.7 }, scene));
+    runner.position.set(0, 0.018, -8.55);
+    runner.material = CCW.mat(scene, B, 'theater-int-aisle-runner-mat', P.coral);
+    [-0.84, 0.84].forEach(function (x, i) {
+      var trim = add(B.MeshBuilder.CreateBox('theater-int-aisle-trim-' + i,
+        { width: 0.06, height: 0.035, depth: 10.7 }, scene));
+      trim.position.set(x, 0.02, -8.55);
+      trim.material = CCW.mat(scene, B, 'theater-int-aisle-trim-mat-' + i, P.gold);
+    });
+
+    // Low globe lamps marking the aisle ends.
+    [[-1.35, -5.5], [1.35, -5.5], [-1.35, -13.2], [1.35, -13.2]].forEach(function (pos, i) {
+      var post = add(B.MeshBuilder.CreateCylinder('theater-int-lamp-' + i + '-post',
+        { diameter: 0.09, height: 1.05, tessellation: 8 }, scene));
+      post.position.set(pos[0], 0.53, pos[1]);
+      post.material = CCW.mat(scene, B, 'theater-int-lamp-post-mat-' + i, P.plumHouse);
+      var globe = add(B.MeshBuilder.CreateSphere('theater-int-lamp-' + i + '-globe',
+        { diameter: 0.42, segments: 12 }, scene));
+      globe.position.set(pos[0], 1.25, pos[1]);
+      globe.material = CCW.glowMat(scene, B, 'theater-int-lamp-globe-mat-' + i, P.goldSoft);
+    });
+
+    // Framed floral sidelights on both side walls.
+    [-7.0, -11.0].forEach(function (z, i) {
+      var lf = add(B.MeshBuilder.CreateBox('theater-int-sidelight-left-frame-' + i,
+        { width: 1.86, height: 2.76, depth: 0.09 }, scene));
+      lf.rotation.y = -Math.PI / 2;
+      lf.position.set(-6.44, 3.6, z);
+      lf.material = CCW.mat(scene, B, 'theater-int-sidelight-left-frame-mat-' + i, P.gold);
+      var la = add(B.MeshBuilder.CreatePlane('theater-int-sidelight-left-' + i,
+        { width: 1.7, height: 2.6 }, scene));
+      la.rotation.y = -Math.PI / 2; // readable face toward +X
+      la.position.set(-6.37, 3.6, z);
+      la.material = CCW.texMat(scene, B, 'theater-int-sidelight-left-mat-' + i, glassTex,
+        { emissive: true, alpha: true });
+      var rf = add(B.MeshBuilder.CreateBox('theater-int-sidelight-right-frame-' + i,
+        { width: 1.86, height: 2.76, depth: 0.09 }, scene));
+      rf.rotation.y = Math.PI / 2;
+      rf.position.set(6.44, 3.6, z);
+      rf.material = CCW.mat(scene, B, 'theater-int-sidelight-right-frame-mat-' + i, P.gold);
+      var ra = add(B.MeshBuilder.CreatePlane('theater-int-sidelight-right-' + i,
+        { width: 1.7, height: 2.6 }, scene));
+      ra.rotation.y = Math.PI / 2; // readable face toward -X
+      ra.position.set(6.37, 3.6, z);
+      ra.material = CCW.texMat(scene, B, 'theater-int-sidelight-right-mat-' + i, glassTex,
+        { emissive: true, alpha: true });
+    });
+
+    // ---- Return pad, inside by the door (the parlor's set) ---------
+    var padTex = CCW.padTexture(scene, B, 'theater-int-pad-tex', P.gold);
+    var returnPad = add(B.MeshBuilder.CreateDisc('theater-int-return-pad',
+      { radius: 1.5, tessellation: 28 }, scene));
+    returnPad.rotation.x = Math.PI / 2;
+    returnPad.position.set(4.7, 0.04, -2.3);
+    returnPad.material = CCW.texMat(scene, B, 'theater-int-return-pad-mat', padTex,
+      { alpha: true, emissive: true });
+    var returnRing = add(B.MeshBuilder.CreateTorus('theater-int-return-ring',
+      { diameter: 3.0, thickness: 0.07, tessellation: 32 }, scene));
+    returnRing.rotation.x = Math.PI / 2;
+    returnRing.position.set(4.7, 0.05, -2.3);
+    returnRing.material = CCW.glowMat(scene, B, 'theater-int-return-ring-mat', P.gold);
+    var returnSign = add(CCW.makeLabel(scene, B, 'theater-int-return-sign',
+      ['↩ The Plaza'], 2.2, 0.55, { fg: P.goldSoft }));
+    // No half-turn: the sign's readable -Z face looks into the room.
+    returnSign.position.set(4.7, 2.7, -2.35);
+
+    // ---- The room's lights ------------------------------------------
+    // A low warm hemisphere wash over the seats…
+    var houseHemi = new B.HemisphericLight('theater-int-hemi',
+      new B.Vector3(0, 1, 0), scene);
+    houseHemi.intensity = 0.45;
+    houseHemi.diffuse = new B.Color3(0.92, 0.78, 0.66);
+    houseHemi.groundColor = new B.Color3(0.30, 0.16, 0.30);
+    intLights.push(houseHemi);
+    // …the screen's own glow, spilling rose-gold onto the front rows…
+    var screenLight = new B.PointLight('theater-int-screen-light',
+      roomWorld(0, 3.4, -12.2), scene);
+    screenLight.intensity = 1.0;
+    screenLight.diffuse = new B.Color3(1.0, 0.72, 0.78);
+    screenLight.range = 16;
+    intLights.push(screenLight);
+    // …and a soft house light over the middle rows.
+    var houseLight = new B.PointLight('theater-int-house-light',
+      roomWorld(0, 5.6, -7.5), scene);
+    houseLight.intensity = 0.5;
+    houseLight.diffuse = new B.Color3(1.0, 0.76, 0.52);
+    houseLight.range = 15;
+    intLights.push(houseLight);
+
+    // Scope the rig to the room + lift the light cap (see header).
+    var intMeshes = scene.meshes.filter(function (m) {
+      return m.name.indexOf('theater-int-') === 0;
+    });
+    intLights.forEach(function (l) { l.includedOnlyMeshes = intMeshes; });
+    var sceneLightCount = scene.lights.length;
+    intMeshes.forEach(function (m) {
+      if (m.material && m.material.maxSimultaneousLights !== undefined &&
+          m.material.maxSimultaneousLights < sceneLightCount) {
+        m.material.maxSimultaneousLights = sceneLightCount;
+      }
+    });
+
+    return {
+      returnPad: returnPad,
+      returnRing: returnRing,
+      entrance: {
+        position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
+        target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
+      }
+    };
+  }
+
   function buildZone(scene, B, zone) {
     var P = CCW.PALETTE;
     var theta = zone.angleDeg * Math.PI / 180;
@@ -746,6 +1065,16 @@
       var interior = buildParlorInterior(scene, B, zone, add);
       result.threshold = interior.entrance;
       result.interiorReturn = { mesh: interior.returnPad, ringMesh: interior.returnRing };
+    }
+    if (zone.id === 'theater') {
+      // The Theater (M2b): same arrival pattern as the Parlor — the
+      // Plaza pad lands INSIDE, behind the back row, facing the
+      // glowing screen; the room's own return pad rides home. The
+      // generic threshold above stays as the fallback data but is
+      // not used for this zone. See buildTheaterInterior's header.
+      var tInterior = buildTheaterInterior(scene, B, zone, add);
+      result.threshold = tInterior.entrance;
+      result.interiorReturn = { mesh: tInterior.returnPad, ringMesh: tInterior.returnRing };
     }
     return result;
   }
@@ -980,7 +1309,9 @@
         label: zone.name,
         landed: zone.id === 'arcade'
           ? 'You are in the Game Parlor. Classic games, played together.'
-          : 'You are at the ' + zone.name + '.'
+          : zone.id === 'theater'
+            ? 'You are in the Theater. The great window glows — Classic Cinema is showing.'
+            : 'You are at the ' + zone.name + '.'
       });
       teleports.push({
         mesh: built.returnPad, ringMesh: null,

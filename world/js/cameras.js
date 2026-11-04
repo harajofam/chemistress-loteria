@@ -258,6 +258,11 @@
    *    (34 m) and a lower ceiling (12 m), so a visitor can still look
    *    AT the facades, the chapel sign, and — from the parlor entry —
    *    the gallery wall at the room's back (target z = -32).
+   *  - The Theater (M2b, 2026-11-04) is the second sanctioned
+   *    interior, at 120° — its room box is tested in the zone's own
+   *    local frame (extraRooms below, same rotation the builders
+   *    use) rather than a second world-axis special case, so each
+   *    future interior adds one data row, not new math.
    */
   CCW.BOUNDS = {
     plazaRadius: 21,
@@ -268,12 +273,34 @@
     room: {
       gateHalfX: 7.5, gateMinZ: -39.5, gateMaxZ: -23.0,
       minX: -6.1, maxX: 6.1, minZ: -38.0, maxZ: -25.1, maxY: 6.6
-    }
+    },
+    extraRooms: [
+      { // The Theater, angleDeg 120: gate covers the room's extent;
+        // the clamp box sits just inside its walls and door.
+        angleDeg: 120, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
+        minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
+      }
+    ]
   };
 
   function inRoomGate(x, z) {
     var r = CCW.BOUNDS.room;
     return Math.abs(x) <= r.gateHalfX && z >= r.gateMinZ && z <= r.gateMaxZ;
+  }
+
+  // World point -> a zone-local room frame (center at angleDeg on
+  // the zone ring; local +Z faces the Plaza center, matching the
+  // builders' roomWorld transform, inverted).
+  function extraRoomLocal(x, z, room) {
+    var t = room.angleDeg * Math.PI / 180;
+    var R = CCW.ZONE_RADIUS || 24;
+    var cx = Math.sin(t) * R, cz = Math.cos(t) * R;
+    var a = t + Math.PI, ca = Math.cos(a), sa = Math.sin(a);
+    var rx = x - cx, rz = z - cz;
+    return {
+      lx: rx * ca - rz * sa, lz: rx * sa + rz * ca,
+      ca: ca, sa: sa, cx: cx, cz: cz
+    };
   }
 
   // Clamp a position-like {x, y, z} in place; returns the vector.
@@ -284,15 +311,33 @@
       v.z = Math.max(r.minZ, Math.min(r.maxZ, v.z));
       v.y = Math.max(bd.minY, Math.min(r.maxY, v.y));
     } else {
-      var rad = isTarget ? bd.targetRadius : bd.plazaRadius;
-      var d = Math.sqrt(v.x * v.x + v.z * v.z);
-      if (d > rad && d > 0) {
-        var s = rad / d;
-        v.x *= s;
-        v.z *= s;
+      var inExtraRoom = false;
+      var rooms = bd.extraRooms || [];
+      for (var i = 0; i < rooms.length; i++) {
+        var rm = rooms[i];
+        var loc = extraRoomLocal(v.x, v.z, rm);
+        if (Math.abs(loc.lx) <= rm.gateHalfX &&
+            loc.lz >= rm.gateMinLz && loc.lz <= rm.gateMaxLz) {
+          var clx = Math.max(rm.minLx, Math.min(rm.maxLx, loc.lx));
+          var clz = Math.max(rm.minLz, Math.min(rm.maxLz, loc.lz));
+          v.x = loc.cx + clx * loc.ca + clz * loc.sa;
+          v.z = loc.cz - clx * loc.sa + clz * loc.ca;
+          v.y = Math.max(bd.minY, Math.min(rm.maxY, v.y));
+          inExtraRoom = true;
+          break;
+        }
       }
-      var yCap = isTarget ? bd.targetMaxY : bd.maxY;
-      v.y = Math.max(bd.minY, Math.min(yCap, v.y));
+      if (!inExtraRoom) {
+        var rad = isTarget ? bd.targetRadius : bd.plazaRadius;
+        var d = Math.sqrt(v.x * v.x + v.z * v.z);
+        if (d > rad && d > 0) {
+          var s = rad / d;
+          v.x *= s;
+          v.z *= s;
+        }
+        var yCap = isTarget ? bd.targetMaxY : bd.maxY;
+        v.y = Math.max(bd.minY, Math.min(yCap, v.y));
+      }
     }
     return v;
   };
