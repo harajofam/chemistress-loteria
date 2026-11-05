@@ -1069,17 +1069,30 @@
    * THE PEN-PAL POST — the notes module (M2b interior 3 of 5,
    * 2026-11-04; design §3.6). This is the ONE named seam between
    * the room's note card (cameras.js wirePenpal) and wherever the
-   * letters live. Today the letters live HERE: a seeded starter
-   * set of house notes, plus the visitor's own left notes kept in
-   * their browser's localStorage — so a note left tonight is in
-   * YOUR boxes tomorrow, on this device. PERSISTENCE TRUTH, plain:
-   * real cross-visitor mail (a note left by one member landing in
-   * another member's box) needs a server piece that is NOT in this
-   * pass — the Hub/Render note endpoints, the shared contact
-   * filter, the overnight delivery queue, block/report (design
-   * §3.6). When that lands, it replaces THIS module's draw/leave
-   * bodies; the card and the room never change. Nothing here fakes
-   * shared persistence.
+   * letters live.
+   *
+   * SHARED MAIL LANDED with the combined server pass (2026-11-04):
+   * the house server now keeps the shared pool (GET/POST
+   * /penpal/notes, server/penpal.js) — a note one visitor leaves
+   * really can surface in another visitor's box. This module's
+   * draw/leave bodies were replaced, exactly as promised when the
+   * room was built; the card, the wiring, and the meshes never
+   * changed. What lives where, honestly:
+   *   - SEED: the same 10 seeded house notes as ever (starter set,
+   *     in Jay's register — house notes, not fake member mail).
+   *   - SHARED: the server pool (usernames + <=400 chars + a
+   *     timestamp, nothing more), fetched in the background and
+   *     drawn from alongside the seeds. The server re-runs this
+   *     module's scan() rules on every post, so the filter holds
+   *     even for a caller who skips the client entirely.
+   *   - OWN: the visitor's own left notes still ALSO keep in their
+   *     browser's localStorage, so the "in your boxes tomorrow"
+   *     promise holds on this device even if the server is asleep.
+   * Pre-door, any visitor may leave a note (the Phase 3 door ships
+   * open/shadow first). When a member session exists (door.js), a
+   * left note carries the member's token and the server stores it
+   * under the VERIFIED account username — the seam is live now;
+   * nothing about names is faked in the meantime.
    *
    * The guardrails are §3.6's: usernames only — the contact filter
    * (scan) refuses emails, phone-shaped strings, and links, in the
@@ -1125,7 +1138,9 @@
     }
     // The contact filter (design §3.6's Hub sensor, client-side
     // edition): returns { ok: true } or { ok: false, reason } with
-    // reason 'email' | 'phone' | 'link'.
+    // reason 'email' | 'phone' | 'link'. LOCKSTEP: server/penpal.js
+    // carries the identical regexes and re-runs them on every post;
+    // change one side, change the other.
     function scan(text) {
       var t = String(text == null ? '' : text);
       if (/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.test(t)) {
@@ -1140,22 +1155,83 @@
       }
       return { ok: true };
     }
-    // A note drawn from a box: the starter set plus the visitor's
-    // own left notes. rng is injectable for tests.
+    // --- The shared pool (the server pass, 2026-11-04) ----------
+    // Fetched in the background from the house server and drawn
+    // from alongside the seeds. Every network touch is guarded: no
+    // location/fetch (test harnesses, odd embeds) means the module
+    // simply behaves as it did before the server piece existed.
+    var SHARED = [];
+    var sharedAt = 0;
+    var fetchingShared = false;
+    function mailBase() {
+      try {
+        var loc = root.location;
+        if (loc && loc.origin && typeof root.fetch === 'function') return loc.origin;
+      } catch (e) {}
+      return null;
+    }
+    function refreshShared() {
+      var base = mailBase();
+      if (!base || fetchingShared) return;
+      if (SHARED.length && Date.now() - sharedAt < 30000) return;
+      fetchingShared = true;
+      root.fetch(base + '/penpal/notes')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          fetchingShared = false;
+          if (data && Array.isArray(data.notes)) {
+            SHARED = data.notes.filter(function (n) {
+              return n && typeof n.from === 'string' && typeof n.text === 'string';
+            }).slice(-50);
+            sharedAt = Date.now();
+          }
+        })
+        .catch(function () { fetchingShared = false; });
+    }
+    function postShared(who, body) {
+      var base = mailBase();
+      if (!base) return;
+      var headers = { 'Content-Type': 'application/json' };
+      try {
+        var sess = root.LoungeDoor && typeof root.LoungeDoor.session === 'function'
+          ? root.LoungeDoor.session() : null;
+        if (sess && sess.accessToken) headers.Authorization = 'Bearer ' + sess.accessToken;
+      } catch (e) {}
+      root.fetch(base + '/penpal/notes', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ name: who, text: body })
+      }).then(function (r) { return r.json(); })
+        .then(function (v) {
+          // Sealed at the Post Office: the next draw refreshes the
+          // shared pool, so the note can surface for anyone.
+          if (v && v.ok) sharedAt = 0;
+        })
+        .catch(function () {});
+    }
+    // A note drawn from a box: the starter set, the shared pool,
+    // and the visitor's own left notes. Drawing kicks a background
+    // refresh of the shared pool for the next box. rng is
+    // injectable for tests.
     function draw(rng) {
-      var pool = SEED.concat(ownNotes());
+      refreshShared();
+      var pool = SEED.concat(SHARED, ownNotes());
       var r = typeof rng === 'function' ? rng() : Math.random();
       var i = Math.floor(r * pool.length);
       if (i < 0) i = 0;
       if (i >= pool.length) i = pool.length - 1;
       return pool[i];
     }
-    // Leave a note: scanned first (name AND text), then kept for
-    // the visitor's own boxes. Returns scan's verdict shape, plus
-    // { ok: false, reason: 'empty' } for a blank note.
+    // Leave a note: scanned first (name AND text), kept for the
+    // visitor's own boxes, and posted to the shared pool. The
+    // server scans again with the same rules and enforces the
+    // envelope size there too. Returns scan's verdict shape, plus
+    // { ok: false, reason: 'empty' } for a blank note and
+    // { ok: false, reason: 'long' } past 400 characters.
     function leave(name, text) {
       var body = String(text == null ? '' : text).trim();
       if (!body) return { ok: false, reason: 'empty' };
+      if (body.length > 400) return { ok: false, reason: 'long' };
       var who = String(name == null ? '' : name).trim() || 'A friend';
       var v = scan(who);
       if (!v.ok) return v;
@@ -1164,6 +1240,7 @@
       var arr = ownNotes();
       arr.push({ from: who, text: body });
       saveOwn(arr);
+      postShared(who, body);
       return { ok: true };
     }
     return {
@@ -1172,7 +1249,9 @@
       draw: draw,
       leave: leave,
       scan: scan,
-      ownNotes: ownNotes
+      ownNotes: ownNotes,
+      refresh: refreshShared,
+      sharedNotes: function () { return SHARED.slice(); }
     };
   })();
 

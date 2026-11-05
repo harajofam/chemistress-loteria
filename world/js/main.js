@@ -91,6 +91,22 @@
   }
 
   function boot() {
+    // Phase 3 members' door (Layer B for the world): door.js has
+    // already adopted + scrubbed any Hub fragment handoff at load.
+    // ready() is called — never awaited — so the scene builds
+    // behind the door card exactly as the plan intends: in
+    // open/shadow it resolves at once and changes nothing; in
+    // members mode the door card (door.js's own overlay) is what
+    // greets a visitor without a session. The world is scenery —
+    // its only gate is this card; the rooms are the real gate.
+    // (../../door.js is loaded after this file in index.html, and
+    // boot runs on DOMContentLoaded, so LoungeDoor exists by now;
+    // the guard keeps any other load order harmless.)
+    try {
+      if (root.LoungeDoor && typeof root.LoungeDoor.ready === 'function') {
+        root.LoungeDoor.ready();
+      }
+    } catch (e) {}
     var canvas = document.getElementById('world-canvas');
     if (!B) {
       failOverlay('The Plaza could not start — the 3D library did not load. ' +
@@ -193,72 +209,225 @@
     // ---- The Theater's watch experience (2026-11-04) -------------
     // Tapping the program board opens the Classic Cinema index
     // (cameras.js wireTheater runs the catalog). Choosing a title
-    // plays the film in the BIG VIEWER — a plain video element
-    // carrying the Archive.org stream, opened over the room, with
-    // native controls. Stop film, or Live Art Takes The Stage
-    // (Jay's rule: live art preempts the movies), closes it.
+    // plays the film ON THE GREAT GLASS via a Babylon VideoTexture
+    // fed by the house server's FILM RAIL (server/film-rail.js): a
+    // same-origin allowlist proxy that re-serves exactly the 83
+    // program titles with the CORS header Archive.org does not
+    // send. The BIG VIEWER (the plain video overlay) remains the
+    // full-screen path and the fallback: Full screen hands the
+    // stream to it at the same place, and if the glass cannot
+    // start, the film opens there instead. Stop film, or Live Art
+    // Takes The Stage (Jay's rule: live art preempts the movies),
+    // ends the showing and restores the idle glass.
     //
-    // WHY THE VIEWER, NOT THE GLASS (proven in the render harness,
-    // theater-render-check/): the great screen was built first as
-    // a Babylon VideoTexture — and the Archive's file servers send
-    // NO Access-Control-Allow-Origin header, so (1) a CORS-mode
-    // load is rejected outright (Babylon's VideoTexture defaults
-    // its video to crossOrigin 'anonymous'), and (2) a no-CORS
-    // load plays as media but WebGL refuses its frames, leaving
-    // the screen black. A plain <video> element has neither
-    // problem. The one addition that lights the glass for real is
-    // a same-origin film rail on the house server (it re-serves
-    // the Archive stream with the CORS header) — the snippet and
-    // the switch to flip live in THEATER-BUILD-NOTES.md. Until
-    // then the glass stays the room's idle face, and the watch
-    // bar's views (Sit & watch, Audience view) glide the room
-    // camera exactly as Jay specced.
-    var film = null; // { entry } while a film is showing
+    // WHY A RAIL (the finding that shaped this, proven in the
+    // render harness, theater-render-check/): pointed straight at
+    // the Archive, a VideoTexture can NEVER work — their file
+    // servers send no Access-Control-Allow-Origin header, so (1) a
+    // CORS-mode load is rejected outright (Babylon's VideoTexture
+    // defaults its video to crossOrigin 'anonymous'), and (2) a
+    // no-CORS load plays as media but WebGL refuses its frames,
+    // leaving the screen black. The rail's same-origin stream has
+    // neither problem: the glass lights for real.
+    //
+    // THE FILM RULE still holds (theme picker): while a film plays,
+    // the screen mesh wears the FILM material; a skin swap writes
+    // only the captured glass material and appears when stopFilm
+    // restores it.
+    var film = null; // { entry, mode: 'glass'|'viewer', vt, filmMat, swapped, handedOff, directTried }
+    var filmTimer = null;
     var fsEl = document.getElementById('theater-fs');
     var fsVideo = document.getElementById('theater-fs-video');
     var fsClose = document.getElementById('theater-fs-close');
     function streamUrl(entry) {
+      // The viewer's last-resort address: the Archive file itself
+      // (a plain video element needs no CORS header). Used only if
+      // the rail stream fails inside the viewer.
       return 'https://archive.org/download/' + entry.id + '/' + encodeURIComponent(entry.file);
+    }
+    function railUrl(entry) {
+      // The house film rail: same origin, allowlisted to the
+      // program, CORS-open — the glass's stream.
+      return '/film/' + entry.id + '/' + encodeURIComponent(entry.file);
+    }
+    function theaterWatch() {
+      return (world.theater && world.theater.watch) || null;
+    }
+    function clearFilmTimer() {
+      if (filmTimer) { clearTimeout(filmTimer); filmTimer = null; }
+    }
+    function restoreGlass() {
+      var w = theaterWatch();
+      if (w && w.screen && film && film.swapped) {
+        w.screen.material = w.glassMaterial;
+      }
+      if (film) film.swapped = false;
+    }
+    function disposeFilmTexture() {
+      if (!film) return;
+      if (film.vt) {
+        try { if (film.vt.video) film.vt.video.pause(); } catch (e) {}
+        try { film.vt.dispose(); } catch (e) {}
+        film.vt = null;
+      }
+      if (film.filmMat) {
+        try { film.filmMat.dispose(false, true); } catch (e) {}
+        film.filmMat = null;
+      }
     }
     function stopFilm() {
       if (!film) return;
+      clearFilmTimer();
+      restoreGlass();
+      disposeFilmTexture();
       film = null;
       if (fsEl) fsEl.hidden = true;
       if (fsVideo) {
         try {
+          fsVideo.onerror = null;
           fsVideo.pause();
           fsVideo.removeAttribute('src');
           fsVideo.load();
         } catch (e) {}
       }
     }
-    function playFilm(entry) {
-      stopFilm();
-      if (!fsEl || !fsVideo) return;
-      film = { entry: entry };
+    function openViewer() {
+      // The fallback/full-screen surface: today's big viewer,
+      // carrying the rail stream (its one video element, native
+      // controls, sound on).
+      if (!film || !fsEl || !fsVideo) return;
+      fsEl.hidden = false;
+      if (theaterCtl) theaterCtl.setFullscreen(true);
       try {
-        fsVideo.src = streamUrl(entry);
-        fsEl.hidden = false;
-        if (theaterCtl) theaterCtl.setFullscreen(true);
         var pr = fsVideo.play();
         if (pr && pr.catch) {
           pr.catch(function () {
             setStatus('The film is loading — tap ⛶ Full screen if it needs a nudge.');
           });
         }
+      } catch (e) {}
+    }
+    function glassFailed() {
+      // The glass could not start this film: hand the showing to
+      // the viewer, exactly the pre-rail behavior.
+      if (!film) return;
+      clearFilmTimer();
+      restoreGlass();
+      disposeFilmTexture();
+      film.mode = 'viewer';
+      openViewer();
+    }
+    function startGlass(entry) {
+      var w = theaterWatch();
+      if (!w || !w.screen || typeof B.VideoTexture !== 'function') {
+        glassFailed();
+        return;
+      }
+      var vt = null;
+      try {
+        vt = new B.VideoTexture('theater-film-texture', railUrl(entry), scene, false, false);
+      } catch (e) {
+        glassFailed();
+        return;
+      }
+      if (!film || film.entry !== entry) {
+        try { vt.dispose(); } catch (e) {}
+        return;
+      }
+      film.vt = vt;
+      var video = vt.video;
+      var settled = false;
+      function succeed() {
+        if (settled || !film || film.entry !== entry) return;
+        settled = true;
+        clearFilmTimer();
+        try {
+          var mat = new B.StandardMaterial('theater-film-mat', scene);
+          mat.diffuseTexture = vt;
+          mat.emissiveTexture = vt;
+          mat.emissiveColor = new B.Color3(1, 1, 1);
+          mat.disableLighting = true;
+          film.filmMat = mat;
+          w.screen.material = mat;
+          film.swapped = true;
+          film.mode = 'glass';
+          var pr = video.play();
+          if (pr && pr.catch) {
+            pr.catch(function () {
+              // Autoplay refused (a browser saving us from noise):
+              // the viewer — a plain element — takes the showing.
+              if (film && film.entry === entry && film.mode === 'glass') glassFailed();
+            });
+          }
+        } catch (e) {
+          glassFailed();
+        }
+      }
+      function fail() {
+        if (settled || !film || film.entry !== entry) return;
+        settled = true;
+        glassFailed();
+      }
+      if (video) {
+        try { video.setAttribute('playsinline', ''); } catch (e) {}
+        if (video.readyState >= 3) succeed();
+        else {
+          video.addEventListener('canplay', succeed);
+          video.addEventListener('error', fail);
+        }
+      }
+      // A silent glass (slow connection, a stream that never
+      // becomes readable) falls back to the viewer on a timer.
+      filmTimer = setTimeout(function () {
+        if (!settled) { settled = true; glassFailed(); }
+      }, 9000);
+    }
+    function playFilm(entry) {
+      stopFilm();
+      if (!fsEl || !fsVideo) return;
+      film = {
+        entry: entry, mode: 'glass', vt: null, filmMat: null,
+        swapped: false, handedOff: false, directTried: false
+      };
+      try {
+        // Arm the viewer with the same rail stream (metadata only)
+        // so Full screen — or a glass failure — brings it forward
+        // at the same place without a cold start.
+        fsVideo.preload = 'metadata';
+        fsVideo.src = railUrl(entry);
+        fsVideo.onerror = function () {
+          if (film && film.mode === 'viewer' && !film.directTried) {
+            film.directTried = true;
+            try {
+              fsVideo.src = streamUrl(entry);
+              var pr = fsVideo.play();
+              if (pr && pr.catch) pr.catch(function () {});
+            } catch (e) {}
+          }
+        };
         setStatus('🎬 Now showing: ' + entry.t + ' (' + entry.y + '). Sit back and enjoy. 💜');
+        startGlass(entry);
       } catch (e) {
         stopFilm();
         setStatus('The film could not start just now — tap it again in a moment.');
       }
     }
     function openFullscreen() {
-      // The viewer IS the full screen: one element, one stream,
-      // so there is no second player to keep in step. Reopening
-      // it resumes the same film at the same place.
+      // Full screen IS the viewer: one stream conceptually, handed
+      // over at the same place. From the glass, the viewer's copy
+      // takes the glass's clock and the glass rests; from a
+      // viewer-mode film, it simply comes forward again.
       if (!film || !fsEl || !fsVideo) {
         if (theaterCtl) theaterCtl.setFullscreen(false);
         return;
+      }
+      if (film.mode === 'glass' && film.vt && film.vt.video) {
+        try {
+          film.handedOff = true;
+          fsVideo.preload = 'auto';
+          fsVideo.currentTime = film.vt.video.currentTime || 0;
+          film.vt.video.pause();
+        } catch (e) {}
       }
       fsEl.hidden = false;
       try {
@@ -270,9 +439,20 @@
       if (!fsEl || fsEl.hidden) return;
       fsEl.hidden = true;
       // The film keeps playing while the visitor looks around the
-      // room — the watch bar's Full screen button brings the
-      // viewer back, same film, same place.
+      // room — on the glass again if it was handed off, otherwise
+      // in the viewer itself, as before. The watch bar's Full
+      // screen button brings the viewer back, same film, same
+      // place.
       if (theaterCtl) theaterCtl.setFullscreen(false);
+      if (film && film.handedOff && film.vt && film.vt.video) {
+        film.handedOff = false;
+        try {
+          film.vt.video.currentTime = fsVideo.currentTime || 0;
+          fsVideo.pause();
+          var pr = film.vt.video.play();
+          if (pr && pr.catch) pr.catch(function () {});
+        } catch (e) {}
+      }
     }
     if (fsClose) fsClose.addEventListener('click', closeFullscreen);
 

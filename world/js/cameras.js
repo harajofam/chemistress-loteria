@@ -890,6 +890,10 @@
       } else if (reason === 'link') {
         say('Links can\'t ride the slow mail — usernames and kind ' +
             'words only. Take it out and seal it again?');
+      } else if (reason === 'long') {
+        say('That note is a little long for an envelope — the Post ' +
+            'carries up to 400 characters of kindness. Trim it a ' +
+            'touch and seal it again?');
       } else {
         say('Write a little something first — even one kind ' +
             'sentence travels well.');
