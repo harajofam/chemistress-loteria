@@ -254,6 +254,18 @@ html, body {
   line-height: 1.45;
 }
 
+/* Shop Gallery card (WALL LIFE pass, 2026-11-04): the game card's
+   sibling — same shell, a teal edge for the shop. Bound by
+   cameras.js wireShopCard. */
+.shop-card-box {
+  border-color: var(--teal);
+}
+
+#shop-card-blurb {
+  margin: 0 0 0.9rem;
+  line-height: 1.45;
+}
+
 .game-card-actions {
   display: flex;
   flex-wrap: wrap;
