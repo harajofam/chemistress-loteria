@@ -3537,6 +3537,653 @@
     };
   }
 
+  /*
+   * The Creator Studio INTERIOR (M2b interior 5 of 5, 2026-11-04)
+   * — the Apothecary (interiors addendum; design section 3.7),
+   * from Jay's photos 05 (the lavender herb cabinet) + 01-BR
+   * (the apothecary market lounge) + 06 (the Kitchen Disco look,
+   * the social corner only — a borrowed photo: its look, never
+   * a likeness, never a copied surface).
+   *
+   * The room at 0 degrees, BEHIND the entrance chapel on the +Z
+   * axis (which is why its Plaza pad used to land at a threshold
+   * short of the door — the world fix pass's exception; the
+   * interior follows the house arrival pattern instead: the pad
+   * lands INSIDE, just past the door, facing the cabinet). The
+   * palette law holds inside: hot pink carries the walls, its
+   * gold LINE-ART drawn as strokes only (photo 05's wall), teal
+   * is the second voice (shelf unit, sofa, frames), plum is the
+   * rug field and small furniture, navy appears ONLY in the
+   * shared star-chart ceiling, and gold stays a fine line (the
+   * return ring, the house beacon, excepted as in every
+   * interior; the black of the social corner is a POSTER
+   * surface — the emblem register, per the saga-art standard).
+   *
+   * THE ICON is the great LAVENDER CABINET (photo 05): twin
+   * arched glass doors over four shelves of labeled jars —
+   * lavender, chamomile, rose petals, green tea, earl grey,
+   * the photo's own labels — dressed on top with a vase of
+   * tulips and a book stack, as the photo dresses it. Flanking
+   * it, the ARCHED APOTHECARY SHELVES (01-BR): one teal unit,
+   * one burnt-orange, stocked with jars and with MEMBERS'
+   * CREATIONS standing between them — the Studio's whole point
+   * (design 3.7): member work treated the way the apothecary
+   * treats its goods, labeled, lit, and honored. The creations
+   * are drawn in the saga's emblem register and carry TITLES
+   * ONLY — no invented makers, ever: displayed work is posted
+   * by members themselves under their username, and that flow
+   * is the Hub/Phase 3 piece; the plaque by the door says the
+   * rules in the design's own register. Around the room: the
+   * gallery wall (five framed pieces, salon-hung), the long
+   * work table with its making clutter, the teal velvet sofa,
+   * café tables, hanging plants, and the KITCHEN DISCO social
+   * corner on the right wall (photo 06's look: the pop panel,
+   * the drawn neon, hot-pink chairs, a checkerboard cushion).
+   *
+   * LANDED LINE: the plan names NO landed line for this room,
+   * so none is invented — buildWorld keeps the world's generic
+   * fallback for the studio ("You are at the Creator Studio.").
+   * A house-pattern candidate waits in STUDIO-BUILD-NOTES.md
+   * for Jay's word; swapping it in is one string in buildWorld.
+   *
+   * ARRIVAL: the house pattern — the Plaza pad lands INSIDE,
+   * just past the door, facing the lavender cabinet; the
+   * room's return pad rides home. LIGHTING: the round-3
+   * lesson applied — a warm rig scoped to this room's meshes
+   * only, every material's maxSimultaneousLights raised at
+   * creation. NO theme picker (the abstract direction is
+   * proposed, not decided — single default look).
+   */
+  function buildStudioInterior(scene, B, zone, add) {
+    var P = CCW.PALETTE;
+    var uv = outward(zone);
+    var wallTex = CCW.studioWallTexture(scene, B, 'studio-int-wall-tex');
+    var pinkWallTex = CCW.penpalPinkWallTexture(scene, B, 'studio-int-pinkwall-tex');
+    var floorTex = CCW.studioFloorTexture(scene, B, 'studio-int-floor-tex');
+    var ceilingTex = CCW.starChartTexture(scene, B, 'studio-int-ceiling-tex');
+    var woodTex = CCW.woodTexture(scene, B, 'studio-int-wood-tex');
+    var leafTex = CCW.leafTexture(scene, B, 'studio-int-leaf-tex');
+
+    var intLights = [];
+    function roomWorld(lx, ly, lz) {
+      var a = zone.angleDeg * Math.PI / 180 + Math.PI;
+      var ca = Math.cos(a), sa = Math.sin(a);
+      return new B.Vector3(
+        uv[0] * CCW.ZONE_RADIUS + lx * ca + lz * sa, ly,
+        uv[1] * CCW.ZONE_RADIUS - lx * sa + lz * ca);
+    }
+
+    // ---- Room shell (the shared interior volume) ------------------
+    var floor = add(B.MeshBuilder.CreateBox('studio-int-floor',
+      { width: 13.4, height: 0.12, depth: 14.2 }, scene));
+    floor.position.set(0, -0.06, -7.5);
+    floor.material = CCW.texMat(scene, B, 'studio-int-floor-mat', floorTex, {});
+    floor.receiveShadows = true;
+
+    // Ceiling: the shared star chart (navy's one lawful field).
+    var ceiling = add(B.MeshBuilder.CreateBox('studio-int-ceiling',
+      { width: 13.6, height: 0.25, depth: 14.4 }, scene));
+    ceiling.position.set(0, 7.12, -7.5);
+    ceiling.material = CCW.texMat(scene, B, 'studio-int-ceiling-mat', ceilingTex,
+      { emissive: true });
+
+    // Back wall: pink panelling with the photo's gold line-art,
+    // behind the cabinet and shelves.
+    var backWall = add(B.MeshBuilder.CreateBox('studio-int-wall-back',
+      { width: 14, height: 7, depth: 0.5 }, scene));
+    backWall.position.set(0, 3.5, -14.65);
+    backWall.material = CCW.texMat(scene, B, 'studio-int-wall-back-mat', wallTex, {});
+
+    // Side walls + the interior face of the front wall: the
+    // shared hot-pink panelling.
+    [-6.75, 6.75].forEach(function (x, i) {
+      var side = add(B.MeshBuilder.CreateBox('studio-int-wall-' + (i ? 'right' : 'left'),
+        { width: 0.5, height: 7, depth: 14.3 }, scene));
+      side.position.set(x, 3.5, -7.5);
+      side.material = CCW.texMat(scene, B, 'studio-int-wall-side-mat-' + i, pinkWallTex, {});
+    });
+    var front = add(B.MeshBuilder.CreateBox('studio-int-front-panel',
+      { width: 13, height: 7, depth: 0.15 }, scene));
+    front.position.set(0, 3.5, -0.68);
+    front.material = CCW.texMat(scene, B, 'studio-int-front-mat', pinkWallTex, {});
+    var doorFrameIn = add(B.MeshBuilder.CreateBox('studio-int-door-frame',
+      { width: 4.0, height: 5.2, depth: 0.12 }, scene));
+    doorFrameIn.position.set(0, 2.6, -0.78);
+    doorFrameIn.material = CCW.mat(scene, B, 'studio-int-door-frame-mat', P.tealDeep);
+    var doorGlowIn = add(B.MeshBuilder.CreatePlane('studio-int-door-glow',
+      { width: 3.4, height: 4.6 }, scene));
+    // No half-turn: the readable -Z face points into the room.
+    doorGlowIn.position.set(0, 2.3, -0.86);
+    doorGlowIn.material = CCW.mat(scene, B, 'studio-int-door-glow-mat', P.velvetOrange,
+      { emissive: P.velvetOrange });
+
+    // The room sign over the door, inside (house pattern).
+    var signTrim = add(B.MeshBuilder.CreateBox('studio-int-sign-trim',
+      { width: 5.0, height: 1.05, depth: 0.1 }, scene));
+    signTrim.position.set(0, 5.95, -0.80);
+    signTrim.material = CCW.mat(scene, B, 'studio-int-sign-trim-mat', P.tealDeep);
+    var sign = add(CCW.makeLabel(scene, B, 'studio-int-sign',
+      ['Creator Studio', 'The apothecary of member work'], 4.7, 0.9,
+      { fg: P.goldSoft }));
+    sign.position.set(0, 5.95, -0.87);
+
+    // ---- The lavender cabinet (the icon, photo 05) -----------------
+    // The body is a FRAME, not a slab (stiles + top/bottom rails
+    // around a real cavity): the first render pass caught a
+    // solid carcass box swallowing the jars whole — a cabinet
+    // with glass doors has to have an inside. See
+    // STUDIO-BUILD-NOTES.md.
+    var lav = '#8f7fd4', lavDeep = '#7a68bd';
+    [-1.73, 1.73].forEach(function (sx, si) {
+      var stile = add(B.MeshBuilder.CreateBox('studio-int-cabinet-stile-' + si,
+        { width: 0.14, height: 4.8, depth: 0.6 }, scene));
+      stile.position.set(sx, 2.4, -13.95);
+      stile.material = CCW.mat(scene, B, 'studio-int-cabinet-stile-mat-' + si, lav);
+    });
+    var cabTopRail = add(B.MeshBuilder.CreateBox('studio-int-cabinet-toprail',
+      { width: 3.32, height: 0.14, depth: 0.6 }, scene));
+    cabTopRail.position.set(0, 4.73, -13.95);
+    cabTopRail.material = CCW.mat(scene, B, 'studio-int-cabinet-toprail-mat', lav);
+    var cabBotRail = add(B.MeshBuilder.CreateBox('studio-int-cabinet-bottomrail',
+      { width: 3.32, height: 0.14, depth: 0.6 }, scene));
+    cabBotRail.position.set(0, 0.29, -13.95);
+    cabBotRail.material = CCW.mat(scene, B, 'studio-int-cabinet-bottomrail-mat', lav);
+    var plinth = add(B.MeshBuilder.CreateBox('studio-int-cabinet-plinth',
+      { width: 3.8, height: 0.22, depth: 0.7 }, scene));
+    plinth.position.set(0, 0.11, -13.95);
+    plinth.material = CCW.mat(scene, B, 'studio-int-cabinet-plinth-mat', lavDeep);
+    var cabCornice = add(B.MeshBuilder.CreateBox('studio-int-cabinet-cornice',
+      { width: 3.8, height: 0.18, depth: 0.7 }, scene));
+    cabCornice.position.set(0, 4.89, -13.95);
+    cabCornice.material = CCW.mat(scene, B, 'studio-int-cabinet-cornice-mat', lavDeep);
+    var cabBack = add(B.MeshBuilder.CreateBox('studio-int-cabinet-back',
+      { width: 3.3, height: 4.3, depth: 0.06 }, scene));
+    cabBack.position.set(0, 2.45, -14.2);
+    cabBack.material = CCW.mat(scene, B, 'studio-int-cabinet-back-mat', P.plumHouse);
+    var jarTex = [0, 1, 2, 3, 4].map(function (v) {
+      return CCW.studioJarTexture(scene, B, 'studio-int-jar-tex-' + v, v);
+    });
+    var jrnd = CCW.prand(90210);
+    var cabJarIdx = 0;
+    [0.95, 1.95, 2.95, 3.95].forEach(function (boardY, row) {
+      var board = add(B.MeshBuilder.CreateBox('studio-int-cabinet-board-' + row,
+        { width: 3.3, height: 0.07, depth: 0.48 }, scene));
+      board.position.set(0, boardY, -13.98);
+      board.material = CCW.mat(scene, B, 'studio-int-cabinet-board-mat-' + row, lav);
+      for (var col = 0; col < 6; col++) {
+        var jar = add(B.MeshBuilder.CreateCylinder('studio-int-cabinet-jar-' + cabJarIdx,
+          { diameter: 0.34, height: 0.55, tessellation: 12 }, scene));
+        jar.position.set(-1.35 + col * 0.54 + (jrnd() - 0.5) * 0.02,
+          boardY + 0.035 + 0.275, -13.98 + (jrnd() - 0.5) * 0.02);
+        jar.material = CCW.texMat(scene, B, 'studio-int-cabinet-jar-mat-' + cabJarIdx,
+          jarTex[(col + row * 2) % 5], {});
+        cabJarIdx++;
+      }
+    });
+    // The twin arched glass doors: a real RAIL frame (four
+    // rails, not a slab — the same render catch as the carcass:
+    // a solid "frame" box hides everything behind the glass),
+    // the glass pane set into it, an arch TUBE riding the glass
+    // top (CreateTorus ignores its arc option in this build —
+    // the Garden gate lesson), twin mullions, a cream knob each.
+    [-0.86, 0.86].forEach(function (dx, di) {
+      [[dx - 0.77, 2.45, 0.12, 4.5], [dx + 0.77, 2.45, 0.12, 4.5],
+       [dx, 4.64, 1.42, 0.12], [dx, 0.26, 1.42, 0.12]].forEach(function (rc, ri) {
+        var rail = add(B.MeshBuilder.CreateBox('studio-int-cabinet-door-' + di + '-rail-' + ri,
+          { width: rc[2], height: rc[3], depth: 0.07 }, scene));
+        rail.position.set(rc[0], rc[1], -13.615);
+        rail.material = CCW.mat(scene, B, 'studio-int-cabinet-door-rail-mat-' + di + '-' + ri, lav);
+      });
+      var dGlass = add(B.MeshBuilder.CreatePlane('studio-int-cabinet-door-' + di + '-glass',
+        { width: 1.44, height: 4.28 }, scene));
+      dGlass.position.set(dx, 2.45, -13.66);
+      dGlass.material = CCW.mat(scene, B, 'studio-int-cabinet-door-glass-mat-' + di, '#bfe8e2',
+        { alpha: 0.20, emissive: '#1d4a44' });
+      var archPath = [];
+      for (var aa = 0; aa <= 12; aa++) {
+        var aang = (aa / 12) * Math.PI;
+        archPath.push(new B.Vector3(Math.cos(aang) * 0.72, Math.sin(aang) * 0.72, 0));
+      }
+      var dArch = add(B.MeshBuilder.CreateTube('studio-int-cabinet-door-' + di + '-arch',
+        { path: archPath, radius: 0.045, radialSegments: 8, cap: B.Mesh.CAP_ALL }, scene));
+      dArch.position.set(dx, 3.86, -13.58);
+      dArch.material = CCW.mat(scene, B, 'studio-int-cabinet-door-arch-mat-' + di, lavDeep);
+      [-0.36, 0.36].forEach(function (mx, mi) {
+        var mull = add(B.MeshBuilder.CreateBox('studio-int-cabinet-door-' + di + '-mullion-' + mi,
+          { width: 0.055, height: 3.6, depth: 0.03 }, scene));
+        mull.position.set(dx + mx, 2.28, -13.655);
+        mull.material = CCW.mat(scene, B, 'studio-int-cabinet-door-mullion-mat-' + di + '-' + mi, lavDeep);
+      });
+      var knob = add(B.MeshBuilder.CreateSphere('studio-int-cabinet-door-' + di + '-knob',
+        { diameter: 0.11, segments: 10 }, scene));
+      knob.position.set(dx + (di === 0 ? 0.68 : -0.68), 2.3, -13.52);
+      knob.material = CCW.mat(scene, B, 'studio-int-cabinet-door-knob-mat-' + di, P.cream);
+    });
+    // Dressing the cabinet top (photo 05): a striped vase with
+    // three tulips, and a small stack of books.
+    var vase = add(B.MeshBuilder.CreateCylinder('studio-int-cabinet-vase',
+      { diameterTop: 0.2, diameterBottom: 0.26, height: 0.42, tessellation: 12 }, scene));
+    vase.position.set(-1.15, 5.19, -13.95);
+    vase.material = CCW.mat(scene, B, 'studio-int-cabinet-vase-mat', P.teal);
+    var stems = add(B.MeshBuilder.CreateCylinder('studio-int-cabinet-stems',
+      { diameter: 0.05, height: 0.4, tessellation: 6 }, scene));
+    stems.position.set(-1.15, 5.55, -13.95);
+    stems.material = CCW.mat(scene, B, 'studio-int-cabinet-stems-mat', '#2e7d4f');
+    [[-1.28, '#ff7a59'], [-1.15, '#ff2e88'], [-1.02, '#ffb0a0']].forEach(function (cfg, i) {
+      var tulip = add(B.MeshBuilder.CreateSphere('studio-int-cabinet-tulip-' + i,
+        { diameter: 0.17, segments: 10 }, scene));
+      tulip.position.set(cfg[0], 5.82, -13.95);
+      tulip.material = CCW.mat(scene, B, 'studio-int-cabinet-tulip-mat-' + i, cfg[1]);
+    });
+    [0, 1].forEach(function (i) {
+      var book = add(B.MeshBuilder.CreateBox('studio-int-cabinet-book-' + i,
+        { width: 0.62 - i * 0.08, height: 0.07, depth: 0.44 }, scene));
+      book.position.set(1.05, 5.03 + i * 0.075, -13.95);
+      book.rotation.y = i * 0.16 - 0.06;
+      book.material = CCW.mat(scene, B, 'studio-int-cabinet-book-mat-' + i,
+        i ? P.coral : P.velvetMagenta);
+    });
+
+    // ---- The arched apothecary shelves (01-BR) ----------------------
+    // One teal unit, one burnt-orange unit, flanking the cabinet:
+    // jars on the boards with members' creations standing
+    // BETWEEN them (design 3.7 — labeled, lit, honored).
+    var artTex = [0, 1, 2, 3, 4].map(function (v) {
+      return CCW.studioArtTexture(scene, B, 'studio-int-art-tex-' + v, v);
+    });
+    function shelfUnit(cx, carcassHex, tag, jarOff, artOff) {
+      var back = add(B.MeshBuilder.CreateBox('studio-int-shelf-' + tag + '-back',
+        { width: 2.6, height: 4.2, depth: 0.12 }, scene));
+      back.position.set(cx, 2.1, -14.3);
+      back.material = CCW.mat(scene, B, 'studio-int-shelf-' + tag + '-back-mat', P.plumHouse);
+      [-1.22, 1.22].forEach(function (off, i) {
+        var up = add(B.MeshBuilder.CreateBox('studio-int-shelf-' + tag + '-upright-' + i,
+          { width: 0.16, height: 4.2, depth: 0.55 }, scene));
+        up.position.set(cx + off, 2.1, -14.02);
+        up.material = CCW.mat(scene, B, 'studio-int-shelf-' + tag + '-upright-mat-' + i, carcassHex);
+      });
+      var archPath = [];
+      for (var aa = 0; aa <= 12; aa++) {
+        var aang = (aa / 12) * Math.PI;
+        archPath.push(new B.Vector3(Math.cos(aang) * 1.22, Math.sin(aang) * 1.22, 0));
+      }
+      var arch = add(B.MeshBuilder.CreateTube('studio-int-shelf-' + tag + '-arch',
+        { path: archPath, radius: 0.055, radialSegments: 8, cap: B.Mesh.CAP_ALL }, scene));
+      arch.position.set(cx, 4.2, -14.02);
+      arch.material = CCW.mat(scene, B, 'studio-int-shelf-' + tag + '-arch-mat', carcassHex);
+      var srnd = CCW.prand(tag === 'teal' ? 5150 : 6170);
+      [1.1, 2.2, 3.3].forEach(function (boardY, row) {
+        var board = add(B.MeshBuilder.CreateBox('studio-int-shelf-' + tag + '-board-' + row,
+          { width: 2.45, height: 0.08, depth: 0.5 }, scene));
+        board.position.set(cx, boardY, -14.02);
+        board.material = CCW.texMat(scene, B, 'studio-int-shelf-' + tag + '-board-mat-' + row,
+          woodTex, {});
+        // Per board: jar, creation, jar — the Studio's pattern.
+        [-0.78, 0.78].forEach(function (off, ji) {
+          var jar = add(B.MeshBuilder.CreateCylinder(
+            'studio-int-shelf-' + tag + '-jar-' + row + '-' + ji,
+            { diameter: 0.3, height: 0.5, tessellation: 12 }, scene));
+          jar.position.set(cx + off + (srnd() - 0.5) * 0.02, boardY + 0.04 + 0.25, -14.02);
+          jar.material = CCW.texMat(scene, B,
+            'studio-int-shelf-' + tag + '-jar-mat-' + row + '-' + ji,
+            jarTex[(jarOff + row + ji) % 5], {});
+        });
+        var fr = add(B.MeshBuilder.CreateBox('studio-int-shelf-' + tag + '-art-' + row + '-frame',
+          { width: 0.52, height: 0.66, depth: 0.05 }, scene));
+        fr.position.set(cx, boardY + 0.04 + 0.33, -14.02);
+        fr.material = CCW.mat(scene, B, 'studio-int-shelf-' + tag + '-art-frame-mat-' + row,
+          P.tealDeep);
+        var art = add(B.MeshBuilder.CreatePlane('studio-int-shelf-' + tag + '-art-' + row,
+          { width: 0.44, height: 0.58 }, scene));
+        art.rotation.y = Math.PI; // back wall: readable face toward the room
+        art.position.set(cx, boardY + 0.04 + 0.33, -13.99);
+        art.material = CCW.texMat(scene, B, 'studio-int-shelf-' + tag + '-art-mat-' + row,
+          artTex[(artOff + row) % 5], {});
+      });
+    }
+    shelfUnit(-4.6, P.tealDeep, 'teal', 1, 0);
+    shelfUnit(4.6, P.velvetOrange, 'orange', 3, 2);
+
+    // ---- The gallery wall (left wall, design 3.7) --------------------
+    [-3.2, -5.5, -7.8, -10.1, -12.4].forEach(function (gz, i) {
+      var fr = add(B.MeshBuilder.CreateBox('studio-int-gallery-' + i + '-frame',
+        { width: 0.07, height: 1.32, depth: 1.08 }, scene));
+      fr.position.set(-6.44, 3.05 + (i % 2) * 0.22, gz);
+      fr.material = CCW.mat(scene, B, 'studio-int-gallery-frame-mat-' + i, P.tealDeep);
+      var art = add(B.MeshBuilder.CreatePlane('studio-int-gallery-' + i,
+        { width: 0.94, height: 1.18 }, scene));
+      art.rotation.y = -Math.PI / 2; // left wall: readable face into the room
+      art.position.set(-6.39, 3.05 + (i % 2) * 0.22, gz);
+      art.material = CCW.texMat(scene, B, 'studio-int-gallery-mat-' + i, artTex[i % 5], {});
+    });
+
+    // ---- By the door: the Studio plaque (design 3.7's rules) --------
+    var plaqueBack = add(B.MeshBuilder.CreateBox('studio-int-plaque-back',
+      { width: 2.9, height: 1.9, depth: 0.1 }, scene));
+    plaqueBack.position.set(-4.35, 3.3, -0.80);
+    plaqueBack.material = CCW.mat(scene, B, 'studio-int-plaque-back-mat', P.plumHouse);
+    var plaque = add(B.MeshBuilder.CreatePlane('studio-int-plaque',
+      { width: 2.7, height: 1.7 }, scene));
+    // No half-turn: front wall, readable face into the room.
+    plaque.position.set(-4.35, 3.3, -0.87);
+    plaque.material = CCW.texMat(scene, B, 'studio-int-plaque-mat',
+      CCW.studioPlaqueTexture(scene, B, 'studio-int-plaque-tex'), {});
+
+    // ---- The work table: making, mid-room -----------------------------
+    var tableTop = add(B.MeshBuilder.CreateBox('studio-int-table-top',
+      { width: 3.6, height: 0.12, depth: 1.5 }, scene));
+    tableTop.position.set(0, 0.95, -7.5);
+    tableTop.material = CCW.texMat(scene, B, 'studio-int-table-top-mat', woodTex, {});
+    [[-1.65, -8.1], [1.65, -8.1], [-1.65, -6.9], [1.65, -6.9]].forEach(function (cfg, i) {
+      var leg = add(B.MeshBuilder.CreateBox('studio-int-table-leg-' + i,
+        { width: 0.12, height: 0.9, depth: 0.12 }, scene));
+      leg.position.set(cfg[0], 0.45, cfg[1]);
+      leg.material = CCW.mat(scene, B, 'studio-int-table-leg-mat-' + i, P.plumHouse);
+    });
+    // The making clutter (photo 05's counter, put to work): a
+    // fruit bowl, a honey jar, papers and pencils, a posy vase.
+    var bowl = add(B.MeshBuilder.CreateCylinder('studio-int-table-bowl',
+      { diameterTop: 0.55, diameterBottom: 0.3, height: 0.18, tessellation: 14 }, scene));
+    bowl.position.set(-1.15, 1.1, -7.5);
+    bowl.material = CCW.mat(scene, B, 'studio-int-table-bowl-mat', P.tealDeep);
+    [[-1.24, '#ff7a59'], [-1.05, '#e9a13b'], [-1.15, '#c65b7d']].forEach(function (cfg, i) {
+      var fruit = add(B.MeshBuilder.CreateSphere('studio-int-table-fruit-' + i,
+        { diameter: 0.17, segments: 10 }, scene));
+      fruit.position.set(cfg[0], 1.24, -7.5 + (i - 1) * 0.07);
+      fruit.material = CCW.mat(scene, B, 'studio-int-table-fruit-mat-' + i, cfg[1]);
+    });
+    var honey = add(B.MeshBuilder.CreateCylinder('studio-int-table-honey',
+      { diameter: 0.2, height: 0.3, tessellation: 10 }, scene));
+    honey.position.set(0.15, 1.16, -7.25);
+    honey.material = CCW.texMat(scene, B, 'studio-int-table-honey-mat', jarTex[1], {});
+    var paperTex = CCW.paperTexture(scene, B, 'studio-int-paper-tex');
+    [0, 1].forEach(function (i) {
+      var paper = add(B.MeshBuilder.CreateBox('studio-int-table-paper-' + i,
+        { width: 0.42, height: 0.012, depth: 0.3 }, scene));
+      paper.position.set(0.85 + i * 0.1, 1.02 + i * 0.013, -7.65 + i * 0.12);
+      paper.rotation.y = 0.3 - i * 0.45;
+      paper.material = CCW.texMat(scene, B, 'studio-int-table-paper-mat-' + i, paperTex, {});
+    });
+    [0, 1].forEach(function (i) {
+      var pencil = add(B.MeshBuilder.CreateCylinder('studio-int-table-pencil-' + i,
+        { diameter: 0.025, height: 0.3, tessellation: 6 }, scene));
+      pencil.position.set(0.62 + i * 0.07, 1.03, -7.35 + i * 0.05);
+      pencil.rotation.z = Math.PI / 2;
+      pencil.rotation.y = 0.4 * i;
+      pencil.material = CCW.mat(scene, B, 'studio-int-table-pencil-mat-' + i,
+        i ? P.coral : P.teal);
+    });
+    var posy = add(B.MeshBuilder.CreateCylinder('studio-int-table-posy',
+      { diameterTop: 0.13, diameterBottom: 0.17, height: 0.26, tessellation: 10 }, scene));
+    posy.position.set(1.35, 1.14, -7.7);
+    posy.material = CCW.mat(scene, B, 'studio-int-table-posy-mat', P.velvetLavender);
+    [0, 1].forEach(function (i) {
+      var bloom = add(B.MeshBuilder.CreateSphere('studio-int-table-bloom-' + i,
+        { diameter: 0.14, segments: 8 }, scene));
+      bloom.position.set(1.3 + i * 0.11, 1.36, -7.7 + (i ? 0.04 : -0.03));
+      bloom.material = CCW.glowMat(scene, B, 'studio-int-table-bloom-mat-' + i,
+        i ? P.pinkHot : P.goldSoft);
+    });
+    // Stools around the table, velvet in two voices.
+    var stoolTex = [
+      CCW.velvetTexture(scene, B, 'studio-int-stool-velvet-0', P.velvetMagenta),
+      CCW.velvetTexture(scene, B, 'studio-int-stool-velvet-1', P.velvetTeal)
+    ];
+    [[-1.2, -6.2], [1.2, -6.2], [-1.2, -8.8], [1.2, -8.8]].forEach(function (cfg, i) {
+      var seat = add(B.MeshBuilder.CreateCylinder('studio-int-stool-' + i + '-seat',
+        { diameter: 0.66, height: 0.12, tessellation: 16 }, scene));
+      seat.position.set(cfg[0], 0.52, cfg[1]);
+      seat.material = CCW.texMat(scene, B, 'studio-int-stool-' + i + '-seat-mat',
+        stoolTex[i % 2], {});
+      var sleg = add(B.MeshBuilder.CreateCylinder('studio-int-stool-' + i + '-leg',
+        { diameter: 0.16, height: 0.48, tessellation: 10 }, scene));
+      sleg.position.set(cfg[0], 0.24, cfg[1]);
+      sleg.material = CCW.mat(scene, B, 'studio-int-stool-' + i + '-leg-mat', P.plumHouse);
+    });
+
+    // ---- The teal velvet sofa (right wall, 01-BR) ---------------------
+    var sofaTex = CCW.velvetTexture(scene, B, 'studio-int-sofa-tex', P.velvetTeal);
+    var sofaBase = add(B.MeshBuilder.CreateBox('studio-int-sofa-base',
+      { width: 0.95, height: 0.42, depth: 2.6 }, scene));
+    sofaBase.position.set(6.0, 0.33, -9.6);
+    sofaBase.material = CCW.texMat(scene, B, 'studio-int-sofa-base-mat', sofaTex, {});
+    var sofaPlinth = add(B.MeshBuilder.CreateBox('studio-int-sofa-plinth',
+      { width: 0.9, height: 0.12, depth: 2.5 }, scene));
+    sofaPlinth.position.set(6.0, 0.06, -9.6);
+    sofaPlinth.material = CCW.mat(scene, B, 'studio-int-sofa-plinth-mat', P.plumHouse);
+    var sofaBack = add(B.MeshBuilder.CreateBox('studio-int-sofa-back',
+      { width: 0.24, height: 1.05, depth: 2.6 }, scene));
+    sofaBack.position.set(6.4, 0.95, -9.6);
+    sofaBack.material = CCW.texMat(scene, B, 'studio-int-sofa-back-mat', sofaTex, {});
+    [-10.79, -8.41].forEach(function (z, i) {
+      var arm = add(B.MeshBuilder.CreateBox('studio-int-sofa-arm-' + i,
+        { width: 0.9, height: 0.3, depth: 0.22 }, scene));
+      arm.position.set(6.0, 0.72, z);
+      arm.material = CCW.texMat(scene, B, 'studio-int-sofa-arm-mat-' + i, sofaTex, {});
+    });
+    [-10.2, -9.0].forEach(function (z, i) {
+      var cush = add(B.MeshBuilder.CreateBox('studio-int-sofa-cushion-' + i,
+        { width: 0.78, height: 0.14, depth: 1.1 }, scene));
+      cush.position.set(5.95, 0.61, z);
+      cush.rotation.x = 0.03;
+      cush.material = CCW.texMat(scene, B, 'studio-int-sofa-cushion-mat-' + i, sofaTex, {});
+    });
+    [[-10.45, P.velvetOrange], [-8.75, P.velvetMagenta]].forEach(function (cfg, i) {
+      var throwC = add(B.MeshBuilder.CreateBox('studio-int-sofa-throw-' + i,
+        { width: 0.4, height: 0.42, depth: 0.42 }, scene));
+      throwC.position.set(6.18, 0.92, cfg[0]);
+      throwC.rotation.x = -0.18;
+      throwC.rotation.z = 0.1;
+      throwC.material = CCW.mat(scene, B, 'studio-int-sofa-throw-mat-' + i, cfg[1]);
+    });
+
+    // ---- The Kitchen Disco social corner (right wall, photo 06) -----
+    // The pop panel is an emblem surface — the one black field
+    // in the room, carrying the drawn neon + pop prints.
+    var popPanel = add(B.MeshBuilder.CreateBox('studio-int-disco-panel',
+      { width: 0.1, height: 3.6, depth: 3.4 }, scene));
+    popPanel.position.set(6.48, 2.6, -3.5);
+    popPanel.material = CCW.mat(scene, B, 'studio-int-disco-panel-mat', P.plumDeep);
+    var neon = add(B.MeshBuilder.CreatePlane('studio-int-disco-neon',
+      { width: 1.6, height: 1.28 }, scene));
+    neon.rotation.y = Math.PI / 2; // right wall: readable face into the room
+    neon.position.set(6.41, 3.15, -2.62);
+    neon.material = CCW.texMat(scene, B, 'studio-int-disco-neon-mat',
+      CCW.studioNeonTexture(scene, B, 'studio-int-neon-tex'), { emissive: true });
+    [0, 1].forEach(function (i) {
+      var fr = add(B.MeshBuilder.CreateBox('studio-int-disco-print-' + i + '-frame',
+        { width: 0.07, height: 1.02, depth: 1.02 }, scene));
+      fr.position.set(6.45, 3.6 - i * 1.5, -4.42);
+      fr.material = CCW.mat(scene, B, 'studio-int-disco-print-frame-mat-' + i, P.plumHouse);
+      var art = add(B.MeshBuilder.CreatePlane('studio-int-disco-print-' + i,
+        { width: 0.9, height: 0.9 }, scene));
+      art.rotation.y = Math.PI / 2;
+      art.position.set(6.4, 3.6 - i * 1.5, -4.42);
+      art.material = CCW.texMat(scene, B, 'studio-int-disco-print-mat-' + i,
+        CCW.studioPopTexture(scene, B, 'studio-int-pop-tex-' + i, i), {});
+    });
+    // Hot-pink chairs facing the panel + a café table between.
+    [-2.5, -4.5].forEach(function (z, i) {
+      var seat = add(B.MeshBuilder.CreateBox('studio-int-disco-chair-' + i + '-seat',
+        { width: 0.55, height: 0.09, depth: 0.55 }, scene));
+      seat.position.set(5.35, 0.55, z);
+      seat.material = CCW.mat(scene, B, 'studio-int-disco-chair-seat-mat-' + i, P.pinkHot);
+      var backr = add(B.MeshBuilder.CreateBox('studio-int-disco-chair-' + i + '-back',
+        { width: 0.08, height: 0.72, depth: 0.55 }, scene));
+      backr.position.set(5.04, 0.95, z);
+      backr.material = CCW.mat(scene, B, 'studio-int-disco-chair-back-mat-' + i, P.pinkHot);
+      var ped = add(B.MeshBuilder.CreateBox('studio-int-disco-chair-' + i + '-pedestal',
+        { width: 0.4, height: 0.5, depth: 0.4 }, scene));
+      ped.position.set(5.35, 0.25, z);
+      ped.material = CCW.mat(scene, B, 'studio-int-disco-chair-pedestal-mat-' + i, P.plumHouse);
+    });
+    var discoCush = add(B.MeshBuilder.CreateBox('studio-int-disco-cushion',
+      { width: 0.44, height: 0.1, depth: 0.44 }, scene));
+    discoCush.position.set(5.35, 0.65, -2.5);
+    discoCush.rotation.y = 0.2;
+    discoCush.material = CCW.texMat(scene, B, 'studio-int-disco-cushion-mat',
+      CCW.checkerTexture(scene, B, 'studio-int-checker-tex'), {});
+    var cafeTop = add(B.MeshBuilder.CreateCylinder('studio-int-disco-table-top',
+      { diameter: 0.8, height: 0.05, tessellation: 16 }, scene));
+    cafeTop.position.set(5.65, 0.78, -3.5);
+    cafeTop.material = CCW.texMat(scene, B, 'studio-int-disco-table-top-mat', woodTex, {});
+    var cafeLeg = add(B.MeshBuilder.CreateCylinder('studio-int-disco-table-leg',
+      { diameter: 0.07, height: 0.76, tessellation: 8 }, scene));
+    cafeLeg.position.set(5.65, 0.38, -3.5);
+    cafeLeg.material = CCW.mat(scene, B, 'studio-int-disco-table-leg-mat', P.plumHouse);
+
+    // ---- A second café set by the gallery's back end ------------------
+    var cafe2Top = add(B.MeshBuilder.CreateCylinder('studio-int-cafe-top',
+      { diameter: 0.85, height: 0.05, tessellation: 16 }, scene));
+    cafe2Top.position.set(-4.3, 0.78, -11.8);
+    cafe2Top.material = CCW.texMat(scene, B, 'studio-int-cafe-top-mat', woodTex, {});
+    var cafe2Leg = add(B.MeshBuilder.CreateCylinder('studio-int-cafe-leg',
+      { diameter: 0.07, height: 0.76, tessellation: 8 }, scene));
+    cafe2Leg.position.set(-4.3, 0.38, -11.8);
+    cafe2Leg.material = CCW.mat(scene, B, 'studio-int-cafe-leg-mat', P.plumHouse);
+    [[-5.15, -11.8], [-3.45, -11.8]].forEach(function (cfg, i) {
+      var seat = add(B.MeshBuilder.CreateCylinder('studio-int-cafe-stool-' + i + '-seat',
+        { diameter: 0.6, height: 0.11, tessellation: 14 }, scene));
+      seat.position.set(cfg[0], 0.52, cfg[1]);
+      seat.material = CCW.texMat(scene, B, 'studio-int-cafe-stool-' + i + '-seat-mat',
+        stoolTex[(i + 1) % 2], {});
+      var sleg = add(B.MeshBuilder.CreateCylinder('studio-int-cafe-stool-' + i + '-leg',
+        { diameter: 0.15, height: 0.48, tessellation: 10 }, scene));
+      sleg.position.set(cfg[0], 0.24, cfg[1]);
+      sleg.material = CCW.mat(scene, B, 'studio-int-cafe-stool-' + i + '-leg-mat', P.plumHouse);
+    });
+
+    // ---- Plants: hangers over the table + corners by the cabinet -----
+    [[-2.9, -7.5], [2.9, -7.5]].forEach(function (cfg, i) {
+      var tag = 'studio-int-hang-' + i;
+      var cord = add(B.MeshBuilder.CreateCylinder(tag + '-cord',
+        { diameter: 0.03, height: 1.4, tessellation: 6 }, scene));
+      cord.position.set(cfg[0], 6.2, cfg[1]);
+      cord.material = CCW.mat(scene, B, tag + '-cord-mat', P.plumHouse);
+      var pot = add(B.MeshBuilder.CreateCylinder(tag + '-pot',
+        { diameterTop: 0.4, diameterBottom: 0.3, height: 0.26, tessellation: 10 }, scene));
+      pot.position.set(cfg[0], 5.38, cfg[1]);
+      pot.material = CCW.mat(scene, B, tag + '-pot-mat', i ? P.tealDeep : P.coral);
+      [0, Math.PI / 2].forEach(function (ry, li) {
+        var leaf = add(B.MeshBuilder.CreatePlane(tag + '-leaf-' + li,
+          { width: 0.85, height: 0.85 }, scene));
+        leaf.position.set(cfg[0], 5.72, cfg[1]);
+        leaf.rotation.y = ry + i * 0.7;
+        leaf.material = CCW.texMat(scene, B, tag + '-leaf-mat-' + li, leafTex, { alpha: true });
+      });
+    });
+    function cornerPlant(px, pz, tag) {
+      var pot = add(B.MeshBuilder.CreateCylinder('studio-int-plant-' + tag + '-pot',
+        { diameterTop: 0.5, diameterBottom: 0.38, height: 0.56, tessellation: 12 }, scene));
+      pot.position.set(px, 0.28, pz);
+      pot.material = CCW.mat(scene, B, 'studio-int-plant-' + tag + '-pot-mat', P.coral);
+      var crown = add(B.MeshBuilder.CreateSphere('studio-int-plant-' + tag + '-crown',
+        { diameter: 0.32, segments: 8 }, scene));
+      crown.position.set(px, 0.66, pz);
+      crown.material = CCW.mat(scene, B, 'studio-int-plant-' + tag + '-crown-mat', '#1e5c46');
+      for (var li = 0; li < 3; li++) {
+        var leaf = add(B.MeshBuilder.CreatePlane('studio-int-plant-' + tag + '-leaf-' + li,
+          { width: 1.25, height: 1.25 }, scene));
+        leaf.position.set(px, 1.2, pz);
+        leaf.rotation.y = li * Math.PI / 3;
+        leaf.material = CCW.texMat(scene, B, 'studio-int-plant-' + tag + '-leaf-mat-' + li,
+          leafTex, { alpha: true });
+      }
+    }
+    cornerPlant(-2.95, -13.6, 'l');
+    cornerPlant(2.95, -13.6, 'r');
+
+    // Dried herb bundles by the door (photo 05's hanging bundles).
+    [2.2, 3.15].forEach(function (x, i) {
+      var stem = add(B.MeshBuilder.CreateCylinder('studio-int-bundle-' + i + '-stem',
+        { diameter: 0.035, height: 0.5, tessellation: 6 }, scene));
+      stem.position.set(x, 3.55, -0.82);
+      stem.material = CCW.mat(scene, B, 'studio-int-bundle-stem-mat-' + i, '#8a7a4a');
+      var head = add(B.MeshBuilder.CreateCylinder('studio-int-bundle-' + i + '-head',
+        { diameterTop: 0.05, diameterBottom: 0.16, height: 0.42, tessellation: 8 }, scene));
+      head.position.set(x, 3.1, -0.82);
+      head.material = CCW.mat(scene, B, 'studio-int-bundle-head-mat-' + i, P.velvetLavender);
+    });
+
+    // ---- Pendants over the work table ----------------------------------
+    [-1.3, 0, 1.3].forEach(function (px, i) {
+      var cord = add(B.MeshBuilder.CreateCylinder('studio-int-pendant-' + i + '-cord',
+        { diameter: 0.025, height: 1.75, tessellation: 6 }, scene));
+      cord.position.set(px, 6.02, -7.5);
+      cord.material = CCW.mat(scene, B, 'studio-int-pendant-cord-mat-' + i, P.plumHouse);
+      var globe = add(B.MeshBuilder.CreateSphere('studio-int-pendant-' + i + '-globe',
+        { diameter: 0.4, segments: 12 }, scene));
+      globe.position.set(px, 4.92, -7.5);
+      globe.material = CCW.glowMat(scene, B, 'studio-int-pendant-globe-mat-' + i,
+        i === 1 ? '#ff7ab0' : P.goldSoft);
+      var shade = add(B.MeshBuilder.CreateCylinder('studio-int-pendant-' + i + '-shade',
+        { diameterTop: 0.14, diameterBottom: 0.48, height: 0.26, tessellation: 14, openEnded: true }, scene));
+      shade.position.set(px, 5.1, -7.5);
+      shade.material = CCW.mat(scene, B, 'studio-int-pendant-shade-mat-' + i, P.tealDeep);
+      if (i !== 1) {
+        var pLight = new B.PointLight('studio-int-pendant-light-' + i,
+          roomWorld(px, 4.95, -7.5), scene);
+        pLight.intensity = 0.5;
+        pLight.diffuse = new B.Color3(1.0, 0.78, 0.55);
+        pLight.range = 6.5;
+        intLights.push(pLight);
+      }
+    });
+
+    // ---- The return pad (house pattern) ----------------------------------
+    var padTex = CCW.padTexture(scene, B, 'studio-int-pad-tex', P.velvetOrange);
+    var returnPad = add(B.MeshBuilder.CreateDisc('studio-int-return-pad',
+      { radius: 1.5, tessellation: 28 }, scene));
+    returnPad.rotation.x = Math.PI / 2;
+    returnPad.position.set(4.7, 0.04, -2.3);
+    returnPad.material = CCW.texMat(scene, B, 'studio-int-return-pad-mat', padTex,
+      { alpha: true, emissive: true });
+    var returnRing = add(B.MeshBuilder.CreateTorus('studio-int-return-ring',
+      { diameter: 3.0, thickness: 0.07, tessellation: 32 }, scene));
+    returnRing.rotation.x = Math.PI / 2;
+    returnRing.position.set(4.7, 0.05, -2.3);
+    returnRing.material = CCW.glowMat(scene, B, 'studio-int-return-ring-mat', P.gold);
+    var returnSign = add(CCW.makeLabel(scene, B, 'studio-int-return-sign',
+      ['↩ The Plaza'], 1.8, 0.45, { fg: P.goldSoft }));
+    returnSign.position.set(4.7, 1.85, -2.38);
+
+    // ---- The room's lights ---------------------------------------------
+    var roomHemi = new B.HemisphericLight('studio-int-hemi',
+      new B.Vector3(0, 1, 0), scene);
+    roomHemi.intensity = 0.7;
+    roomHemi.diffuse = new B.Color3(1.0, 0.86, 0.66);
+    roomHemi.groundColor = new B.Color3(0.36, 0.24, 0.28);
+    intLights.push(roomHemi);
+    var roomLight = new B.PointLight('studio-int-light',
+      roomWorld(0, 5.4, -7.5), scene);
+    roomLight.intensity = 0.6;
+    roomLight.diffuse = new B.Color3(1.0, 0.78, 0.54);
+    roomLight.range = 18;
+    intLights.push(roomLight);
+
+    // Scope the rig to the room + lift the light cap (see header).
+    var intMeshes = scene.meshes.filter(function (m) {
+      return m.name.indexOf('studio-int-') === 0;
+    });
+    intLights.forEach(function (l) { l.includedOnlyMeshes = intMeshes; });
+    var sceneLightCount = scene.lights.length;
+    intMeshes.forEach(function (m) {
+      if (m.material && m.material.maxSimultaneousLights !== undefined &&
+          m.material.maxSimultaneousLights < sceneLightCount) {
+        m.material.maxSimultaneousLights = sceneLightCount;
+      }
+    });
+
+    return {
+      returnPad: returnPad,
+      returnRing: returnRing,
+      entrance: {
+        position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
+        target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
+      }
+    };
+  }
+
   function buildZone(scene, B, zone) {
     var P = CCW.PALETTE;
     var theta = zone.angleDeg * Math.PI / 180;
@@ -3705,6 +4352,18 @@
       var gInterior = buildGardenInterior(scene, B, zone, add);
       result.threshold = gInterior.entrance;
       result.interiorReturn = { mesh: gInterior.returnPad, ringMesh: gInterior.returnRing };
+    }
+    if (zone.id === 'studio') {
+      // The Creator Studio (M2b interior 5 of 5): same arrival
+      // pattern — the Plaza pad lands INSIDE, just past the door,
+      // facing the lavender cabinet; the room's own return pad
+      // rides home. The pre-interior threshold landing on this
+      // axis (radius 20.4, clear of the entrance chapel) is
+      // replaced by the interior landing at 27, behind the
+      // chapel. See buildStudioInterior's header.
+      var sInterior = buildStudioInterior(scene, B, zone, add);
+      result.threshold = sInterior.entrance;
+      result.interiorReturn = { mesh: sInterior.returnPad, ringMesh: sInterior.returnRing };
     }
     return result;
   }
@@ -3968,6 +4627,11 @@
         mesh: pad, ringMesh: padRingM, hitMesh: padHit,
         destPos: built.threshold.position, destTarget: built.threshold.target,
         label: zone.name,
+        // The Garden's line was approved by Jay on 2026-11-04 and
+        // rode in with the Creator Studio build (token -12),
+        // replacing the generic fallback the Garden shipped with.
+        // The Studio itself still uses the fallback — its
+        // house-pattern candidate awaits Jay's word.
         landed: zone.id === 'arcade'
           ? 'You are in the Game Parlor. Classic games, played together.'
           : zone.id === 'theater'
@@ -3976,7 +4640,9 @@
               ? 'You are in the Library. Low voices, good books.'
               : zone.id === 'penpal'
                 ? 'You are in the Pen-Pal Post. Slow mail, warm words.'
-                : 'You are at the ' + zone.name + '.'
+                : zone.id === 'garden'
+                  ? 'You are in the Therapeutics Garden. Breathe easy — the gate is always open.'
+                  : 'You are at the ' + zone.name + '.'
       });
       teleports.push({
         mesh: built.returnPad, ringMesh: null,
