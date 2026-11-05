@@ -4352,14 +4352,27 @@
     });
 
     // ---- By the door: the consent banner + the host's corner -------
+    // BANNER RELOCATION (2026-11-05, token -18): the banner used
+    // to hang high (y 3.3) in the wall's far-left corner, and two
+    // independent live checkers faced this door and never saw it
+    // — a consent banner nobody notices fails its purpose. It
+    // now hangs at EYE HEIGHT (y 1.85), modestly enlarged
+    // (backing 3.2 x 2.1, face 3.0 x 1.9). The span first
+    // suggested for it, centered x 0.6-1.2 beside the gate, is
+    // occupied by the door frame + door glow themselves
+    // (x -2.0..2.0) and the host's sign takes the wall right of
+    // the door (x 3.25..5.45), so this is the nearest clear
+    // eye-height span on the same wall: the banner's own column,
+    // dropped straight down. A visitor turning around from the
+    // landing faces it, with the door at its right hand.
     var bannerBack = add(B.MeshBuilder.CreateBox('garden-int-banner-back',
-      { width: 2.9, height: 1.9, depth: 0.1 }, scene));
-    bannerBack.position.set(-4.35, 3.3, -0.80);
+      { width: 3.2, height: 2.1, depth: 0.1 }, scene));
+    bannerBack.position.set(-4.35, 1.85, -0.80);
     bannerBack.material = CCW.mat(scene, B, 'garden-int-banner-back-mat', P.plumHouse);
     var banner = add(B.MeshBuilder.CreatePlane('garden-int-banner',
-      { width: 2.7, height: 1.7 }, scene));
+      { width: 3.0, height: 1.9 }, scene));
     // No half-turn: front wall, readable face into the room.
-    banner.position.set(-4.35, 3.3, -0.87);
+    banner.position.set(-4.35, 1.85, -0.87);
     banner.material = CCW.texMat(scene, B, 'garden-int-banner-mat',
       CCW.gardenBannerTexture(scene, B, 'garden-int-banner-tex'), {});
 
