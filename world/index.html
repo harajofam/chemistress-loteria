@@ -10,9 +10,9 @@
   ?v= token. Her phone once kept serving a cached build after a new
   deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
   DEPLOY: increment the token on ALL of these URLs in the same edit.
-  Current token: 2026-11-04-14 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6, the Theater view-glide fix + entrance-pad hit-area widening is -7, the Library poster gallery is -8, the Pen-Pal Post interior is -9, the Theater theme-picker preview is -10, the Therapeutics Garden interior is -11, the Creator Studio interior + Jay's approved Garden landed line is -12, the Wall Life pass — wallpaper feature walls, framed art, neon, pin boards and the shop cards — is -13, the Theater skin rework — each skin its own layout, aisle, and Sit & Watch seat — is -14).
+  Current token: 2026-11-04-15 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6, the Theater view-glide fix + entrance-pad hit-area widening is -7, the Library poster gallery is -8, the Pen-Pal Post interior is -9, the Theater theme-picker preview is -10, the Therapeutics Garden interior is -11, the Creator Studio interior + Jay's approved Garden landed line is -12, the Wall Life pass — wallpaper feature walls, framed art, neon, pin boards and the shop cards — is -13, the Theater skin rework — each skin its own layout, aisle, and Sit & Watch seat — is -14, the combined server pass — the Phase 3 members' door client (door.js), films on the great glass via the film rail, and shared Pen-Pal mail — is -15).
 -->
-<link rel="stylesheet" href="css/world.css?v=2026-11-04-14">
+<link rel="stylesheet" href="css/world.css?v=2026-11-04-15">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
@@ -105,16 +105,16 @@ window.setTimeout(function () {
   tapping the Theater's program board opens the catalog — the
   full Classic Cinema index (83 public-domain titles, grouped by
   decade; the list is built by cameras.js wireTheater from the
-  index data in plaza.js). Choosing a title plays it in the big
-  viewer overlay below — a plain video element carrying the
-  Archive.org stream (the Archive's file servers send no CORS
-  header, so an in-world video texture cannot legally read
-  their frames; the viewer is the working cinema surface, and
-  the film rail that lights the great glass itself is written
-  up in THEATER-BUILD-NOTES.md). The watch bar then offers Sit
-  & watch, Stand up, Full screen (back to the viewer), Audience
-  view, Live art takes the stage, and Stop film. Nothing here
-  is a link and nothing navigates.
+  index data in plaza.js). Choosing a title plays it ON THE GREAT
+  GLASS via a Babylon VideoTexture fed by the house server's film
+  rail — a same-origin allowlist proxy for exactly these 83 titles,
+  which exists because the Archive's file servers send no CORS
+  header an in-world texture could legally read. The big viewer
+  overlay below is the full-screen path and the fallback (one
+  video element, native controls). The watch bar then offers Sit
+  & watch, Stand up, Full screen (the viewer, same film, same
+  place), Audience view, Live art takes the stage, and Stop film.
+  Nothing here is a link and nothing navigates.
 -->
 <div id="theater-card" class="game-card theater-card" hidden role="dialog" aria-labelledby="theater-card-title">
   <div class="game-card-box theater-card-box">
@@ -255,11 +255,20 @@ window.setTimeout(function () {
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js?v=2026-11-04-14"></script>
-<script src="js/palette.js?v=2026-11-04-14"></script>
-<script src="js/plaza.js?v=2026-11-04-14"></script>
-<script src="js/cameras.js?v=2026-11-04-14"></script>
-<script src="js/main.js?v=2026-11-04-14"></script>
+<script src="vendor/babylon.js?v=2026-11-04-15"></script>
+<script src="js/palette.js?v=2026-11-04-15"></script>
+<script src="js/plaza.js?v=2026-11-04-15"></script>
+<script src="js/cameras.js?v=2026-11-04-15"></script>
+<script src="js/main.js?v=2026-11-04-15"></script>
+<!--
+  The members' door (Phase 3, Layer B): ../../door.js is the shared
+  door script from the client root (the same file the game pages
+  load). It adopts the Hub's session handoff and carries the door
+  card; it loads AFTER main.js on purpose — boot runs on
+  DOMContentLoaded, when door.js has executed, and a door.js hiccup
+  can never trip the boot guard above into failing the whole world.
+-->
+<script src="../door.js?v=2026-11-04-15"></script>
 <script>
 /* If the library itself failed to load or parse (the old-Safari
    failure shape), say so in plain language instead of sitting blank. */
