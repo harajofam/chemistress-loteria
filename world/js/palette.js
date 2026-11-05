@@ -2884,6 +2884,210 @@
     });
   };
   // ==================================================================
+  // THEATER SKIN REWORK (2026-11-04) — the layout painters. The
+  // theme picker shipped swapping surfaces on ONE shared layout;
+  // Jay's verdict was that the skins read too much alike, so each
+  // skin now owns a LAYOUT (see plaza.js buildTheaterInterior):
+  // Dream Pop gets a river aisle, Emblem Poster gets hanging
+  // medallion emblems over its tarot steps, Physical Church gets
+  // arched side windows. These three painters dress those pieces
+  // in the same hands as the rest of the room — procedural, grained,
+  // <=1024px a side, zero image bytes.
+
+  // DREAM POP: the river aisle (256x1024) — true coral water with
+  // teal flow lines running its length, cream foam dashes and a
+  // scatter of gold sparkles. Painted to wrap a flattened tube:
+  // the pattern runs DOWN the canvas (v), the flow lines wander.
+  CCW.dreamRiverTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 256, 1024, function (ctx, w, h) {
+      var g = ctx.createLinearGradient(0, 0, w, 0);
+      g.addColorStop(0, '#e85a3c');
+      g.addColorStop(0.5, P.coral);
+      g.addColorStop(1, '#e85a3c');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      // Woven streaks (the runner's weave, loosened into water).
+      ctx.globalAlpha = 0.10;
+      ctx.strokeStyle = '#ffd9c2'; ctx.lineWidth = 1.4;
+      for (var wy = 0; wy < h; wy += 7) {
+        ctx.beginPath(); ctx.moveTo(0, wy); ctx.lineTo(w, wy); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      // Flow lines: three wandering teal streams + two cream ones.
+      function flow(xBase, amp, color, lw, alpha, phase) {
+        ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        for (var y = -10; y <= h + 10; y += 16) {
+          var x = xBase + Math.sin((y / h) * Math.PI * 3 + phase) * amp;
+          if (y === -10) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      flow(52, 16, P.teal, 7, 0.55, 0.4);
+      flow(128, 22, '#0b7a70', 9, 0.5, 2.2);
+      flow(204, 16, P.teal, 7, 0.55, 4.0);
+      flow(88, 12, '#fdf3e3', 3, 0.5, 1.3);
+      flow(168, 12, '#fdf3e3', 3, 0.5, 3.4);
+      // Foam dashes along the streams.
+      var rnd = prand(7331);
+      ctx.fillStyle = 'rgba(253,243,227,0.75)';
+      for (var f = 0; f < 90; f++) {
+        var fx = 20 + rnd() * (w - 40), fy = rnd() * h;
+        ctx.fillRect(fx, fy, 5 + rnd() * 7, 2.2);
+      }
+      // Gold sparkles, sparse — fine-line accents only.
+      for (var s = 0; s < 26; s++) {
+        star(ctx, 14 + rnd() * (w - 28), rnd() * h, 3.5 + rnd() * 3.5, '#ffd873');
+      }
+      grainOver(ctx, w, h, 733, 1500, 'rgba(255,220,200,0.05)', 'rgba(90,20,10,0.16)');
+    });
+  };
+
+  // EMBLEM POSTER: one hanging medallion (512x512) — the tarot
+  // border (cream double ring, fine gold hairline) around one of
+  // the saga's emblem glyphs on the emblem black. kind: 'moon'
+  // (crescent+star), 'book' (the open book), 'atom', 'seven'.
+  CCW.emblemMedallionTexture = function (scene, B, name, kind) {
+    var P = CCW.PALETTE;
+    var CREAM = '#fdf3e3', GOLD = '#ffd873', BLACK = '#0d0510';
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = BLACK;
+      ctx.fillRect(0, 0, w, h);
+      var glow = ctx.createRadialGradient(256, 256, 40, 256, 256, 250);
+      glow.addColorStop(0, 'rgba(61,18,71,0.6)');
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
+      ribbonSwirl(ctx, [[36, 420], [140, 330], [240, 440], [380, 360]], P.teal, 4, 0.4);
+      ribbonSwirl(ctx, [[476, 92], [380, 170], [280, 70], [150, 140]], '#8f7fd4', 4, 0.38);
+      // The tarot border: cream ring + gold hairline.
+      ctx.strokeStyle = CREAM; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(256, 256, 232, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(256, 256, 216, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(253,243,227,0.5)'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(256, 256, 200, 0, Math.PI * 2); ctx.stroke();
+      if (kind === 'moon') {
+        emblemCrescent(ctx, 244, 252, 108, GOLD, BLACK);
+        star(ctx, 336, 158, 26, CREAM);
+        star(ctx, 150, 330, 13, P.teal);
+        ribbonSwirl(ctx, [[150, 396], [220, 356], [300, 404], [366, 368]], P.teal, 5, 0.65);
+      } else if (kind === 'book') {
+        emblemCrescent(ctx, 256, 138, 36, GOLD, BLACK);
+        star(ctx, 302, 106, 12, CREAM);
+        emblemBook(ctx, 256, 292, 96, CREAM, BLACK);
+        ribbonSwirl(ctx, [[140, 402], [220, 366], [300, 410], [372, 380]], '#e8871e', 4, 0.5);
+      } else if (kind === 'atom') {
+        emblemAtom(ctx, 256, 246, 118, P.teal);
+        ctx.fillStyle = '#e8871e';
+        ctx.beginPath(); ctx.arc(256, 246, 15, 0, Math.PI * 2); ctx.fill();
+        star(ctx, 148, 130, 13, GOLD);
+        star(ctx, 372, 372, 13, P.pinkHot);
+        ribbonSwirl(ctx, [[140, 416], [226, 380], [306, 424], [376, 392]], '#8f7fd4', 4, 0.5);
+      } else { // 'seven'
+        ctx.fillStyle = GOLD;
+        ctx.font = 'bold 300px Georgia, serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('7', 256, 272);
+        emblemCrescent(ctx, 152, 132, 30, CREAM, BLACK);
+        emblemFruit(ctx, 366, 388, 30, '#e8871e', '#2d6a4f');
+        star(ctx, 366, 128, 14, P.teal);
+      }
+      grainOver(ctx, w, h, 619, 1100, 'rgba(253,243,227,0.05)', 'rgba(0,0,0,0.3)');
+    });
+  };
+
+  // PHYSICAL CHURCH: one arched side window (512x768) — a radiant
+  // sun-heart over floral rosettes, drawn inside an arch silhouette
+  // with transparent corners (the stainedGlassTexture convention),
+  // but wooded like the photos: a deep-teal frame band, dark
+  // leading, one fine gold hairline. NOT the lancet texture — the
+  // chapel's side windows are their own drawing.
+  CCW.chapelWindowTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 768, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      // Arch silhouette: rounded top, straight sides.
+      function archPath(inset) {
+        ctx.beginPath();
+        ctx.moveTo(inset, h - 6);
+        ctx.lineTo(inset, 210);
+        ctx.arc(w / 2, 210, w / 2 - inset, Math.PI, 0);
+        ctx.lineTo(w - inset, h - 6);
+        ctx.closePath();
+      }
+      archPath(6);
+      ctx.fillStyle = '#0b5a54';
+      ctx.fill();
+      archPath(34);
+      ctx.fillStyle = '#180a24';
+      ctx.fill();
+      ctx.save();
+      archPath(34);
+      ctx.clip();
+      var rnd = prand(818);
+      // Glass panes: warm jewel washes (the chapel runs warmer
+      // than the lancets — candlelight lives here).
+      var washes = [P.pinkHot, P.coral, '#e8871e', P.teal, P.velvetLavender, '#a4137c'];
+      for (var i = 0; i < 30; i++) {
+        ctx.fillStyle = washes[i % washes.length];
+        ctx.globalAlpha = 0.34 + rnd() * 0.3;
+        ctx.beginPath();
+        ctx.arc(rnd() * w, rnd() * h, 36 + rnd() * 96, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // The radiant sun-heart at the arch's crown.
+      for (var r = 0; r < 12; r++) {
+        var a = (r / 12) * Math.PI * 2;
+        ctx.strokeStyle = P.gold; ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(w / 2 + Math.cos(a) * 62, 218 + Math.sin(a) * 62);
+        ctx.lineTo(w / 2 + Math.cos(a) * 88, 218 + Math.sin(a) * 88);
+        ctx.stroke();
+      }
+      ctx.fillStyle = P.gold;
+      ctx.beginPath(); ctx.arc(w / 2, 218, 56, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = P.coral;
+      ctx.beginPath(); ctx.arc(w / 2, 218, 36, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fdf3e3';
+      ctx.beginPath(); ctx.arc(w / 2, 218, 15, 0, Math.PI * 2); ctx.fill();
+      // Floral rosettes down the body.
+      function rosette(cx, cy, R) {
+        for (var p = 0; p < 8; p++) {
+          var ang = (p / 8) * Math.PI * 2;
+          ctx.fillStyle = p % 2 ? P.pinkHot : P.teal;
+          ctx.beginPath();
+          ctx.ellipse(cx + Math.cos(ang) * R * 0.55, cy + Math.sin(ang) * R * 0.55,
+            R * 0.34, R * 0.18, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = P.gold;
+        ctx.beginPath(); ctx.arc(cx, cy, R * 0.22, 0, Math.PI * 2); ctx.fill();
+      }
+      rosette(w / 2, 452, 104);
+      rosette(118, 648, 56);
+      rosette(w - 118, 648, 56);
+      for (var s = 0; s < 30; s++) star(ctx, rnd() * w, rnd() * h, 3 + rnd() * 5, P.goldSoft);
+      // Leading: dark mullions + the gold hairline.
+      ctx.strokeStyle = '#12060f'; ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.moveTo(w / 2, 60); ctx.lineTo(w / 2, h - 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(34, 356); ctx.lineTo(w - 34, 356); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(34, 566); ctx.lineTo(w - 34, 566); ctx.stroke();
+      // Grain stays INSIDE the clip — the corners must stay
+      // transparent or the arch silhouette leaks speckles.
+      grainOver(ctx, w, h, 823, 1200, 'rgba(255,220,190,0.05)', 'rgba(0,0,0,0.25)');
+      ctx.restore();
+      // The gold hairline just inside the wood.
+      archPath(40);
+      ctx.strokeStyle = 'rgba(255,216,115,0.85)'; ctx.lineWidth = 2.4;
+      ctx.stroke();
+    });
+  };
+
+  // ==================================================================
   // THE THERAPEUTICS GARDEN (M2b interior 4 of 5, 2026-11-04) — the
   // greenhouse painters. Everything procedural in the house style
   // (deterministic prand seeds, Georgia serif, <=1024px a side),

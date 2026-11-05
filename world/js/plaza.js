@@ -776,26 +776,36 @@
   // cushions, like her photos) a contrasting velvet cushion resting
   // against the backrest. Seat top sits at y = 0.40; the backrest
   // leans away from the screen (toward the door) for a cinema slouch.
-  function theaterBench(scene, B, add, x, z, velvet, pillow, tag) {
+  // SKIN REWORK (2026-11-04): the optional pose { rot, dx, dz }
+  // swings the whole bench around its own center by rot radians
+  // (the rotPlace convention) and nudges it — Dream Pop's benches
+  // sit at playful angles, not in rows. Returns the part list (the
+  // Dream Pop layout group owns these meshes now).
+  function theaterBench(scene, B, add, x, z, velvet, pillow, tag, pose) {
     var P = CCW.PALETTE;
+    var parts = [];
     var plinth = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-plinth',
       { width: 4.3, height: 0.18, depth: 1.02 }, scene));
     plinth.position.set(x, 0.09, z);
     plinth.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-plinth-mat', P.plumHouse);
+    parts.push(plinth);
     var seat = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-seat',
       { width: 4.4, height: 0.22, depth: 1.05 }, scene));
     seat.position.set(x, 0.29, z);
     seat.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-seat-mat', velvet);
+    parts.push(seat);
     var back = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-back',
       { width: 4.4, height: 0.85, depth: 0.16 }, scene));
     back.position.set(x, 0.72, z + 0.55);
     back.rotation.x = 0.10;
     back.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-back-mat', velvet);
+    parts.push(back);
     [-2.05, 2.05].forEach(function (dx, i) {
       var arm = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-arm-' + i,
         { width: 0.16, height: 0.34, depth: 0.95 }, scene));
       arm.position.set(x + dx, 0.55, z);
       arm.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-arm-mat-' + i, P.plumHouse);
+      parts.push(arm);
     });
     var cushion = add(B.MeshBuilder.CreateBox('theater-int-bench-' + tag + '-cushion',
       { width: 0.52, height: 0.46, depth: 0.14 }, scene));
@@ -803,6 +813,57 @@
     cushion.rotation.x = 0.18;
     cushion.rotation.y = tag.slice(-1) === 'l' ? 0.12 : -0.12;
     cushion.material = CCW.mat(scene, B, 'theater-int-bench-' + tag + '-cushion-mat', pillow);
+    parts.push(cushion);
+    if (pose && (pose.rot || pose.dx || pose.dz)) {
+      var c = Math.cos(pose.rot || 0), s = Math.sin(pose.rot || 0);
+      parts.forEach(function (p) {
+        var ox = p.position.x - x, oz = p.position.z - z;
+        p.position.x = x + ox * c + oz * s + (pose.dx || 0);
+        p.position.z = z - ox * s + oz * c + (pose.dz || 0);
+        p.rotation.y += (pose.rot || 0);
+      });
+    }
+    return parts;
+  }
+
+  // One chapel pew (SKIN REWORK, Physical Church layout): deep
+  // teal-wood ends standing to the floor, a wood seat slab with a
+  // jewel-velvet cushion strip, a leaning back with a cap rail.
+  // Built straight (the chapel does not tilt its furniture) and
+  // returned as a part list for the Church layout group. Wood and
+  // cushion materials are SHARED across pews (created per call
+  // site by the caller and passed in) — pews never change ink.
+  function theaterPew(scene, B, add, x, z, woodMat, cushionMat, tag) {
+    var parts = [];
+    [-1.98, 1.98].forEach(function (dx, i) {
+      var end = add(B.MeshBuilder.CreateBox('theater-int-pew-' + tag + '-end-' + i,
+        { width: 0.14, height: 1.04, depth: 0.80 }, scene));
+      end.position.set(x + dx, 0.52, z);
+      end.material = woodMat;
+      parts.push(end);
+    });
+    var seat = add(B.MeshBuilder.CreateBox('theater-int-pew-' + tag + '-seat',
+      { width: 4.1, height: 0.14, depth: 0.62 }, scene));
+    seat.position.set(x, 0.47, z);
+    seat.material = woodMat;
+    parts.push(seat);
+    var cushion = add(B.MeshBuilder.CreateBox('theater-int-pew-' + tag + '-cushion',
+      { width: 3.9, height: 0.07, depth: 0.52 }, scene));
+    cushion.position.set(x, 0.575, z);
+    cushion.material = cushionMat;
+    parts.push(cushion);
+    var back = add(B.MeshBuilder.CreateBox('theater-int-pew-' + tag + '-back',
+      { width: 4.1, height: 0.66, depth: 0.13 }, scene));
+    back.position.set(x, 0.88, z + 0.37);
+    back.rotation.x = 0.08;
+    back.material = woodMat;
+    parts.push(back);
+    var cap = add(B.MeshBuilder.CreateBox('theater-int-pew-' + tag + '-cap',
+      { width: 4.1, height: 0.06, depth: 0.20 }, scene));
+    cap.position.set(x, 1.235, z + 0.40);
+    cap.material = woodMat;
+    parts.push(cap);
+    return parts;
   }
 
   // One corner plant in a plum-plum pot (the Library's pattern:
@@ -1318,15 +1379,32 @@
     progBoard.material = CCW.texMat(scene, B, 'theater-int-program-mat',
       CCW.theaterProgramTexture(scene, B, 'theater-int-program-tex'), {});
 
-    // ---- Seating: four rows of jewel-velvet benches -----------------
-    // Two benches per row on a coral center aisle; velvet steps
-    // orange → teal → lavender → magenta toward the door, each
-    // bench with a contrasting cushion (the density standard).
+    // ---- Seating: the DREAM POP layout's benches -------------------
+    // Four rows of jewel-velvet benches, two per row on the center
+    // aisle; velvet steps orange → teal → lavender → magenta toward
+    // the door, each bench with a contrasting cushion (the density
+    // standard). SKIN REWORK: the rows are BROKEN — every bench
+    // sits at its own playful angle with its own nudge (Dream Pop
+    // is where the whimsy lives, per Jay's scope), and the parts
+    // belong to the Dream Pop layout group: Emblem Poster and
+    // Physical Church hide them for their own furniture (the tarot
+    // steps, the chapel pews). The bench MATERIALS stay in the skin
+    // registry below exactly as before — ink still swaps per skin,
+    // it simply lands on hidden furniture outside Dream Pop.
     var rowVelvets = [P.velvetOrange, P.velvetTeal, P.velvetLavender, P.velvetMagenta];
     var rowPillows = [P.velvetTeal, P.velvetMagenta, P.velvetOrange, P.velvetLavender];
+    var benchPoses = [
+      { rot: 0.15, dx: -0.10, dz: 0.05 }, { rot: -0.12, dx: 0.12, dz: -0.04 },
+      { rot: -0.19, dx: -0.06, dz: -0.05 }, { rot: 0.17, dx: 0.08, dz: 0.06 },
+      { rot: 0.11, dx: 0.05, dz: 0.08 }, { rot: -0.21, dx: -0.10, dz: 0.02 },
+      { rot: -0.14, dx: 0.10, dz: -0.06 }, { rot: 0.20, dx: -0.05, dz: -0.08 }
+    ];
+    var dreamLayout = [];
     [-12.1, -10.2, -8.3, -6.4].forEach(function (z, r) {
-      theaterBench(scene, B, add, -3.05, z, rowVelvets[r], rowPillows[r], 'r' + r + '-l');
-      theaterBench(scene, B, add, 3.05, z, rowVelvets[r], rowPillows[r], 'r' + r + '-r');
+      dreamLayout = dreamLayout.concat(theaterBench(scene, B, add, -3.05, z,
+        rowVelvets[r], rowPillows[r], 'r' + r + '-l', benchPoses[r * 2]));
+      dreamLayout = dreamLayout.concat(theaterBench(scene, B, add, 3.05, z,
+        rowVelvets[r], rowPillows[r], 'r' + r + '-r', benchPoses[r * 2 + 1]));
     });
 
     // The aisle: the woven coral runner with teal edges, door to
@@ -1517,6 +1595,254 @@
     // No half-turn: the sign's readable -Z face looks into the room.
     returnSign.position.set(4.7, 2.7, -2.35);
 
+    // ================================================================
+    // PER-SKIN LAYOUTS (THEATER SKIN REWORK, 2026-11-04)
+    // ================================================================
+    // Jay's verdict on the shipped picker: the skins "don't seem
+    // too far off from each other… I expected more whimsical
+    // effects and different layouts entirely." Her scope: "Go big
+    // on all three but make only dream pop more whimsical. Emblem
+    // poster and physical church can get different art views and
+    // styles." So a skin now owns a LAYOUT — its own seating,
+    // aisle, and decor placement — on top of the surface/light
+    // swaps the picker already did. The shared skeleton (walls,
+    // ceiling, screen + glass, stage, board, marquee, lancets,
+    // sidelights, lamps, plants, dream layer, return pad) never
+    // moves; exactly one layout group is visible at a time, chosen
+    // by CCW.applyTheaterSkin alongside the look. Film, the
+    // 83-title index, presence, the stage yield, and the landed
+    // line are untouched — and each skin's Sit & Watch seat (in
+    // the registry below) stands inside its own layout.
+    //
+    // The straight aisle (runner + trims) is a layout piece too:
+    // it serves Emblem Poster and Physical Church; Dream Pop
+    // replaces it with the river.
+    var aisleLayout = [runner,
+      scene.getMeshByName('theater-int-aisle-trim-0'),
+      scene.getMeshByName('theater-int-aisle-trim-1')].filter(Boolean);
+
+    // ---- DREAM POP extras: the river + the lounge clusters --------
+    // The river: a flattened tube wandering down the room's center
+    // on a slow sine — the aisle as water. It slides under a bench
+    // corner here and there, the way a dream river would.
+    var riverPath = [];
+    for (var rp = 0; rp <= 24; rp++) {
+      var rt = rp / 24;
+      riverPath.push(new B.Vector3(
+        0.5 * Math.sin(rt * Math.PI * 1.6), 0.055, -3.4 - 10.0 * rt));
+    }
+    var river = add(B.MeshBuilder.CreateTube('theater-int-dream-river',
+      { path: riverPath, radius: 0.72, radialSegments: 12, cap: B.Mesh.CAP_ALL }, scene));
+    river.scaling.y = 0.05;
+    river.material = CCW.texMat(scene, B, 'theater-int-dream-river-mat',
+      CCW.dreamRiverTexture(scene, B, 'theater-int-dream-river-tex'), {});
+    dreamLayout.push(river);
+    // Two lounge clusters by the door-side walls: a FLOATING
+    // loveseat (no plinth — a teal glow pool underneath sells the
+    // hover), two ottomans, a small round side table. Angled
+    // toward the screen and each other, never in a row.
+    function dreamCluster(tag, cx, cz, phi, seatVelvet, ottVelvet) {
+      var parts = [];
+      var glow = add(B.MeshBuilder.CreateDisc('theater-int-dream-cluster-' + tag + '-glow',
+        { radius: 1.45, tessellation: 28 }, scene));
+      rotPlace(glow, cx, 0.03, cz, phi, 0, 0);
+      glow.rotation.x = Math.PI / 2;
+      glow.material = CCW.mat(scene, B, 'theater-int-dream-cluster-' + tag + '-glow-mat',
+        P.teal, { alpha: 0.32, emissive: P.tealDeep });
+      parts.push(glow);
+      var seat = add(B.MeshBuilder.CreateBox('theater-int-dream-cluster-' + tag + '-seat',
+        { width: 1.9, height: 0.34, depth: 0.85 }, scene));
+      rotPlace(seat, cx, 0.42, cz, phi, 0, 0);
+      seat.material = CCW.mat(scene, B, 'theater-int-dream-cluster-' + tag + '-seat-mat', seatVelvet);
+      parts.push(seat);
+      var back = add(B.MeshBuilder.CreateBox('theater-int-dream-cluster-' + tag + '-back',
+        { width: 1.9, height: 0.62, depth: 0.18 }, scene));
+      rotPlace(back, cx, 0.80, cz, phi, 0, 0.48);
+      back.rotation.x = 0.10;
+      back.material = CCW.mat(scene, B, 'theater-int-dream-cluster-' + tag + '-back-mat', seatVelvet);
+      parts.push(back);
+      [-0.95, 0.95].forEach(function (ox, i) {
+        var arm = add(B.MeshBuilder.CreateBox('theater-int-dream-cluster-' + tag + '-arm-' + i,
+          { width: 0.16, height: 0.30, depth: 0.80 }, scene));
+        rotPlace(arm, cx, 0.66, cz, phi, ox, 0);
+        arm.material = CCW.mat(scene, B, 'theater-int-dream-cluster-' + tag + '-arm-mat-' + i, P.plumHouse);
+        parts.push(arm);
+      });
+      [[-0.55, -0.90], [0.45, -1.0]].forEach(function (off, i) {
+        var ott = add(B.MeshBuilder.CreateCylinder('theater-int-dream-cluster-' + tag + '-ottoman-' + i,
+          { diameter: 0.68, height: 0.34, tessellation: 14 }, scene));
+        rotPlace(ott, cx, 0.17, cz, phi, off[0], off[1]);
+        ott.material = CCW.mat(scene, B, 'theater-int-dream-cluster-' + tag + '-ottoman-mat-' + i, ottVelvet);
+        parts.push(ott);
+      });
+      var tableTop = add(B.MeshBuilder.CreateCylinder('theater-int-dream-cluster-' + tag + '-table-top',
+        { diameter: 0.60, height: 0.05, tessellation: 16 }, scene));
+      rotPlace(tableTop, cx, 0.52, cz, phi, 1.35, -0.30);
+      tableTop.material = CCW.mat(scene, B, 'theater-int-dream-cluster-' + tag + '-table-top-mat', P.plumHouse);
+      parts.push(tableTop);
+      var tableLeg = add(B.MeshBuilder.CreateCylinder('theater-int-dream-cluster-' + tag + '-table-leg',
+        { diameter: 0.07, height: 0.50, tessellation: 8 }, scene));
+      rotPlace(tableLeg, cx, 0.26, cz, phi, 1.35, -0.30);
+      tableLeg.material = CCW.mat(scene, B, 'theater-int-dream-cluster-' + tag + '-table-leg-mat', P.plumHouse);
+      parts.push(tableLeg);
+      return parts;
+    }
+    dreamLayout = dreamLayout.concat(
+      dreamCluster('l', -4.5, -5.3, 0.42, P.velvetMagenta, P.velvetTeal));
+    dreamLayout = dreamLayout.concat(
+      dreamCluster('r', 4.5, -5.3, -0.42, P.velvetTeal, P.velvetMagenta));
+
+    // ---- EMBLEM POSTER: the tarot tableau --------------------------
+    // Tiered steps descend to the screen like a card's stage —
+    // visitors sit ON the steps (flat jewel cushions), front-
+    // facing, everything on the tableau axis. Big medallion
+    // emblems hang before the screen wall; ribbon swirls become
+    // curved rails (CreateTube — a torus would ignore its arc)
+    // flowing down both sides of the steps. NO whimsy: the poster
+    // discipline is flat, centered, and still.
+    var emblemLayout = [];
+    var emblemStepTex = CCW.emblemCarpetTexture(scene, B, 'theater-int-emblemstep-tex');
+    var emblemStepMat = CCW.texMat(scene, B, 'theater-int-emblemstep-mat', emblemStepTex, {});
+    var emblemNosingMat = CCW.mat(scene, B, 'theater-int-emblem-nosing-mat', '#fdf3e3');
+    var emblemJewels = ['#12c2b2', '#ff2e88', '#e8871e', '#8f7fd4'];
+    var stepTops = [1.02, 0.78, 0.54, 0.30];
+    var stepZ = [-6.5, -8.2, -9.9, -11.6];
+    stepTops.forEach(function (top, i) {
+      var step = add(B.MeshBuilder.CreateBox('theater-int-emblem-step-' + i,
+        { width: 8.6, height: top, depth: 1.7 }, scene));
+      step.position.set(0, top / 2, stepZ[i]);
+      step.material = emblemStepMat;
+      emblemLayout.push(step);
+      var nosing = add(B.MeshBuilder.CreateBox('theater-int-emblem-nosing-' + i,
+        { width: 8.6, height: 0.055, depth: 0.07 }, scene));
+      nosing.position.set(0, top + 0.012, stepZ[i] + 0.815);
+      nosing.material = emblemNosingMat;
+      emblemLayout.push(nosing);
+      var cushionMat = CCW.mat(scene, B, 'theater-int-emblem-cushion-mat-' + i, emblemJewels[i]);
+      [-2.7, 0, 2.7].forEach(function (cx, j) {
+        var cushion = add(B.MeshBuilder.CreateBox('theater-int-emblem-cushion-' + i + '-' + j,
+          { width: 1.15, height: 0.09, depth: 0.95 }, scene));
+        cushion.position.set(cx, top + 0.045, stepZ[i] - 0.15);
+        cushion.material = cushionMat;
+        emblemLayout.push(cushion);
+      });
+    });
+    // The hanging medallions: moon + book low over the lancets,
+    // atom + seven high flanking the marquee — her saga emblem
+    // language, wall-sized, on slim cords from the ceiling.
+    var emblemCordMat = CCW.mat(scene, B, 'theater-int-emblem-cord-mat', '#0d0510');
+    [['moon', -4.5, 5.75], ['book', -5.15, 3.35], ['atom', 5.15, 3.35], ['seven', 4.5, 5.75]]
+      .forEach(function (md) {
+        var disc = add(B.MeshBuilder.CreateDisc('theater-int-emblem-medallion-' + md[0],
+          { radius: 0.95, tessellation: 36 }, scene));
+        disc.rotation.y = Math.PI; // face the audience, like the screen
+        disc.position.set(md[1], md[2], -13.5);
+        disc.material = CCW.texMat(scene, B, 'theater-int-emblem-medallion-mat-' + md[0],
+          CCW.emblemMedallionTexture(scene, B, 'theater-int-emblem-medallion-tex-' + md[0], md[0]),
+          { emissive: true });
+        emblemLayout.push(disc);
+        var cordH = 7.0 - (md[2] + 0.95);
+        var cord = add(B.MeshBuilder.CreateCylinder('theater-int-emblem-cord-' + md[0],
+          { diameter: 0.036, height: cordH, tessellation: 6 }, scene));
+        cord.position.set(md[1], (7.0 + md[2] + 0.95) / 2, -13.5);
+        cord.material = emblemCordMat;
+        emblemLayout.push(cord);
+      });
+    // Ribbon rails: one swirling tube down each side of the steps.
+    [-1, 1].forEach(function (side, i) {
+      var railPath = [];
+      for (var rr = 0; rr <= 20; rr++) {
+        var rq = rr / 20;
+        railPath.push(new B.Vector3(
+          side * (4.62 + 0.38 * Math.sin(rq * Math.PI * 2)),
+          1.30 - 0.82 * rq + 0.06 * Math.sin(rq * Math.PI * 3),
+          -5.55 - 7.35 * rq));
+      }
+      var rail = add(B.MeshBuilder.CreateTube('theater-int-emblem-rail-' + i,
+        { path: railPath, radius: 0.045, radialSegments: 8, cap: B.Mesh.CAP_ALL }, scene));
+      rail.material = CCW.glowMat(scene, B, 'theater-int-emblem-rail-mat-' + i, '#fdf3e3');
+      emblemLayout.push(rail);
+    });
+
+    // ---- PHYSICAL CHURCH: the chapel -------------------------------
+    // Long pews in two banks on a straight center aisle, candles
+    // along the aisle and flanking the stage, arched windows down
+    // both sides carrying stained-glass floral light. Photo-
+    // faithful: nothing tilts, nothing floats. The candle glow is
+    // ONE warm point light scoped to this layout + the floor it
+    // pools on — layout furniture, deliberately NOT one of the
+    // skin handle's three look lights.
+    var churchLayout = [];
+    var pewWoodMat = CCW.mat(scene, B, 'theater-int-pew-wood-mat', '#0b5a54');
+    [-12.1, -10.2, -8.3, -6.4].forEach(function (z, r) {
+      var pewCushionMat = CCW.mat(scene, B, 'theater-int-pew-cushion-mat-' + r, rowVelvets[r]);
+      churchLayout = churchLayout.concat(
+        theaterPew(scene, B, add, -2.85, z, pewWoodMat, pewCushionMat, 'r' + r + '-l'));
+      churchLayout = churchLayout.concat(
+        theaterPew(scene, B, add, 2.85, z, pewWoodMat, pewCushionMat, 'r' + r + '-r'));
+    });
+    var candleStandMat = CCW.mat(scene, B, 'theater-int-candle-stand-mat', P.plumHouse);
+    var candleWaxMat = CCW.mat(scene, B, 'theater-int-candle-wax-mat', '#ffe9c4');
+    var candleFlameMat = CCW.mat(scene, B, 'theater-int-candle-flame-mat', '#ffca7a',
+      { emissive: '#ff9a3c' });
+    [[-1.05, -5.5], [1.05, -5.5], [-1.05, -12.9], [1.05, -12.9], [-3.6, -13.0], [3.6, -13.0]]
+      .forEach(function (cp, i) {
+        var pole = add(B.MeshBuilder.CreateCylinder('theater-int-candle-' + i + '-pole',
+          { diameter: 0.056, height: 1.12, tessellation: 8 }, scene));
+        pole.position.set(cp[0], 0.56, cp[1]);
+        pole.material = candleStandMat;
+        churchLayout.push(pole);
+        var wax = add(B.MeshBuilder.CreateCylinder('theater-int-candle-' + i + '-wax',
+          { diameter: 0.11, height: 0.30, tessellation: 10 }, scene));
+        wax.position.set(cp[0], 1.27, cp[1]);
+        wax.material = candleWaxMat;
+        churchLayout.push(wax);
+        var flame = add(B.MeshBuilder.CreateSphere('theater-int-candle-' + i + '-flame',
+          { diameter: 0.10, segments: 8 }, scene));
+        flame.position.set(cp[0], 1.52, cp[1]);
+        flame.scaling.y = 1.9;
+        flame.material = candleFlameMat;
+        churchLayout.push(flame);
+      });
+    // Arched windows down both sides, interleaved with the shared
+    // sidelights so no two frames ever cross (z -4.6 / -9.0 /
+    // -13.2 against the sidelights' -7 / -11).
+    var churchWindowTex = CCW.chapelWindowTexture(scene, B, 'theater-int-chapel-window-tex');
+    var churchWindowFrameMat = CCW.mat(scene, B, 'theater-int-church-window-frame-mat', '#0b5a54');
+    [-4.6, -9.0, -13.2].forEach(function (z, i) {
+      [['left', -1], ['right', 1]].forEach(function (sd) {
+        var wf = add(B.MeshBuilder.CreateBox('theater-int-church-window-' + sd[0] + '-frame-' + i,
+          { width: 1.9, height: 3.6, depth: 0.09 }, scene));
+        wf.rotation.y = sd[1] * Math.PI / 2;
+        wf.position.set(sd[1] * 6.44, 3.3, z);
+        wf.material = churchWindowFrameMat;
+        churchLayout.push(wf);
+        var wp = add(B.MeshBuilder.CreatePlane('theater-int-church-window-' + sd[0] + '-' + i,
+          { width: 1.7, height: 3.4 }, scene));
+        wp.rotation.y = sd[1] * Math.PI / 2; // readable face into the room
+        wp.position.set(sd[1] * 6.36, 3.3, z);
+        wp.material = CCW.texMat(scene, B, 'theater-int-church-window-mat-' + sd[0] + '-' + i,
+          churchWindowTex, { emissive: true, alpha: true });
+        churchLayout.push(wp);
+      });
+    });
+    // The candle glow, created LAST in the church block so its
+    // scope names the COMPLETE layout (pews, candles, windows)
+    // plus the floor and runner the light pools on.
+    var candleLight = new B.PointLight('theater-int-candle-light',
+      roomWorld(0, 1.8, -9.2), scene);
+    candleLight.intensity = 0.55;
+    candleLight.diffuse = new B.Color3(1.0, 0.76, 0.52);
+    candleLight.range = 10;
+    candleLight.includedOnlyMeshes = churchLayout.concat([floor, runner]);
+
+    // Layouts start in the default skin's state (Dream Pop): the
+    // other two groups and the straight aisle wait hidden; every
+    // applyTheaterSkin call re-asserts all four groups.
+    emblemLayout.forEach(function (m) { m.isVisible = false; });
+    churchLayout.forEach(function (m) { m.isVisible = false; });
+    aisleLayout.forEach(function (m) { m.isVisible = false; });
+
     // ---- The room's lights ------------------------------------------
     // Softer and warmer than the first build, and BRIGHTER (the
     // realism pass: the first build's 0.45 hemi under a yellow-
@@ -1632,6 +1958,34 @@
       b.seatBack.forEach(function (m) { skinAllMats.push(m); });
       b.cushion.forEach(function (m) { skinAllMats.push(m); });
     });
+    // SKIN REWORK (2026-11-04): each skin's own Sit & Watch seat,
+    // standing inside its own layout — Dream Pop's from the left
+    // lounge cluster (low, angled, relaxed), Emblem Poster's
+    // centered on the tableau axis ON the steps (row two's level),
+    // Physical Church's from a middle pew of the left bank, down
+    // the aisle. All three sit inside the room's camera clamp box
+    // (cameras.js BOUNDS.extraRooms, Theater 120°).
+    var skinSeats = {
+      'dream-pop': {
+        // Render-checked 2026-11-04 (twice): the first seat sat
+        // INSIDE the loveseat (its own seat filled half the
+        // frame); the second still framed a bench back across
+        // the bottom. This one HOVERS at the cluster's front —
+        // the loveseats float in this room, so the seat does too
+        // — high enough that the angled benches drop to a low
+        // foreground sliver and the glass owns the view.
+        position: worldArr(roomWorld(-4.5, 1.52, -6.15)),
+        target: worldArr(roomWorld(0, 3.0, -14.27))
+      },
+      'emblem-poster': {
+        position: worldArr(roomWorld(0, 1.80, -8.45)),
+        target: worldArr(roomWorld(0, 3.1, -14.27))
+      },
+      'physical-church': {
+        position: worldArr(roomWorld(-1.5, 1.35, -10.2)),
+        target: worldArr(roomWorld(0, 2.95, -14.27))
+      }
+    };
     var skinHandle = {
       roles: skinRoles,
       benches: skinBenches,
@@ -1645,7 +1999,19 @@
         rings: roleMeshes(['theater-int-constellation-0', 'theater-int-constellation-1'])
       },
       allMats: skinAllMats,
-      baseline: null
+      baseline: null,
+      // SKIN REWORK: the per-skin LAYOUT groups (see the layouts
+      // block above) and seats. Exactly one layout group is
+      // visible at a time; applyTheaterSkin owns the switching.
+      // The layout meshes are NOT in allMats — they never change
+      // ink; they only show inside their own skin.
+      layouts: {
+        dream: dreamLayout,
+        emblem: emblemLayout,
+        church: churchLayout,
+        aisle: aisleLayout
+      },
+      seats: skinSeats
     };
 
     var entranceView = {
@@ -1670,15 +2036,16 @@
         boardMeshes: [progFrame, progBoard],
         screen: screen,
         glassMaterial: glassMaterial,
-        // The theme-picker's handle (spec §2.1): surfaces, light,
-        // and decor a skin may swap — nothing else lives here.
+        // The theme-picker's handle (spec §2.1, REWORKED
+        // 2026-11-04): the surfaces, light, and decor a skin swaps
+        // — plus its layout groups and its Sit & Watch seat, since
+        // a skin is now a whole room arrangement, not a coat of
+        // paint. views.seat always points at the ACTIVE skin's
+        // seat; applyTheaterSkin re-points it on every swap.
         skin: skinHandle,
         views: {
           landing: entranceView,
-          seat: {
-            position: worldArr(roomWorld(1.15, 1.32, -10.2)),
-            target: worldArr(roomWorld(0, 3.05, -14.27))
-          },
+          seat: skinSeats['dream-pop'],
           audience: {
             position: worldArr(roomWorld(-5.65, 5.6, -2.2)),
             target: worldArr(roomWorld(0.8, 1.6, -12.5))
@@ -1693,9 +2060,16 @@
   // 2026-11-04; contract: theme-picker-preview/THEME-PICKER-PREVIEW-
   // SPEC.md + skins.json). Jay's teaching tool: the same room, the
   // same moment, different eyes — each visitor picks the Theater's
-  // skin for THEIR OWN view. A skin swaps SURFACES, LIGHT, and
-  // DECOR VISIBILITY only: never geometry, never a mesh position,
-  // never the views, never the film path. Three skins:
+  // skin for THEIR OWN view. As SHIPPED, a skin swapped SURFACES,
+  // LIGHT, and DECOR VISIBILITY only — and Jay's verdict was that
+  // the three read too much alike: "I expected more whimsical
+  // effects and different layouts entirely." THE REWORK
+  // (2026-11-04): a skin now ALSO owns a LAYOUT — its own seating,
+  // aisle, and decor placement, built once at room-build time and
+  // switched by visibility (geometry never moves at swap time) —
+  // and its own Sit & Watch seat, which views.seat re-points to on
+  // every swap. The film path, the index, presence, the stage
+  // yield, and every other room are still untouchable. Three skins:
   //   dream-pop       — the live Surrealism + Pop Art build; the
   //                     default, and the baseline every swap
   //                     restores from (by object identity).
@@ -1931,6 +2305,23 @@
     // any swap is the baseline itself — byte-identical materials.
     restoreTheaterBaseline(handle);
     if (id !== 'dream-pop') applyTheaterSkinLook(scene, B, handle, id);
+    // SKIN REWORK: the LAYOUT swap, asserted on every call so the
+    // room can never sit between arrangements — exactly one layout
+    // group visible, the straight aisle serving the two front-
+    // facing skins, and views.seat standing in the active layout.
+    if (handle.layouts) {
+      var lay = handle.layouts;
+      var setGroup = function (group, on) {
+        (group || []).forEach(function (m) { m.isVisible = on; });
+      };
+      setGroup(lay.dream, id === 'dream-pop');
+      setGroup(lay.emblem, id === 'emblem-poster');
+      setGroup(lay.church, id === 'physical-church');
+      setGroup(lay.aisle, id !== 'dream-pop');
+    }
+    if (handle.seats && theater.views && handle.seats[id]) {
+      theater.views.seat = handle.seats[id];
+    }
     CCW._theaterSkin = id;
     var ls = theaterSkinStorage();
     if (ls) { try { ls.setItem(CCW.THEATER_SKIN_KEY, id); } catch (e) {} }
