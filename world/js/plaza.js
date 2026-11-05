@@ -576,6 +576,93 @@
     // toward a visitor coming from the tables. See header contract.
     returnSign.position.set(4.7, 2.7, -2.35);
 
+
+    // ============================================================
+    // WALL LIFE (2026-11-04): the Parlor's walls stop being flat
+    // plum. A neon sign in the Studio's glass treatment crowns
+    // the door; two Theater-program posters (the Library
+    // gallery's self-hosted WebPs, reused sparingly as the brief
+    // allows) flank it in fine-line frames; teal panel insets
+    // break the side walls between the game motifs; baseboards
+    // and a picture rail finish the planes. No new lights; the
+    // rig scope below collects every mesh by prefix.
+    // ============================================================
+    var shopTargets = [];
+    var neonBack = add(B.MeshBuilder.CreateBox('parlor-int-neon-back',
+      { width: 5.4, height: 1.45, depth: 0.06 }, scene));
+    neonBack.position.set(0, 5.85, -0.80);
+    neonBack.material = CCW.mat(scene, B, 'parlor-int-neon-back-mat', P.plumDeep);
+    var neonSign = add(B.MeshBuilder.CreatePlane('parlor-int-neon',
+      { width: 5.2, height: 1.3 }, scene));
+    neonSign.position.set(0, 5.85, -0.86);
+    neonSign.material = CCW.texMat(scene, B, 'parlor-int-neon-mat',
+      CCW.neonSignTexture(scene, B, 'parlor-int-neon-tex',
+        'The Game Parlor', 'PLAY TOGETHER', { font1: 104 }),
+      { emissive: true });
+
+    // Program posters flanking the door (frame + fine-line liner
+    // + the true poster, the Library gallery pattern). Both are
+    // cleared program titles, played whole at the Theater.
+    [['charade', -4.35, 415 / 640], ['his-girl-friday', 4.35, 411 / 640]].forEach(function (pp) {
+      var slug = pp[0], px = pp[1], pw = 2.0 * pp[2];
+      var fr = add(B.MeshBuilder.CreateBox('parlor-int-poster-' + slug + '-frame',
+        { width: pw + 0.2, height: 2.26, depth: 0.07 }, scene));
+      fr.position.set(px, 3.15, -0.80);
+      fr.material = CCW.mat(scene, B, 'parlor-int-poster-' + slug + '-frame-mat', P.tealDeep);
+      var ln = add(B.MeshBuilder.CreatePlane('parlor-int-poster-' + slug + '-liner',
+        { width: pw + 0.1, height: 2.13 }, scene));
+      ln.position.set(px, 3.15, -0.845);
+      ln.material = CCW.mat(scene, B, 'parlor-int-poster-' + slug + '-liner-mat', P.goldSoft);
+      var art = add(B.MeshBuilder.CreatePlane('parlor-int-poster-' + slug,
+        { width: pw, height: 2.0 }, scene));
+      art.position.set(px, 3.15, -0.86);
+      var ptex = new B.Texture('assets/posters/' + slug + '.webp', scene);
+      ptex.name = 'parlor-int-poster-' + slug + '-tex';
+      art.material = CCW.texMat(scene, B, 'parlor-int-poster-' + slug + '-mat', ptex, {});
+    });
+
+    // Panel insets + picture rail + baseboards on both side
+    // walls (thin teal/plum geometry breaking the flat planes).
+    [-1, 1].forEach(function (side) {
+      var sx = side * 6.44, sideName = side < 0 ? 'left' : 'right';
+      [-2.7, -8.0, -13.1].forEach(function (iz, k) {
+        var iframe = add(B.MeshBuilder.CreateBox(
+          'parlor-int-inset-' + sideName + '-' + k,
+          { width: 0.09, height: 3.54, depth: 2.34 }, scene));
+        iframe.position.set(sx, 3.4, iz);
+        iframe.material = CCW.mat(scene, B,
+          'parlor-int-inset-' + sideName + '-' + k + '-mat', P.tealDeep);
+        var ipanel = add(B.MeshBuilder.CreatePlane(
+          'parlor-int-inset-' + sideName + '-' + k + '-panel',
+          { width: 2.02, height: 3.22 }, scene));
+        ipanel.rotation.y = side < 0 ? -Math.PI / 2 : Math.PI / 2;
+        ipanel.position.set(side * 6.375, 3.4, iz);
+        // Magenta velvet, not flat plum: the first render proved
+        // a near-wall tone reads as nothing at room distance —
+        // the velvet grain + the deeper magenta carry the inset.
+        ipanel.material = CCW.texMat(scene, B,
+          'parlor-int-inset-' + sideName + '-' + k + '-panel-mat',
+          CCW.velvetTexture(scene, B,
+            'parlor-int-inset-' + sideName + '-' + k + '-panel-tex', '#7c2565'), {});
+      });
+      var rail = add(B.MeshBuilder.CreateBox('parlor-int-rail-' + sideName,
+        { width: 0.06, height: 0.09, depth: 13.6 }, scene));
+      rail.position.set(side * 6.46, 6.5, -7.5);
+      rail.material = CCW.mat(scene, B, 'parlor-int-rail-' + sideName + '-mat', P.tealDeep);
+      var base = add(B.MeshBuilder.CreateBox('parlor-int-baseboard-' + sideName,
+        { width: 0.07, height: 0.34, depth: 13.9 }, scene));
+      base.position.set(side * 6.455, 0.17, -7.5);
+      base.material = CCW.mat(scene, B, 'parlor-int-baseboard-' + sideName + '-mat', '#5b2a78');
+    });
+    var railB = add(B.MeshBuilder.CreateBox('parlor-int-rail-back',
+      { width: 13.4, height: 0.09, depth: 0.06 }, scene));
+    railB.position.set(0, 6.5, -14.36);
+    railB.material = CCW.mat(scene, B, 'parlor-int-rail-back-mat', P.tealDeep);
+    var baseB = add(B.MeshBuilder.CreateBox('parlor-int-baseboard-back',
+      { width: 13.9, height: 0.34, depth: 0.07 }, scene));
+    baseB.position.set(0, 0.17, -14.38);
+    baseB.material = CCW.mat(scene, B, 'parlor-int-baseboard-back-mat', '#5b2a78');
+
     // Scope the room's lights to the room (lighting round 2): every
     // mesh built above carries the 'parlor-int-' prefix, and
     // includedOnlyMeshes keeps the interior rig — hemisphere,
@@ -676,6 +763,7 @@
       returnPad: returnPad,
       returnRing: returnRing,
       gameTargets: gameTargets,
+      shopTargets: shopTargets,
       entrance: {
         position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
         target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
@@ -1026,6 +1114,61 @@
       ownNotes: ownNotes
     };
   })();
+
+
+  /* ================================================================
+   * THE SHOP SEAM (WALL LIFE pass, 2026-11-04 — Jay's Shop Gallery
+   * direction, 17:03: her real product art dressed into the rooms
+   * at life scale, tappable to shop cards).
+   *
+   * SHOP_LINKS is the ONE place the world's shop URLs live, so a
+   * corrected link is a one-line change. Jay picks her favorite
+   * wallpaper designs later; until a design has its own product,
+   * its card opens the storefront root, and the Chef design —
+   * the family the live peel-and-stick wallpaper product wears —
+   * opens that product's page. Links point at the Shopify
+   * storefront ONLY: the world never links to the game pages from
+   * a wall, and never to the deck game's page at all (the
+   * navigation guard in the smoke enforces the wall side).
+   *
+   * A shop target is { id, name, blurb, url, meshes } — the same
+   * shape discipline as the Parlor's game targets. main.js hangs
+   * a pick handler on each mesh; the pick only SHOWS the card
+   * (cameras.js wireShopCard); the card's button is the one
+   * navigation, through the injected navigate, exactly like Play.
+   * ================================================================ */
+  CCW.SHOP_LINKS = {
+    storefront: 'https://chemistress-cause.myshopify.com',
+    wallpaper: 'https://chemistress-cause.myshopify.com/products/peel-and-stick-wallpaper'
+  };
+
+  // One wallpaper accent panel's texture: the seamless tile as a
+  // file texture with wrap repeat — the accent walls are
+  // ONE-TEXTURE SWAPS by design (change the slug here or the
+  // texture on the mesh; the trim and frame stay).
+  function wallpaperTexture(scene, B, name, slug, uScale, vScale) {
+    var tex = new B.Texture('assets/wallpaper/' + slug + '.webp', scene);
+    tex.name = name;
+    tex.wrapU = B.Texture.WRAP_ADDRESSMODE;
+    tex.wrapV = B.Texture.WRAP_ADDRESSMODE;
+    tex.uScale = uScale;
+    tex.vScale = vScale;
+    return tex;
+  }
+
+  // One framed wallpaper panel (frame box + the paper plane proud
+  // of it), the house gallery pattern. Returns { frame, art }.
+  function framedWallpaper(scene, B, add, prefix, slug, uScale, vScale,
+                           w, h, frameHex) {
+    var frame = add(B.MeshBuilder.CreateBox(prefix + '-frame',
+      { width: w + 0.16, height: h + 0.16, depth: 0.08 }, scene));
+    frame.material = CCW.mat(scene, B, prefix + '-frame-mat', frameHex);
+    var art = add(B.MeshBuilder.CreatePlane(prefix + '-art',
+      { width: w, height: h }, scene));
+    art.material = CCW.texMat(scene, B, prefix + '-art-mat',
+      wallpaperTexture(scene, B, prefix + '-tex', slug, uScale, vScale), {});
+    return { frame: frame, art: art };
+  }
 
   function buildTheaterInterior(scene, B, zone, add) {
     var P = CCW.PALETTE;
@@ -2466,6 +2609,67 @@
     intLights.push(roomLight);
     // (…and one point light per reading lamp, pushed above.)
 
+
+    // ============================================================
+    // WALL LIFE (2026-11-04): the CELESTIAL CARDS feature wall —
+    // Jay's confirmed favorite of the six wallpaper designs
+    // ("sooooo much better than before") gets the Library's
+    // right wall as a PRIME accent: one framed sweep of the
+    // seamless tile running behind the star charts and the
+    // reading nook, gallery-labelled, teal-trimmed. It is a
+    // ONE-TEXTURE swap by construction: change the slug in the
+    // wallpaperTexture call and the whole wall re-papers; the
+    // trim, plaque and charts do not move. The wall is a shop
+    // target — tap it and the card offers the design in the
+    // shop. Built before the rig scope below so the rig lights
+    // it with the room.
+    // ============================================================
+    var shopTargets = [];
+    var celPanel = add(B.MeshBuilder.CreatePlane('library-int-wallpaper-celestial',
+      { width: 6.3, height: 6.5 }, scene));
+    celPanel.rotation.y = Math.PI / 2; // right wall: face -Z -> -X, into the room
+    celPanel.position.set(6.47, 3.37, -3.98);
+    celPanel.material = CCW.texMat(scene, B, 'library-int-wallpaper-celestial-mat',
+      wallpaperTexture(scene, B, 'library-int-wallpaper-celestial-tex',
+        'celestial-cards', 2.5, 2.6), {});
+    // Teal trim: picture rail along the top, baseboard along the
+    // floor, end caps at both edges — the paper reads as a hung
+    // feature wall, not a re-skinned plane.
+    var celRail = add(B.MeshBuilder.CreateBox('library-int-wallpaper-rail',
+      { width: 0.09, height: 0.12, depth: 6.5 }, scene));
+    celRail.position.set(6.45, 6.68, -3.98);
+    celRail.material = CCW.mat(scene, B, 'library-int-wallpaper-rail-mat', P.tealDeep);
+    var celBase = add(B.MeshBuilder.CreateBox('library-int-wallpaper-baseboard',
+      { width: 0.09, height: 0.3, depth: 6.5 }, scene));
+    celBase.position.set(6.45, 0.15, -3.98);
+    celBase.material = CCW.mat(scene, B, 'library-int-wallpaper-baseboard-mat', P.tealDeep);
+    [-0.78, -7.18].forEach(function (cz, i) {
+      var cap = add(B.MeshBuilder.CreateBox('library-int-wallpaper-cap-' + i,
+        { width: 0.09, height: 6.6, depth: 0.12 }, scene));
+      cap.position.set(6.45, 3.37, cz);
+      cap.material = CCW.mat(scene, B, 'library-int-wallpaper-cap-mat-' + i, P.tealDeep);
+    });
+    // The gallery label: cream plaque naming the design, hung on
+    // the paper itself at the door end, clear of both charts.
+    var celTrim = add(B.MeshBuilder.CreateBox('library-int-wallpaper-plaque-trim',
+      { width: 0.07, height: 0.62, depth: 2.1 }, scene));
+    celTrim.position.set(6.44, 5.9, -3.98);
+    celTrim.material = CCW.mat(scene, B, 'library-int-wallpaper-plaque-trim-mat', P.cream);
+    var celPlaque = add(CCW.makeLabel(scene, B, 'library-int-wallpaper-plaque',
+      ['CELESTIAL CARDS', 'CHEAT CODE wallpaper — a house favorite'], 1.95, 0.5,
+      { fg: P.cream, bg: '#0d3a47' }));
+    celPlaque.rotation.y = Math.PI / 2;
+    celPlaque.position.set(6.40, 5.9, -3.98);
+    shopTargets.push({
+      id: 'wallpaper-celestial-cards',
+      name: 'Celestial Cards — Wallpaper',
+      blurb: 'Jay\'s favorite of the new designs: the CHEAT CODE ' +
+        'cards — Jupiter, El Pinche Saturn, Mercury — scattered ' +
+        'on deep teal. This wall wears it at full sweep.',
+      url: CCW.SHOP_LINKS.storefront,
+      meshes: [celPanel]
+    });
+
     // Scope the rig to the room + lift the light cap (see header).
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('library-int-') === 0;
@@ -2482,6 +2686,7 @@
     return {
       returnPad: returnPad,
       returnRing: returnRing,
+      shopTargets: shopTargets,
       entrance: {
         position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
         target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
@@ -2948,6 +3153,54 @@
     roomLight.diffuse = new B.Color3(1.0, 0.76, 0.52);
     roomLight.range = 17;
     intLights.push(roomLight);
+
+
+    // ============================================================
+    // WALL LIFE (2026-11-04): the COMMUNITY PIN BOARD — a cork
+    // board on the left wall, in the letter room's spirit: house
+    // cards pinned where members' cards will go when the shared
+    // mail and the members' door land. VISUAL DRESSING ONLY —
+    // nothing here pretends a member posted anything; the cards
+    // say so themselves. Three loose paper notes ride on top of
+    // the cork at handmade tilts for depth.
+    // ============================================================
+    var pinFrame = add(B.MeshBuilder.CreateBox('penpal-int-pinboard-frame',
+      { width: 0.09, height: 2.1, depth: 3.0 }, scene));
+    pinFrame.position.set(-6.45, 3.15, -5.6);
+    pinFrame.material = CCW.mat(scene, B, 'penpal-int-pinboard-frame-mat', P.tealDeep);
+    var pinFace = add(B.MeshBuilder.CreatePlane('penpal-int-pinboard',
+      { width: 2.84, height: 1.94 }, scene));
+    pinFace.rotation.y = -Math.PI / 2; // left wall: face -Z -> +X, into the room
+    pinFace.position.set(-6.39, 3.15, -5.6);
+    pinFace.material = CCW.texMat(scene, B, 'penpal-int-pinboard-mat',
+      CCW.pinboardTexture(scene, B, 'penpal-int-pinboard-tex',
+        'THE COMMUNITY BOARD', [
+          { title: 'LETTER CIRCLE', tone: '#fdf3e3', lines: [
+            'Tuesdays, right here.', 'Bring a story —',
+            'we provide the paper.'] },
+          { title: 'FROM THE BOXES', tone: '#ffd7ec', lines: [
+            'New notes land overnight.', 'Leave one kind sentence;',
+            'someone finds it.'] },
+          { title: 'MOVIE NIGHT', tone: '#a8ece5', lines: [
+            'Fridays at the Theater.', 'Classic Cinema — 83 films,',
+            'free forever.'] },
+          { title: 'PEN-PAL PROMISE', tone: '#d9d2f5', lines: [
+            'Slow mail, warm words.', 'No addresses, no links —',
+            'just kindness, sealed.'] },
+          { title: 'YOUR TURN', tone: '#fdf3e3', lines: [
+            'Member pins open here', 'when the door does.',
+            'For now: the house pins.'] }
+        ]), {});
+    [[-6.375, 2.37, -6.7, 0.09], [-6.375, 2.35, -5.55, -0.07],
+     [-6.375, 2.37, -4.45, 0.05]].forEach(function (np, i) {
+      var note = add(B.MeshBuilder.CreatePlane('penpal-int-pinboard-note-' + i,
+        { width: 0.42, height: 0.34 }, scene));
+      note.rotation.y = -Math.PI / 2;
+      note.rotation.z = np[3];
+      note.position.set(np[0], np[1], np[2]);
+      note.material = CCW.texMat(scene, B, 'penpal-int-pinboard-note-mat-' + i,
+        CCW.paperTexture(scene, B, 'penpal-int-pinboard-note-tex-' + i), {});
+    });
 
     // Scope the rig to the room + lift the light cap (see header).
     var intMeshes = scene.meshes.filter(function (m) {
@@ -3514,6 +3767,51 @@
     roomLight.range = 18;
     intLights.push(roomLight);
 
+
+    // ============================================================
+    // WALL LIFE (2026-11-04): the back wall's bare pink flanks
+    // take two framed wallpaper panels, symmetric around the
+    // herb shelves — CELESTIAL MUSES (the saga's teal muses) on
+    // the left, DINNER PARTY BLOCKS (the Vintage Dates table) on
+    // the right. No art hangs on the garden's glass; the back
+    // wall is the room's one solid hanging surface, and these
+    // fill it the way the botanical prints crown the shelves.
+    // Both panels are shop targets (one-texture swaps, like
+    // every accent wall in this pass).
+    // ============================================================
+    var shopTargets = [];
+    [['celestial-muses', -4.75, 1.3, 1.7,
+      'Celestial Muses — Wallpaper',
+      'The CHEAT CODE muses in teal and gold on deep teal — ' +
+      'the saga\'s own art, as a repeat. It hangs by the herbs ' +
+      'because even muses like a garden.'],
+     ['dinner-party-blocks', 4.75, 1.2, 1.6,
+      'Dinner Party Blocks — Wallpaper',
+      'The Vintage Dates table in four cream blocks — the chef, ' +
+      'the table, the instruments, the spread. Dinner-party ' +
+      'energy, by the square.']].forEach(function (wp) {
+      var slug = wp[0], px = wp[1];
+      var piece = framedWallpaper(scene, B, add, 'garden-int-wallpaper-' + slug,
+        slug, wp[2], wp[3], 2.5, 3.3, P.tealDeep);
+      piece.frame.rotation.y = Math.PI;
+      piece.frame.position.set(px, 3.0, -14.36);
+      piece.art.rotation.y = Math.PI; // back wall: face -Z -> +Z, into the room
+      piece.art.position.set(px, 3.0, -14.30);
+      var liner = add(B.MeshBuilder.CreatePlane('garden-int-wallpaper-' + slug + '-liner',
+        { width: 2.58, height: 3.38 }, scene));
+      liner.rotation.y = Math.PI;
+      liner.position.set(px, 3.0, -14.31);
+      liner.material = CCW.mat(scene, B, 'garden-int-wallpaper-' + slug + '-liner-mat',
+        P.goldSoft);
+      shopTargets.push({
+        id: 'wallpaper-' + slug,
+        name: wp[4],
+        blurb: wp[5],
+        url: CCW.SHOP_LINKS.storefront,
+        meshes: [piece.art]
+      });
+    });
+
     // Scope the rig to the room + lift the light cap (see header).
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('garden-int-') === 0;
@@ -3530,6 +3828,7 @@
     return {
       returnPad: returnPad,
       returnRing: returnRing,
+      shopTargets: shopTargets,
       entrance: {
         position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
         target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
@@ -4161,6 +4460,48 @@
     roomLight.range = 18;
     intLights.push(roomLight);
 
+
+    // ============================================================
+    // WALL LIFE (2026-11-04): the Studio takes the food-side
+    // papers. CHEF MEDALLION SCATTER — the chef medallions of
+    // the live peel-and-stick wallpaper — panels the right wall
+    // between the Kitchen Disco corner and the sofa, where the
+    // kitchen energy already lives; its card opens the wallpaper
+    // product itself. CAFÉ GIRL DENSE — the Heartbreaker Café
+    // girl in her brick repeat — hangs as a framed swatch on the
+    // front wall, a sample card at room scale. Both are shop
+    // targets and one-texture swaps.
+    // ============================================================
+    var shopTargets = [];
+    var chefPanel = framedWallpaper(scene, B, add, 'studio-int-wallpaper-chef',
+      'chef-medallion-scatter', 1.4, 1.8, 2.7, 3.6, P.tealDeep);
+    chefPanel.frame.rotation.y = Math.PI / 2; // long axis along the wall (Z)
+    chefPanel.frame.position.set(6.46, 3.1, -6.7);
+    chefPanel.art.rotation.y = Math.PI / 2; // right wall: face -Z -> -X
+    chefPanel.art.position.set(6.40, 3.1, -6.7);
+    shopTargets.push({
+      id: 'wallpaper-chef-medallion',
+      name: 'Chef Medallion Scatter — Wallpaper',
+      blurb: 'The Chemistress chef in her medallions, scattered ' +
+        'over polka-dot cream — the design family of the ' +
+        'peel-and-stick wallpaper in the shop.',
+      url: CCW.SHOP_LINKS.wallpaper,
+      meshes: [chefPanel.art]
+    });
+    var cafePanel = framedWallpaper(scene, B, add, 'studio-int-wallpaper-cafe',
+      'cafe-girl-dense', 1.2, 1.3, 2.14, 2.34, P.plumHouse);
+    cafePanel.frame.position.set(4.45, 4.0, -0.80);
+    cafePanel.art.position.set(4.45, 4.0, -0.865);
+    shopTargets.push({
+      id: 'wallpaper-cafe-girl',
+      name: 'Café Girl — Wallpaper & Art',
+      blurb: 'The Heartbreaker Café girl, repeated brick by ' +
+        'brick. She sells as wallpaper, prints and tees — the ' +
+        'shop has her whole collection.',
+      url: CCW.SHOP_LINKS.storefront,
+      meshes: [cafePanel.art]
+    });
+
     // Scope the rig to the room + lift the light cap (see header).
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('studio-int-') === 0;
@@ -4177,6 +4518,7 @@
     return {
       returnPad: returnPad,
       returnRing: returnRing,
+      shopTargets: shopTargets,
       entrance: {
         position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
         target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
@@ -4312,6 +4654,7 @@
       result.threshold = interior.entrance;
       result.interiorReturn = { mesh: interior.returnPad, ringMesh: interior.returnRing };
       result.gameTargets = interior.gameTargets;
+      result.shopTargets = interior.shopTargets;
     }
     if (zone.id === 'theater') {
       // The Theater (M2b): same arrival pattern as the Parlor — the
@@ -4332,6 +4675,7 @@
       var libInterior = buildLibraryInterior(scene, B, zone, add);
       result.threshold = libInterior.entrance;
       result.interiorReturn = { mesh: libInterior.returnPad, ringMesh: libInterior.returnRing };
+      result.shopTargets = libInterior.shopTargets;
     }
     if (zone.id === 'penpal') {
       // The Pen-Pal Post (M2b): same arrival pattern — the Plaza
@@ -4342,6 +4686,7 @@
       result.threshold = penInterior.entrance;
       result.interiorReturn = { mesh: penInterior.returnPad, ringMesh: penInterior.returnRing };
       result.penpal = penInterior.penpal;
+      result.shopTargets = penInterior.shopTargets;
     }
     if (zone.id === 'garden') {
       // The Therapeutics Garden (M2b): same arrival pattern — the
@@ -4352,6 +4697,7 @@
       var gInterior = buildGardenInterior(scene, B, zone, add);
       result.threshold = gInterior.entrance;
       result.interiorReturn = { mesh: gInterior.returnPad, ringMesh: gInterior.returnRing };
+      result.shopTargets = gInterior.shopTargets;
     }
     if (zone.id === 'studio') {
       // The Creator Studio (M2b interior 5 of 5): same arrival
@@ -4364,6 +4710,7 @@
       var sInterior = buildStudioInterior(scene, B, zone, add);
       result.threshold = sInterior.entrance;
       result.interiorReturn = { mesh: sInterior.returnPad, ringMesh: sInterior.returnRing };
+      result.shopTargets = sInterior.shopTargets;
     }
     return result;
   }
@@ -4571,6 +4918,131 @@
     boardFace.material = CCW.texMat(scene, B, 'notice-face-mat',
       CCW.noticeTexture(scene, B, 'notice-tex'), {});
 
+
+    // ============================================================
+    // WALL LIFE (2026-11-04): THE SHOP WINDOW + the Plaza pin
+    // board. The Shop Window stands on the Plaza's open ring
+    // between the Library and the Theater doors: a framed sweep
+    // of EMBLEM MEDALLION paper under a neon THE SHOP sign, with
+    // the Café Girl and the Chemistress Chef framed at life
+    // scale beside it — Jay's Shop Gallery (17:03) made literal.
+    // The framed pieces and the paper are shop targets; the
+    // standing label says what a tap does. Across the spawn
+    // path, the community pin board mirrors the notice board:
+    // house pins only, until the members' door opens it.
+    // ============================================================
+    var shopTargets = [];
+    [2.05, -2.05].forEach(function (pz, i) {
+      var post = B.MeshBuilder.CreateCylinder('plaza-shop-post-' + i,
+        { diameter: 0.12, height: 5.1, tessellation: 8 }, scene);
+      post.position.set(12.32, 2.55, pz);
+      post.material = CCW.mat(scene, B, 'plaza-shop-post-mat-' + i, P.plumHouse);
+    });
+    var shopPanelFrame = B.MeshBuilder.CreateBox('plaza-shop-panel-frame',
+      { width: 0.14, height: 3.5, depth: 4.1 }, scene);
+    shopPanelFrame.position.set(12.28, 2.45, 0);
+    shopPanelFrame.material = CCW.mat(scene, B, 'plaza-shop-panel-frame-mat', P.tealDeep);
+    var shopPanel = B.MeshBuilder.CreatePlane('plaza-shop-panel',
+      { width: 3.8, height: 3.2 }, scene);
+    shopPanel.rotation.y = Math.PI / 2; // face -Z -> -X, toward the Plaza heart
+    shopPanel.position.set(12.19, 2.45, 0);
+    shopPanel.material = CCW.texMat(scene, B, 'plaza-shop-panel-mat',
+      wallpaperTexture(scene, B, 'plaza-shop-panel-tex', 'emblem-medallion', 1.19, 1.0), {});
+    shopTargets.push({
+      id: 'wallpaper-emblem-medallion', name: 'Emblem Medallion — Wallpaper',
+      blurb: 'The CHEAT CODE emblem — crescent, book, atom and ' +
+        'cross in a gold medallion on black. The saga\'s seal, ' +
+        'as a repeating paper.',
+      url: CCW.SHOP_LINKS.storefront, meshes: [shopPanel]
+    });
+    var shopNeonBack = B.MeshBuilder.CreateBox('plaza-shop-neon-back',
+      { width: 0.1, height: 1.05, depth: 3.7 }, scene);
+    shopNeonBack.position.set(12.26, 4.85, 0);
+    shopNeonBack.material = CCW.mat(scene, B, 'plaza-shop-neon-back-mat', P.plumDeep);
+    var shopNeon = B.MeshBuilder.CreatePlane('plaza-shop-neon',
+      { width: 3.5, height: 0.9 }, scene);
+    shopNeon.rotation.y = Math.PI / 2;
+    shopNeon.position.set(12.19, 4.85, 0);
+    shopNeon.material = CCW.texMat(scene, B, 'plaza-shop-neon-mat',
+      CCW.neonSignTexture(scene, B, 'plaza-shop-neon-tex',
+        'The Shop', 'ART · WALLPAPER · WARES',
+        { width: 1024, height: 288, font1: 92, font2: 33 }),
+      { emissive: true });
+    // The two framed pieces on their plinths.
+    [['cafe', 3.45, 'assets/art/cafe-girl.webp', P.tealDeep,
+      'Café Girl — The Heartbreaker Café Print',
+      'The original Café Girl, framed at life scale exactly ' +
+      'as she hangs in the shop. She anchors a whole Chemistress ' +
+      'collection — prints, tees, mugs and more.',
+      CCW.SHOP_LINKS.storefront],
+     ['chef', -3.45, 'assets/art/chef-portrait.webp', P.plumHouse,
+      'The Chemistress Chef — Vintage Dates Art',
+      'Her signature portrait, brushwork and all — the face of ' +
+      'Chemist Dates and of the wallpaper in the shop.',
+      CCW.SHOP_LINKS.wallpaper]].forEach(function (fp) {
+      var plinth = B.MeshBuilder.CreateBox('plaza-shop-' + fp[0] + '-plinth',
+        { width: 0.55, height: 0.5, depth: 2.0 }, scene);
+      plinth.position.set(12.15, 0.25, fp[1]);
+      plinth.material = CCW.mat(scene, B, 'plaza-shop-' + fp[0] + '-plinth-mat', P.plumHouse);
+      var fr = B.MeshBuilder.CreateBox('plaza-shop-' + fp[0] + '-frame',
+        { width: 0.1, height: 1.95, depth: 1.95 }, scene);
+      fr.position.set(12.12, 2.35, fp[1]);
+      fr.material = CCW.mat(scene, B, 'plaza-shop-' + fp[0] + '-frame-mat', fp[3]);
+      var art = B.MeshBuilder.CreatePlane('plaza-shop-' + fp[0],
+        { width: 1.8, height: 1.8 }, scene);
+      art.rotation.y = Math.PI / 2;
+      art.position.set(12.05, 2.35, fp[1]);
+      var atex = new B.Texture(fp[2], scene);
+      atex.name = 'plaza-shop-' + fp[0] + '-tex';
+      art.material = CCW.texMat(scene, B, 'plaza-shop-' + fp[0] + '-mat', atex, {});
+      shopTargets.push({ id: 'art-' + fp[0], name: fp[4], blurb: fp[5],
+        url: fp[6], meshes: [art] });
+    });
+    var shopLabelPost = B.MeshBuilder.CreateBox('plaza-shop-label-post',
+      { width: 0.07, height: 0.62, depth: 0.07 }, scene);
+    shopLabelPost.position.set(11.5, 0.31, 0);
+    shopLabelPost.material = CCW.mat(scene, B, 'plaza-shop-label-post-mat', P.plumHouse);
+    var shopLabel = CCW.makeLabel(scene, B, 'plaza-shop-label',
+      ['THE SHOP WINDOW', 'tap a piece — see it in the shop'], 2.2, 0.52,
+      { fg: P.goldSoft });
+    shopLabel.rotation.y = Math.PI / 2;
+    shopLabel.position.set(11.45, 0.66, 0);
+
+    // The Plaza pin board, mirroring the notice board across
+    // the spawn path (house pins; member pins ride the door).
+    var pinPost = B.MeshBuilder.CreateCylinder('plaza-pinboard-post',
+      { diameter: 0.14, height: 2.2, tessellation: 8 }, scene);
+    pinPost.position.set(-4.6, 1.1, 11.5);
+    pinPost.material = CCW.mat(scene, B, 'plaza-pinboard-post-mat', P.plumHouse);
+    var pinBoard = B.MeshBuilder.CreateBox('plaza-pinboard',
+      { width: 3.3, height: 2.2, depth: 0.12 }, scene);
+    pinBoard.position.set(-4.6, 3.15, 11.5);
+    pinBoard.rotation.y = 0.93; // mirror of the notice board, facing spawn
+    pinBoard.material = CCW.mat(scene, B, 'plaza-pinboard-mat', P.tealDeep);
+    var pinFace = B.MeshBuilder.CreatePlane('plaza-pinboard-face',
+      { width: 3.14, height: 2.04 }, scene);
+    pinFace.position.set(-4.6 + Math.sin(0.93) * 0.1, 3.15, 11.5 + Math.cos(0.93) * 0.1);
+    pinFace.rotation.y = 0.93 + Math.PI;
+    pinFace.material = CCW.texMat(scene, B, 'plaza-pinboard-face-mat',
+      CCW.pinboardTexture(scene, B, 'plaza-pinboard-tex',
+        'PINNED BY THE HOUSE', [
+          { title: 'WELCOME IN', tone: '#fdf3e3', lines: [
+            'Six rooms, one Plaza.', 'Tap a glowing pad',
+            'to glide anywhere.'] },
+          { title: 'GAME NIGHT', tone: '#ffd7ec', lines: [
+            'The Parlor, nightly —', 'chess, checkers, dominoes,',
+            'mancala. People only.'] },
+          { title: 'CLASSIC CINEMA', tone: '#a8ece5', lines: [
+            '83 public-domain films', 'on the Theater board.',
+            'Live art always first.'] },
+          { title: 'THE GARDEN', tone: '#d9d2f5', lines: [
+            'Breathe easy — the gate', 'is always open.',
+            'Garden hours: always.'] },
+          { title: 'THE SHOP WINDOW', tone: '#fdf3e3', lines: [
+            'By the Library door —', 'tap a framed piece',
+            'to see it in the shop.'] }
+        ]), {});
+
     buildEntrance(scene, B);
 
     // Zones + teleport wiring data.
@@ -4582,6 +5054,7 @@
       zones[zone.id] = built;
       portalMeshes = portalMeshes.concat(built.portalMeshes);
       if (built.gameTargets) gameTargets = gameTargets.concat(built.gameTargets);
+      if (built.shopTargets) shopTargets = shopTargets.concat(built.shopTargets);
       if (built.theaterWatch) theaterWatch = built.theaterWatch;
       if (built.penpal) penpalSurface = built.penpal;
 
@@ -4663,6 +5136,7 @@
     });
 
     return { zones: zones, portalMeshes: portalMeshes, teleports: teleports,
-      gameTargets: gameTargets, theater: theaterWatch, penpal: penpalSurface };
+      gameTargets: gameTargets, theater: theaterWatch, penpal: penpalSurface,
+      shopTargets: shopTargets };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

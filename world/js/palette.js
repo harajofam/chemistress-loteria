@@ -3766,4 +3766,123 @@
       });
     });
   };
+  /*
+   * neonSignTexture (WALL LIFE pass, 2026-11-04) — the Creator
+   * Studio's "Good Vibes Only" treatment, generalized so the
+   * Parlor and the Plaza shop window wear the same glass: a
+   * near-black plum field with a breath of dust, the script line
+   * in a pale core with a hot-pink glow halo (canvas shadow,
+   * drawn twice to deepen it), and an optional second line in
+   * letterspaced teal-lit caps beneath. The sign planes carry
+   * the texture emissive (CCW.texMat { emissive: true }), so the
+   * letters read as lit tubes against the dark glass.
+   */
+  CCW.neonSignTexture = function (scene, B, name, line1, line2, opts) {
+    opts = opts || {};
+    var w = opts.width || 1024, h = opts.height || 320;
+    return CCW.canvasTexture(scene, B, name, w, h, function (ctx) {
+      ctx.fillStyle = '#14030f';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = CCW.prand(name);
+      ctx.fillStyle = 'rgba(255,215,236,0.20)';
+      for (var i = 0; i < 140; i++) ctx.fillRect(rnd() * w, rnd() * h, 2, 2);
+      ctx.strokeStyle = 'rgba(255,46,136,0.45)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(16, 16, w - 32, h - 32);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      var core = opts.core || '#ffd7ec', glow = opts.glow || '#ff2e88';
+      ctx.font = (opts.font1 || 118) + 'px "Segoe Script","Brush Script MT","Apple Chancery",cursive';
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 42;
+      ctx.fillStyle = core;
+      var y1 = line2 ? h * 0.40 : h * 0.52;
+      ctx.fillText(line1, w / 2, y1);
+      ctx.fillText(line1, w / 2, y1);
+      if (line2) {
+        ctx.font = '600 ' + (opts.font2 || 42) + 'px Georgia, "Times New Roman", serif';
+        ctx.shadowColor = '#12c2b2';
+        ctx.shadowBlur = 26;
+        ctx.fillStyle = '#c9fff7';
+        ctx.fillText(line2.split('').join(' '), w / 2, h * 0.78);
+      }
+      ctx.shadowBlur = 0;
+    });
+  };
+
+  /*
+   * pinboardTexture (WALL LIFE pass, 2026-11-04) — a cork
+   * community board as ONE drawn texture: cork grain (thousands
+   * of seeded speckles, no flat fill), a plum header band with
+   * the board's name in cream serif, and pinned cards — house
+   * content in Jay's voice lanes (movie nights, garden hours,
+   * the letter circle), each card a soft paper tone with a
+   * slight tilt, a title, hand-set lines, and a pin dot. NO
+   * invented people, and NO fake posting: the cards say plainly
+   * that member pins open with the members' door. The board's
+   * frame, board body and any loose notes are geometry in
+   * plaza.js; this texture is the face.
+   * cards: [{ title, lines: [..], tone }] — five slots.
+   */
+  CCW.pinboardTexture = function (scene, B, name, header, cards) {
+    return CCW.canvasTexture(scene, B, name, 1024, 704, function (ctx, w, h) {
+      var rnd = CCW.prand(name);
+      // Cork field: warm tan with dense grain speckle.
+      ctx.fillStyle = '#b3814a';
+      ctx.fillRect(0, 0, w, h);
+      var tones = ['#9c6c38', '#c1915a', '#a5743f', '#bd8a4e', '#8f6132'];
+      for (var i = 0; i < 5200; i++) {
+        ctx.fillStyle = tones[Math.floor(rnd() * tones.length)];
+        ctx.globalAlpha = 0.25 + rnd() * 0.4;
+        ctx.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 5, 1 + rnd() * 3);
+      }
+      ctx.globalAlpha = 1;
+      // Header band.
+      ctx.fillStyle = '#2a0a33';
+      ctx.fillRect(0, 0, w, 84);
+      ctx.fillStyle = '#f5c542';
+      ctx.fillRect(0, 84, w, 4);
+      ctx.fillStyle = '#fdf3e3';
+      ctx.font = '700 40px Georgia, "Times New Roman", serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(header, w / 2, 44);
+      // Pinned cards in five slots with handmade tilts.
+      var slots = [
+        { x: 34, y: 116, w: 302, h: 196, tilt: -0.022 },
+        { x: 360, y: 108, w: 302, h: 204, tilt: 0.016 },
+        { x: 686, y: 118, w: 304, h: 194, tilt: -0.013 },
+        { x: 118, y: 352, w: 336, h: 216, tilt: 0.012 },
+        { x: 540, y: 360, w: 348, h: 208, tilt: -0.017 }
+      ];
+      cards.slice(0, 5).forEach(function (card, i) {
+        var s = slots[i];
+        ctx.save();
+        ctx.translate(s.x + s.w / 2, s.y + s.h / 2);
+        ctx.rotate(card.tilt !== undefined ? card.tilt : s.tilt);
+        ctx.shadowColor = 'rgba(30,10,20,0.45)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 5;
+        ctx.fillStyle = card.tone || '#fdf3e3';
+        ctx.beginPath(); ctx.roundRect(-s.w / 2, -s.h / 2, s.w, s.h, 8); ctx.fill();
+        ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.fillStyle = '#2a0a33';
+        ctx.textAlign = 'center';
+        ctx.font = '700 27px Georgia, "Times New Roman", serif';
+        ctx.fillText(card.title, 0, -s.h / 2 + 40);
+        ctx.font = '23px Georgia, "Times New Roman", serif';
+        ctx.fillStyle = '#4a2358';
+        (card.lines || []).forEach(function (ln, j) {
+          ctx.fillText(ln, 0, -s.h / 2 + 82 + j * 32);
+        });
+        // The pin: a small glowing dot at the card's top center.
+        ctx.fillStyle = '#ff2e88';
+        ctx.beginPath(); ctx.arc(0, -s.h / 2 + 12, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.beginPath(); ctx.arc(-2.5, -s.h / 2 + 9.5, 2.6, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+    });
+  };
+
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -911,6 +911,60 @@
   };
 
   /*
+   * wireShopCard (WALL LIFE pass, 2026-11-04) — the Shop Gallery
+   * card, the Parlor offer card's sibling (same seam discipline):
+   * tapping a framed piece or a wallpaper accent wall in the
+   * world SHOWS this card; the pick itself never navigates. The
+   * card names the piece, says a line about it, and offers one
+   * action — "See it in the shop" — which is the card's only
+   * navigation, through the injected navigate(url), to the piece's
+   * own shop URL (plaza.js CCW.SHOP_LINKS is the one place those
+   * URLs live). "Keep looking" closes the card and goes nowhere.
+   *
+   * env: { document, navigate } — everything injectable, so the
+   * smoke drives the card against a fake DOM, exactly like the
+   * game card. Returns null when the markup is absent (main.js
+   * then simply never offers the card).
+   */
+  CCW.wireShopCard = function (env) {
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var card = doc.getElementById('shop-card');
+    var title = doc.getElementById('shop-card-title');
+    var blurb = doc.getElementById('shop-card-blurb');
+    var goBtn = doc.getElementById('shop-card-go');
+    var closeBtn = doc.getElementById('shop-card-close');
+    if (!card || !title || !blurb || !goBtn || !closeBtn) return null;
+    var current = null;
+
+    goBtn.addEventListener('click', function () {
+      if (!current) return;
+      var url = current.url;
+      card.hidden = true;
+      current = null;
+      if (env && typeof env.navigate === 'function') env.navigate(url);
+    });
+    closeBtn.addEventListener('click', function () {
+      card.hidden = true;
+      current = null;
+    });
+
+    return {
+      element: card,
+      show: function (target) {
+        if (!target) return;
+        current = target;
+        title.textContent = target.name;
+        blurb.textContent = target.blurb;
+        goBtn.textContent = '🛍 See it in the shop';
+        card.hidden = false;
+      },
+      hide: function () { card.hidden = true; current = null; },
+      current: function () { return current; }
+    };
+  };
+
+  /*
    * VIEWER MODE (2026-11-04 — Jay approved the build in her own
    * revert-safe framing: 'worst that can happen is we don't like
    * it and we have to revert'). A stereo split-screen look mode

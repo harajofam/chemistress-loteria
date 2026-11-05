@@ -136,12 +136,16 @@
     // The Pen-Pal Post's note card, wired below beside the theater;
     // a ride puts it away too.
     var penpalCtl = null;
+    // The Shop Gallery card (wall-life pass), wired below beside
+    // the pen-pal card; a ride puts it away too.
+    var shopCard = null;
 
     function ride(tele) {
       if (glider.active()) return;
       if (gameCard) gameCard.hide();
       if (theaterCtl) theaterCtl.hideCard();
       if (penpalCtl) penpalCtl.hideCard();
+      if (shopCard) shopCard.hide();
       glider.start(scene.activeCamera, tele.destPos, tele.destTarget, 1400,
         function () {
           setStatus(tele.landed || ('You have arrived at ' + tele.label + '.'));
@@ -372,6 +376,31 @@
           new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
             penpalCtl.show();
           }));
+      });
+    }
+
+    // ---- The Shop Gallery card (wall-life pass, 2026-11-04) -----
+    // Tapping a framed piece or a wallpaper accent wall (plaza.js
+    // shop targets: the Library's Celestial Cards feature wall,
+    // the Studio's two papers, the Garden's two panels, the Plaza
+    // Shop Window) offers this card — the Parlor seam, reused:
+    // the pick only SHOWS the card; its "See it in the shop"
+    // button is the one navigation, through the same injected
+    // navigate as the game card's Play, out to the piece's shop
+    // URL. Every URL lives in plaza.js CCW.SHOP_LINKS (one place).
+    shopCard = CCW.wireShopCard({
+      document: document,
+      navigate: function (path) { root.location.href = path; }
+    });
+    if (shopCard && world.shopTargets) {
+      world.shopTargets.forEach(function (target) {
+        target.meshes.forEach(function (mesh) {
+          mesh.actionManager = new B.ActionManager(scene);
+          mesh.actionManager.registerAction(
+            new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
+              shopCard.show(target);
+            }));
+        });
       });
     }
 
