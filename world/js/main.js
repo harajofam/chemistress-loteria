@@ -251,7 +251,18 @@
       return '/film/' + entry.id + '/' + encodeURIComponent(entry.file);
     }
     function theaterWatch() {
-      return (world.theater && world.theater.watch) || null;
+      // buildWorld surfaces the Theater's watch build AS
+      // world.theater (plaza.js: { boardMeshes, screen,
+      // glassMaterial, skin, views }) — there is no nested .watch
+      // property on it. This accessor once looked one level too
+      // deep (world.theater.watch), always found null, and
+      // startGlass handed every film straight to the fallback
+      // viewer before a VideoTexture was ever constructed: the
+      // glass could never light, in any skin, however long the
+      // wait. (Live-caught 2026-11-04; root-caused by local repro
+      // against the real page and rail; guarded in world-smoke19,
+      // whose boot now stubs VideoTexture and pins the swap.)
+      return world.theater || null;
     }
     function clearFilmTimer() {
       if (filmTimer) { clearTimeout(filmTimer); filmTimer = null; }
@@ -376,11 +387,51 @@
           video.addEventListener('error', fail);
         }
       }
-      // A silent glass (slow connection, a stream that never
-      // becomes readable) falls back to the viewer on a timer.
-      filmTimer = setTimeout(function () {
-        if (!settled) { settled = true; glassFailed(); }
-      }, 9000);
+      // The fallback watchdog — with a progress clause (fix,
+      // 2026-11-04). The first build used a flat 9 s deadline:
+      // if 'canplay' had not fired by then, the texture was
+      // disposed and the viewer took the showing. But a stream
+      // that is still DELIVERING — metadata parsed, the buffer
+      // growing — is not a failed glass, only a slow one, and
+      // disposal converted slow into never: the rail's biggest
+      // titles carry multi-megabyte indexes (Charade's is
+      // 3.3 MB) ahead of their first frames, and a header repro
+      // against the real page + rail showed metadata + 1.7 s
+      // buffered at ~13 s — healthy, and already dead under the
+      // flat deadline. So the watchdog now ticks every 3 s and
+      // fails the glass ONLY when the stream errors (fail(),
+      // above) or makes no progress across a whole 9 s window,
+      // with a 60 s hard cap so a zombie stream cannot hold the
+      // room forever. Progress = readyState rising or the
+      // buffered end advancing.
+      var glassStartedAt = Date.now();
+      var glassLastProgressAt = glassStartedAt;
+      var glassLastMark = -1;
+      function glassMark() {
+        var b = 0;
+        try {
+          if (video && video.buffered && video.buffered.length) {
+            b = video.buffered.end(video.buffered.length - 1);
+          }
+        } catch (e) {}
+        return (video ? video.readyState : 0) * 1000000 + Math.floor(b * 1000);
+      }
+      glassLastMark = glassMark();
+      filmTimer = setTimeout(function glassTick() {
+        if (settled || !film || film.entry !== entry) return;
+        var m = glassMark();
+        var now = Date.now();
+        if (m > glassLastMark) {
+          glassLastMark = m;
+          glassLastProgressAt = now;
+        }
+        if (now - glassLastProgressAt >= 9000 || now - glassStartedAt >= 60000) {
+          settled = true;
+          glassFailed();
+          return;
+        }
+        filmTimer = setTimeout(glassTick, 3000);
+      }, 3000);
     }
     function playFilm(entry) {
       stopFilm();
