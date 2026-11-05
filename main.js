@@ -155,7 +155,17 @@ async function main() {
     const roomName = document.getElementById('roomName').value;
     setStatus('Connecting...');
     try {
-      room = await client.joinOrCreate(roomName, {});
+      const joinOpts = {};
+      const typedName = document.getElementById('playerName').value.trim();
+      if (typedName) joinOpts.name = typedName;
+      // Phase 3 door: a member arriving from the Hub carries a
+      // session (door.js) — it rides along, and the server names
+      // them from the verified account, never from the typed field.
+      if (window.LoungeDoor) {
+        const sess = await window.LoungeDoor.ready().catch(() => null);
+        if (sess && sess.accessToken) joinOpts.token = sess.accessToken;
+      }
+      room = await client.joinOrCreate(roomName, joinOpts);
       setStatus('Connected. Players: ' + room.state.players.size);
       document.getElementById('btnReady').disabled = false;
       document.getElementById('btnNextCard').disabled = false;
