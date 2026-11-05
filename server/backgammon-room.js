@@ -62,6 +62,7 @@
 //     a game, both players Ready again for the next.
 
 const { Room } = require('colyseus');
+const { loungeAuth, memberName } = require('./auth');
 const { BackgammonPlayer, BackgammonState } = require('./backgammon-state');
 const B = require('./backgammon');
 
@@ -105,6 +106,14 @@ class ChemistressBackgammonRoom extends Room {
     }
   }
 
+  // Phase 3 members' door (Layer A — the real gate): the shared
+  // helper in auth.js verifies the member's own Supabase token +
+  // attestation per LOUNGE_DOOR mode; in open/shadow it never refuses
+  // (see PHASE3-DOOR-PLAN.md).
+  async onAuth(client, options = {}) {
+    return loungeAuth(options, 'chemistress_backgammon');
+  }
+
   onJoin(client, options = {}) {
     // Side = the free slot: the first player at the table takes
     // pink, the second teal. (Who MOVES first is the opening
@@ -112,7 +121,7 @@ class ChemistressBackgammonRoom extends Room {
     const taken = new Set([...this.state.players.values()].map((p) => p.side));
     const side = taken.has(B.PINK) ? B.TEAL : B.PINK;
     const player = new BackgammonPlayer();
-    player.name = typeof options.name === 'string' && options.name ? options.name : 'Player';
+    player.name = memberName(client, options);
     player.seat = side;
     player.side = side;
     player.ready = false;

@@ -53,6 +53,7 @@
 //     dealt in from the next round with 0 points.
 
 const { Room } = require('colyseus');
+const { loungeAuth, memberName } = require('./auth');
 const { DominoPlayer, ChainTile, DominoesState } = require('./dominoes-state');
 const { mulberry32, shuffledOrder, deckHash } = require('./deck');
 const D = require('./dominoes');
@@ -114,9 +115,17 @@ class ChemistressDominoesRoom extends Room {
     }
   }
 
+  // Phase 3 members' door (Layer A — the real gate): the shared
+  // helper in auth.js verifies the member's own Supabase token +
+  // attestation per LOUNGE_DOOR mode; in open/shadow it never refuses
+  // (see PHASE3-DOOR-PLAN.md).
+  async onAuth(client, options = {}) {
+    return loungeAuth(options, 'chemistress_dominoes');
+  }
+
   onJoin(client, options = {}) {
     const player = new DominoPlayer();
-    player.name = typeof options.name === 'string' && options.name ? options.name : 'Player';
+    player.name = memberName(client, options);
     player.seat = this.nextSeat++;
     player.ready = false;
     player.inRound = false;

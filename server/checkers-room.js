@@ -42,6 +42,7 @@
 //     in v1 — see checkers.js.
 
 const { Room } = require('colyseus');
+const { loungeAuth, memberName } = require('./auth');
 const { CheckersPlayer, CheckersState } = require('./checkers-state');
 const C = require('./checkers');
 
@@ -65,6 +66,14 @@ class ChemistressCheckersRoom extends Room {
     }
   }
 
+  // Phase 3 members' door (Layer A — the real gate): the shared
+  // helper in auth.js verifies the member's own Supabase token +
+  // attestation per LOUNGE_DOOR mode; in open/shadow it never refuses
+  // (see PHASE3-DOOR-PLAN.md).
+  async onAuth(client, options = {}) {
+    return loungeAuth(options, 'chemistress_checkers');
+  }
+
   onJoin(client, options = {}) {
     // Side = the free slot: the first player at the table takes pink
     // (bottom, moves first); the second takes teal. Seat == side at a
@@ -72,7 +81,7 @@ class ChemistressCheckersRoom extends Room {
     const taken = new Set([...this.state.players.values()].map((p) => p.side));
     const side = taken.has(C.PINK) ? C.TEAL : C.PINK;
     const player = new CheckersPlayer();
-    player.name = typeof options.name === 'string' && options.name ? options.name : 'Player';
+    player.name = memberName(client, options);
     player.seat = side;
     player.side = side;
     player.ready = false;

@@ -17,6 +17,13 @@
 //   DECK_PATH      deck JSON path (default ../chemistress_loteria_card_set_full_55_enhanced.json)
 //   LOTERIA_SEED   fixed seed for a reproducible table (default: random per room)
 //   LOTERIA_TEST_HOOKS=1   enable the reveal_deck test message (never in production)
+//   LOUNGE_DOOR    Phase 3 door mode: open (default) | shadow | members
+//                  (server/auth.js; the rollback switch — see PHASE3-DOOR-PLAN.md)
+//   SUPABASE_URL / SUPABASE_ANON_KEY   the Hub project's public values
+//                  (defaults are the ones already in the site's code;
+//                  NEVER a service-role key — auth.js refuses the concept)
+//   FILM_UPSTREAM_BASE   film rail upstream (default https://archive.org/download)
+//   PENPAL_STORE_PATH    pen-pal pool store (default server/data/penpal-notes.json)
 
 const http = require('http');
 const path = require('path');
@@ -29,6 +36,9 @@ const { ChemistressCheckersRoom } = require('./checkers-room');
 const { ChemistressChessRoom } = require('./chess-room');
 const { ChemistressMancalaRoom } = require('./mancala-room');
 const { ChemistressBackgammonRoom } = require('./backgammon-room');
+const auth = require('./auth');
+const { mountFilmRail, ALLOWLIST_SIZE } = require('./film-rail');
+const { mountPenpal } = require('./penpal');
 
 const PORT = Number(process.env.PORT) || 2567;
 
@@ -40,6 +50,7 @@ const CLIENT_FILES = [
   'index.html',
   'main.js',
   'colyseus.js',
+  'door.js',
   'styles.css',
   'chemistress_loteria_card_set_full_55_enhanced.json',
 ];
@@ -87,6 +98,32 @@ app.use('/mancala', express.static(path.join(CLIENT_ROOT, 'mancala')));
 // the same self-hosted colyseus.js bundle from the client root.
 app.use('/backgammon', express.static(path.join(CLIENT_ROOT, 'backgammon')));
 
+// --- Phase 3 members' door: the mode, readable by door.js -----------
+// door.js (loaded by every gated page) asks one question — which mode
+// is the door in — so its overlay knows whether to stand aside
+// (open/shadow) or to stand guard (members). This exposes the mode
+// string only; every real decision stays in the rooms' onAuth
+// (server/auth.js). NOTE: plan §5 foresaw no new routes in the launch
+// set (that was about Layer C's cookie route, still deferred); this
+// five-line status read is the one deliberate addition, flagged in
+// SERVER-PASS-BUILD-NOTES.md.
+app.get('/door/status', (req, res) => {
+  res.json({ mode: auth.doorMode() });
+});
+
+// --- The film rail (Theater) -----------------------------------------
+// Same-origin allowlist proxy: exactly the 83 verified Classic
+// Cinema titles, re-served with the CORS header Archive.org does
+// not send, so the Theater's great glass can play them
+// (server/film-rail.js). Everything else is refused, unfetched.
+mountFilmRail(app);
+
+// --- Shared Pen-Pal mail ----------------------------------------------
+// GET/POST /penpal/notes: the pooled slow mail of the Pen-Pal Post,
+// scanned server-side with the note module's own rules
+// (server/penpal.js).
+const penpal = mountPenpal(app);
+
 // --- Game server on the same HTTP server -----------------------------------
 // Colyseus's matchmaking routes wrap this server's request handler and
 // delegate everything else (the static client above) untouched; the
@@ -107,6 +144,10 @@ gameServer
   .then(() => {
     console.log(`[chemistress-loteria] listening on ws://localhost:${PORT} (room: chemistress_loteria)`);
     console.log(`[chemistress-loteria] web client served at http://localhost:${PORT}/`);
+    console.log(`[chemistress-loteria] lounge door mode: ${auth.doorMode()}` +
+      (auth.TEST_AUTH ? ' — WARNING: LOUNGE_TEST_AUTH=1, the TEST STUB verifier is ON (local test runs only; never set this in production)' : ''));
+    console.log(`[chemistress-loteria] film rail live: ${ALLOWLIST_SIZE} Classic Cinema titles at /film/<id>/<file>`);
+    console.log(`[chemistress-loteria] pen-pal mail live: shared pool at /penpal/notes (store: ${penpal.storePath})`);
   })
   .catch((err) => {
     console.error('[chemistress-loteria] failed to start:', err);
