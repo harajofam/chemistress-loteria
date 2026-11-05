@@ -381,7 +381,15 @@ async function join() {
   const name = $('playerName').value.trim() || 'Player';
   try {
     client = new Colyseus.Client(resolveWsUrl());
-    room = await client.joinOrCreate('chemistress_backgammon', { name });
+    const joinOpts = { name };
+        // Phase 3 door: a member arriving from the Hub carries a
+        // session (door.js) — it rides along, and the server names
+        // them from the verified account, never from this field.
+        if (window.LoungeDoor) {
+          const sess = await window.LoungeDoor.ready().catch(() => null);
+          if (sess && sess.accessToken) joinOpts.token = sess.accessToken;
+        }
+        room = await client.joinOrCreate('chemistress_backgammon', joinOpts);
   } catch (err) {
     setStatus('Could not join the table — is it full (2 seats) or the server waking up? Try again in a moment.');
     return;
