@@ -26,6 +26,7 @@
 //     blackout over marked-and-called tiles.
 
 const { Room } = require('colyseus');
+const { loungeAuth, memberName } = require('./auth');
 const { Tile, Player, LoteriaState } = require('./state');
 const { loadDeckIds, mulberry32, shuffledOrder, drawBoard, deckHash } = require('./deck');
 const { TILE_COUNT, checkWin } = require('./win');
@@ -64,9 +65,17 @@ class ChemistressLoteriaRoom extends Room {
     }
   }
 
+  // Phase 3 members' door (Layer A — the real gate): the shared
+  // helper in auth.js verifies the member's own Supabase token +
+  // attestation per LOUNGE_DOOR mode; in open/shadow it never refuses
+  // (see PHASE3-DOOR-PLAN.md).
+  async onAuth(client, options = {}) {
+    return loungeAuth(options, 'chemistress_loteria');
+  }
+
   onJoin(client, options = {}) {
     const player = new Player();
-    player.name = typeof options.name === 'string' && options.name ? options.name : 'Player';
+    player.name = memberName(client, options);
     player.seat = this.nextSeat++;
     player.ready = false;
     player.isCaller = false;
