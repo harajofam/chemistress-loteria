@@ -3336,4 +3336,434 @@
       });
     });
   };
+
+  // ---- The Creator Studio (M2b interior 5 of 5, 2026-11-04) -------
+  // The Apothecary (interiors addendum; design section 3.7), from
+  // Jay's photos 05 (the lavender herb cabinet) + 01-BR (the
+  // apothecary market lounge) + 06 (the Kitchen Disco look, the
+  // social corner only — a borrowed photo, look only, never a
+  // likeness, never a surface texture copied from it).
+
+  // The Studio's wall: hot-pink panelling carrying the photo's
+  // GOLD LINE-ART — thin gold fans and arch rays over the panels
+  // (gold stays a fine line here too: strokes, never fields),
+  // grain throughout, a teal wainscot line, baked warm falloff.
+  CCW.studioWallTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      ctx.fillStyle = P.pinkHot;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(733 + 41);
+      for (var b = 0; b < 8; b++) {
+        ctx.fillStyle = b % 2 ? 'rgba(160,10,80,0.10)' : 'rgba(255,255,255,0.10)';
+        ctx.fillRect(b * w / 8, 0, w / 8, h);
+      }
+      for (var s = 0; s < 2400; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(140,0,60,0.10)' : 'rgba(255,200,225,0.12)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+      }
+      function strokeR(x, y, rw, rh) {
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + rw, y); ctx.lineTo(x + rw, y + rh);
+        ctx.lineTo(x, y + rh); ctx.closePath();
+        ctx.stroke();
+      }
+      // The gold line-art: one fan per panel — a rising sun of
+      // thin rays + two concentric arcs, drawn in strokes only.
+      function fan(cx, baseY, R) {
+        ctx.strokeStyle = 'rgba(245,197,66,0.85)';
+        ctx.lineWidth = 3;
+        for (var ri = 0; ri <= 6; ri++) {
+          var ang = Math.PI + (ri / 6) * Math.PI;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(ang) * R * 0.30, baseY + Math.sin(ang) * R * 0.30);
+          ctx.lineTo(cx + Math.cos(ang) * R, baseY + Math.sin(ang) * R);
+          ctx.stroke();
+        }
+        [0.52, 0.78, 1.0].forEach(function (k) {
+          ctx.beginPath();
+          ctx.arc(cx, baseY, R * k, Math.PI, Math.PI * 2);
+          ctx.stroke();
+        });
+        ctx.beginPath(); ctx.arc(cx, baseY, 7, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(245,197,66,0.9)';
+        ctx.fill();
+      }
+      var pw = w / 4;
+      for (var p = 0; p < 4; p++) {
+        var x0 = p * pw + 26, x1 = (p + 1) * pw - 26, y0 = 34, y1 = h * 0.70;
+        ctx.strokeStyle = 'rgba(140,0,60,0.50)'; ctx.lineWidth = 7;
+        strokeR(x0, y0, x1 - x0, y1 - y0);
+        ctx.strokeStyle = 'rgba(255,220,238,0.65)'; ctx.lineWidth = 3;
+        strokeR(x0 + 6, y0 + 6, x1 - x0 - 12, y1 - y0 - 12);
+        fan((x0 + x1) / 2, y1 - 24, (x1 - x0) * 0.36);
+      }
+      var wy = h * 0.76;
+      ctx.fillStyle = '#e7549a';
+      ctx.fillRect(0, wy, w, h - wy);
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(0, wy - 7, w, 7);
+      ctx.fillStyle = P.gold;
+      ctx.fillRect(0, wy, w, 2.5);
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, 'rgba(255,240,245,0.12)');
+      g.addColorStop(0.55, 'rgba(255,255,255,0)');
+      g.addColorStop(1, 'rgba(110,0,50,0.13)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // The Studio floor: a Persian-style rug field wall to wall
+  // (photo 01-BR's great rug) — plum-pink field, coral + teal
+  // medallions, border bands, heavy grain so it reads as woven.
+  CCW.studioFloorTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
+      ctx.fillStyle = '#57163f';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(2027);
+      for (var s = 0; s < 9000; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,120,170,0.07)' : 'rgba(20,4,24,0.10)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.4, 2.4);
+      }
+      // Border bands.
+      ctx.strokeStyle = P.coral; ctx.lineWidth = 26;
+      ctx.strokeRect(46, 46, w - 92, h - 92);
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 8;
+      ctx.strokeRect(86, 86, w - 172, h - 172);
+      ctx.strokeStyle = 'rgba(245,197,66,0.65)'; ctx.lineWidth = 3;
+      ctx.strokeRect(112, 112, w - 224, h - 224);
+      // Border diamonds.
+      ctx.fillStyle = 'rgba(18,194,178,0.75)';
+      for (var d = 0; d < 12; d++) {
+        var t = (d + 0.5) / 12;
+        [[t * w, 46], [t * w, h - 46], [46, t * h], [w - 46, t * h]].forEach(function (pt) {
+          ctx.save();
+          ctx.translate(pt[0], pt[1]);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillRect(-11, -11, 22, 22);
+          ctx.restore();
+        });
+      }
+      // Medallions: a great center + four quarter medallions.
+      function medallion(cx, cy, R) {
+        for (var ring = 0; ring < 3; ring++) {
+          ctx.strokeStyle = ring % 2 ? 'rgba(245,197,66,0.7)' : 'rgba(255,122,89,0.85)';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(cx, cy, R * (1 - ring * 0.22), 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        for (var p = 0; p < 8; p++) {
+          var ang = (p / 8) * Math.PI * 2;
+          ctx.fillStyle = p % 2 ? 'rgba(18,194,178,0.8)' : 'rgba(255,46,136,0.8)';
+          ctx.beginPath();
+          ctx.ellipse(cx + Math.cos(ang) * R * 0.62, cy + Math.sin(ang) * R * 0.62,
+            R * 0.20, R * 0.10, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        star(ctx, cx, cy, R * 0.26, P.goldSoft);
+      }
+      medallion(w / 2, h / 2, 190);
+      medallion(w * 0.25, h * 0.25, 88);
+      medallion(w * 0.75, h * 0.25, 88);
+      medallion(w * 0.25, h * 0.75, 88);
+      medallion(w * 0.75, h * 0.75, 88);
+      // A baked center light — the room's warmth pools mid-rug.
+      var g = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, w * 0.72);
+      g.addColorStop(0, 'rgba(255,214,150,0.20)');
+      g.addColorStop(0.6, 'rgba(255,214,150,0.05)');
+      g.addColorStop(1, 'rgba(16,2,20,0.22)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // The Studio's jar painter: five apothecary kinds (photo 05's
+  // own labels), the Garden painter's construction — glass
+  // shading, wooden lid, cream label — with the drawing
+  // PRE-FLIPPED, because a cylinder's wrap reads mirrored from
+  // outside (the Garden render catch, 2026-11-04).
+  CCW.studioJarTexture = function (scene, B, name, variant) {
+    var P = CCW.PALETTE;
+    var kinds = [
+      { fill: '#6d5ba8', fleck: '#9d8fd0', dark: '#4a3d78', word: 'LAVENDER' },
+      { fill: '#c9a86a', fleck: '#efe0b0', dark: '#96762f', word: 'CHAMOMILE' },
+      { fill: '#c65b7d', fleck: '#eda4bc', dark: '#96405c', word: 'ROSE PETALS' },
+      { fill: '#4d8a5a', fleck: '#93c49d', dark: '#2e5c3a', word: 'GREEN TEA' },
+      { fill: '#8a5a2e', fleck: '#c99a5e', dark: '#5c3a1a', word: 'EARL GREY' }
+    ];
+    var k = kinds[variant % kinds.length];
+    return CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      ctx.translate(w, 0); ctx.scale(-1, 1);
+      ctx.fillStyle = k.fill;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(500 + variant * 131);
+      for (var s = 0; s < 700; s++) {
+        ctx.fillStyle = rnd() > 0.45 ? k.fleck : k.dark;
+        ctx.globalAlpha = 0.25 + rnd() * 0.4;
+        ctx.fillRect(rnd() * w, 60 + rnd() * (h - 70), 3.4, 5.5);
+      }
+      ctx.globalAlpha = 1;
+      var g = ctx.createLinearGradient(0, 0, w, 0);
+      g.addColorStop(0, 'rgba(30,10,40,0.38)');
+      g.addColorStop(0.18, 'rgba(255,255,255,0.20)');
+      g.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+      g.addColorStop(0.82, 'rgba(255,255,255,0.16)');
+      g.addColorStop(1, 'rgba(30,10,40,0.38)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#7a4a22';
+      ctx.fillRect(0, 0, w, 34);
+      ctx.fillStyle = 'rgba(255,220,160,0.35)';
+      ctx.fillRect(0, 4, w, 5);
+      ctx.fillStyle = 'rgba(40,20,5,0.45)';
+      ctx.fillRect(0, 30, w, 4);
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(28, 108, w - 56, 74);
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 3;
+      ctx.strokeRect(34, 114, w - 68, 62);
+      ctx.fillStyle = '#3d1247';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 30px Georgia, serif';
+      ctx.fillText(k.word, w / 2, 146);
+    });
+  };
+
+  // A member-work piece for the gallery wall + shelf display:
+  // drawn in the saga's EMBLEM register (SAGA-ART-REFERENCE —
+  // black or cream field, cream frame language, flat jewel
+  // icons, serif titles), because that is the house's art
+  // language. Titles only — the Studio invents no makers:
+  // displayed work is posted by members themselves (design
+  // 3.7), and these stands hold the wall, labeled and lit,
+  // until that flow exists in-world.
+  CCW.studioArtTexture = function (scene, B, name, variant) {
+    var P = CCW.PALETTE;
+    var titles = ['FIRST LIGHT', 'ORCHARD STUDY', 'SMALL ATOMS',
+      'THE BRAVE HEART', 'SEVEN RIBBONS'];
+    return CCW.canvasTexture(scene, B, name, 512, 640, function (ctx, w, h) {
+      var black = variant % 2 === 0;
+      ctx.fillStyle = black ? '#160a1e' : P.cream;
+      ctx.fillRect(0, 0, w, h);
+      var ink = black ? P.cream : '#3d1247';
+      var rnd = prand(3100 + variant * 211);
+      for (var s = 0; s < 420; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(245,197,66,0.08)' : 'rgba(143,127,212,0.08)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+      }
+      ctx.strokeStyle = black ? P.cream : P.tealDeep; ctx.lineWidth = 9;
+      ctx.strokeRect(20, 20, w - 40, h - 40);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2.5;
+      ctx.strokeRect(38, 38, w - 76, h - 76);
+      var cx = w / 2, cy = 268;
+      if (variant === 0) {
+        // Crescent + star over an open book (the emblem pair).
+        emblemCrescent(ctx, cx, cy - 58, 96, P.goldSoft, black ? '#160a1e' : P.cream);
+        star(ctx, cx + 74, cy - 128, 22, P.teal);
+        emblemBook(ctx, cx, cy + 116, 118, black ? '#22102e' : '#efe3cb', P.coral);
+      } else if (variant === 1) {
+        // Orchard study: two great cherries on their stems.
+        ctx.strokeStyle = '#2e7d4f'; ctx.lineWidth = 7;
+        ctx.beginPath(); ctx.moveTo(cx - 64, cy + 62); ctx.quadraticCurveTo(cx - 10, cy - 90, cx + 66, cy - 118); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx + 70, cy + 40); ctx.quadraticCurveTo(cx + 62, cy - 40, cx + 66, cy - 118); ctx.stroke();
+        ctx.fillStyle = '#57a773';
+        ctx.beginPath(); ctx.ellipse(cx + 86, cy - 122, 40, 17, 0.5, 0, Math.PI * 2); ctx.fill();
+        [[cx - 74, cy + 96], [cx + 76, cy + 74]].forEach(function (pt) {
+          ctx.fillStyle = '#d81b60';
+          ctx.beginPath(); ctx.arc(pt[0], pt[1], 56, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.5)';
+          ctx.beginPath(); ctx.arc(pt[0] - 18, pt[1] - 20, 15, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (variant === 2) {
+        // Small atoms: the atom emblem, teal and coral orbits.
+        emblemAtom(ctx, cx, cy, 120, P.teal);
+        emblemAtom(ctx, cx, cy, 74, P.coral);
+        star(ctx, cx - 132, cy - 132, 15, P.goldSoft);
+        star(ctx, cx + 138, cy + 108, 13, P.goldSoft);
+      } else if (variant === 3) {
+        // The brave heart: a graphic heart, ribbon-lined.
+        ctx.fillStyle = '#c2185b';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 138);
+        ctx.bezierCurveTo(cx - 168, cy + 30, cx - 118, cy - 128, cx, cy - 52);
+        ctx.bezierCurveTo(cx + 118, cy - 128, cx + 168, cy + 30, cx, cy + 138);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = P.goldSoft; ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 104);
+        ctx.bezierCurveTo(cx - 118, cy + 12, cx - 84, cy - 92, cx, cy - 34);
+        ctx.bezierCurveTo(cx + 84, cy - 92, cx + 118, cy + 12, cx, cy + 104);
+        ctx.stroke();
+        ribbonSwirl(ctx, [[cx - 150, cy + 150], [cx - 60, cy + 108], [cx + 60, cy + 168], [cx + 150, cy + 118]],
+          black ? 'rgba(18,194,178,0.85)' : 'rgba(11,122,112,0.75)', 5, 1);
+      } else {
+        // Seven ribbons: swirling lines + the numeral.
+        var cols = ['#12c2b2', '#ff2e88', '#ff7a59', '#8f7fd4', '#f5c542', '#18b26b', '#c65b7d'];
+        for (var r = 0; r < 7; r++) {
+          var pts = [];
+          for (var px = 0; px <= 6; px++) {
+            pts.push([86 + px * 57, cy - 120 + r * 40 + Math.sin(px * 1.1 + r) * 16]);
+          }
+          ribbonSwirl(ctx, pts, cols[r], 6, 0.9);
+        }
+        ctx.fillStyle = ink;
+        ctx.font = 'bold 120px Georgia, serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('7', cx, cy + 158);
+      }
+      ctx.fillStyle = ink;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 42px Georgia, serif';
+      ctx.fillText(titles[variant % titles.length], cx, 552);
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(cx - 90, 512, 180, 4);
+    });
+  };
+
+  // The Kitchen Disco corner's neon (photo 06's look — drawn,
+  // not copied): pink neon script on the emblem black, a small
+  // heart beneath. The sign's field is a poster surface, the
+  // one place black belongs inside a bright room.
+  CCW.studioNeonTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 640, 512, function (ctx, w, h) {
+      ctx.fillStyle = '#12040f';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(777 + 13);
+      for (var s = 0; s < 300; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,46,136,0.05)' : 'rgba(18,194,178,0.05)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = '#ff2e88';
+      ctx.shadowBlur = 34;
+      ctx.fillStyle = '#ffd7ec';
+      ctx.font = 'italic bold 92px "Segoe Script", "Brush Script MT", cursive';
+      ctx.fillText('Good Vibes', w / 2, 168);
+      ctx.fillText('Only', w / 2, 282);
+      ctx.shadowBlur = 22;
+      ctx.strokeStyle = '#ff7ab0';
+      ctx.lineWidth = 6;
+      var cx = w / 2, cy = 396;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + 44);
+      ctx.bezierCurveTo(cx - 56, cy + 4, cx - 38, cy - 40, cx, cy - 14);
+      ctx.bezierCurveTo(cx + 38, cy - 40, cx + 56, cy + 4, cx, cy + 44);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    });
+  };
+
+  // Pop prints for the social corner (drawn pop motifs in the
+  // photo-06 register — bold flat shapes on cream): cherries,
+  // a checkerboard starburst, a leopard-spot field.
+  CCW.studioPopTexture = function (scene, B, name, variant) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#1a051f'; ctx.lineWidth = 10;
+      ctx.strokeRect(14, 14, w - 28, h - 28);
+      var rnd = prand(910 + variant * 67);
+      if (variant === 0) {
+        ctx.strokeStyle = '#2e7d4f'; ctx.lineWidth = 9;
+        ctx.beginPath(); ctx.moveTo(190, 300); ctx.quadraticCurveTo(250, 130, 330, 104); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(330, 300); ctx.quadraticCurveTo(322, 190, 330, 104); ctx.stroke();
+        ctx.fillStyle = '#57a773';
+        ctx.beginPath(); ctx.ellipse(356, 98, 52, 21, 0.5, 0, Math.PI * 2); ctx.fill();
+        [[186, 344], [330, 322]].forEach(function (pt) {
+          ctx.fillStyle = '#e0245e';
+          ctx.beginPath(); ctx.arc(pt[0], pt[1], 72, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.55)';
+          ctx.beginPath(); ctx.arc(pt[0] - 24, pt[1] - 26, 19, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (variant === 1) {
+        var cell = w / 8;
+        for (var yy = 0; yy < 8; yy++) {
+          for (var xx = 0; xx < 8; xx++) {
+            if ((xx + yy) % 2 === 0) {
+              ctx.fillStyle = '#1a051f';
+              ctx.fillRect(xx * cell, yy * cell, cell, cell);
+            }
+          }
+        }
+        ctx.fillStyle = P.coral;
+        ctx.beginPath();
+        for (var p = 0; p < 16; p++) {
+          var ang = (p / 16) * Math.PI * 2;
+          var rr = p % 2 ? 62 : 128;
+          var px = w / 2 + Math.cos(ang) * rr, py = h / 2 + Math.sin(ang) * rr;
+          if (p === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath(); ctx.fill();
+        star(ctx, w / 2, h / 2, 34, P.goldSoft);
+      } else {
+        ctx.fillStyle = '#f7a8c4';
+        ctx.fillRect(24, 24, w - 48, h - 48);
+        for (var s = 0; s < 42; s++) {
+          var sx = 50 + rnd() * (w - 100), sy = 50 + rnd() * (h - 100);
+          var sr = 12 + rnd() * 20;
+          ctx.fillStyle = '#1a051f';
+          for (var b2 = 0; b2 < 5; b2++) {
+            var ba = rnd() * Math.PI * 2;
+            ctx.beginPath();
+            ctx.ellipse(sx + Math.cos(ba) * sr * 0.7, sy + Math.sin(ba) * sr * 0.7,
+              sr * 0.42, sr * 0.24, ba, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = '#e8871e';
+          ctx.beginPath(); ctx.arc(sx, sy, sr * 0.36, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    });
+  };
+
+  // The Studio plaque by the door — the room's working rules,
+  // drawn from design section 3.7's own sentences (compressed,
+  // not quoted): makers post their own work, under their
+  // username; nothing is for sale inside the Lounge.
+  CCW.studioPlaqueTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 640, function (ctx, w, h) {
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 8;
+      ctx.strokeRect(18, 18, w - 36, h - 36);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2.5;
+      ctx.strokeRect(32, 32, w - 64, h - 64);
+      star(ctx, 84, 88, 17, P.goldSoft);
+      star(ctx, w - 84, 88, 17, P.goldSoft);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#7a1042';
+      ctx.font = 'bold 58px Georgia, serif';
+      ctx.fillText('THE CREATOR STUDIO', w / 2, 88);
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(w / 2 - 260, 132, 520, 5);
+      ctx.fillStyle = '#3d1247';
+      ctx.font = '44px Georgia, serif';
+      var lines = [
+        'The makers\' room — gallery walls',
+        'for art, writing and music.',
+        '',
+        'Everything shown here is posted by',
+        'its maker, under their username:',
+        'labeled, lit, and honored.',
+        '',
+        'Nothing is for sale in the Lounge —',
+        'the shops live on the website,',
+        'where they belong.'
+      ];
+      lines.forEach(function (ln, i) {
+        ctx.fillText(ln, w / 2, 190 + i * 44);
+      });
+    });
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
