@@ -3218,6 +3218,26 @@
         ctx.fillStyle = lg;
         ctx.fillRect(0, 0, w, h);
       }
+      // MOON GARDEN (realism pass, 2026-11-04): the side glass is
+      // moonlit now — cool cream pools high on the panes where
+      // the moon washes through, and firefly specks drifting in
+      // the green outside. The room stays LUMINOUS (Jay's palette
+      // law overrides the concept painting's gloom): the specks
+      // and pools ADD light, they never take it away.
+      for (var mp = 0; mp < 8; mp++) {
+        var mx = rnd() * w, my = rnd() * h * 0.40;
+        var mg = ctx.createRadialGradient(mx, my, 4, mx, my, 70 + rnd() * 90);
+        mg.addColorStop(0, 'rgba(238,255,240,0.30)');
+        mg.addColorStop(1, 'rgba(238,255,240,0)');
+        ctx.fillStyle = mg;
+        ctx.fillRect(0, 0, w, h);
+      }
+      for (var ff = 0; ff < 44; ff++) {
+        ctx.fillStyle = 'rgba(255,216,110,' + (0.35 + rnd() * 0.45) + ')';
+        ctx.beginPath();
+        ctx.arc(rnd() * w, rnd() * h, 1.3 + rnd() * 1.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
       // Darker hedge line at the foot.
       ctx.fillStyle = 'rgba(24,80,46,0.35)';
       ctx.fillRect(0, h * 0.86, w, h * 0.14);
@@ -3538,6 +3558,412 @@
         ctx.ellipse(cx, 38, 17, 8, 0.6, 0, Math.PI * 2);
         ctx.fill();
       });
+    });
+  };
+
+  // ---- MOON GARDEN (realism pass, 2026-11-04) -------------------
+  // The Therapeutics Garden grows toward Jay's concept painting
+  // "The Moon Garden" (interior-refs/concept-targets/): a glass
+  // dome under a big moon, a cushion circle round a glowing
+  // center, ivy over the shelves, a leaf-pod chair, hanging moons
+  // and stars, lanterns, fireflies. Jay's palette law overrides
+  // the painting's gloom — every painter below ADDS light: the
+  // night in this garden is luminous, hot pink / teal / plum with
+  // navy only as the sky the moon hangs in, gold a fine line.
+
+  // The dome glass: translucent teal-aqua panes (alpha carries
+  // the glass) with a moonwash pooling at the crown, pane lines
+  // in deep teal, gold only as pinhead dots at the joints, and a
+  // dusting of painted stars — the sky shows through the alpha.
+  CCW.gardenDomeGlassTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      // Painted OPAQUE on purpose: the roof glass materials set
+      // a uniform material alpha (see plaza.js) — canvas alpha
+      // proved unreliable there (Babylon's opacityTexture reads
+      // the GREEN channel, not the painted alpha), so the
+      // pattern lives in the RGB and transparency in the
+      // material, where it can be trusted.
+      ctx.fillStyle = 'rgb(168,232,220)';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(9021);
+      for (var i = 0; i < 60; i++) {
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.04 + rnd() * 0.07) + ')';
+        ctx.beginPath();
+        ctx.ellipse(rnd() * w, rnd() * h, 22 + rnd() * 60, 14 + rnd() * 36, rnd() * 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // (No warm moonwash pool in this painter: the first cut
+      // carried one, and the render pass caught it flooding the
+      // up-views gold — a broad warm low-alpha wash under this
+      // room's warm multi-light rig + the glass's own emissive
+      // blooms until it swallows the moon it was meant to frame.
+      // The moon supplies its own glow now, via its halo.)
+      for (var sx = 0; sx < 30; sx++) {
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.35 + rnd() * 0.4) + ')';
+        ctx.beginPath();
+        ctx.arc(rnd() * w, rnd() * h, 1 + rnd() * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = 'rgb(13,110,100)';
+      ctx.lineWidth = 5;
+      for (var vx = 0; vx <= 8; vx++) {
+        ctx.beginPath(); ctx.moveTo(vx * w / 8, 0); ctx.lineTo(vx * w / 8, h); ctx.stroke();
+      }
+      for (var hy = 0; hy <= 4; hy++) {
+        ctx.beginPath(); ctx.moveTo(0, hy * h / 4); ctx.lineTo(w, hy * h / 4); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(245,197,66,0.85)';
+      for (var gx = 0; gx <= 8; gx++) {
+        for (var gy = 0; gy <= 4; gy++) {
+          ctx.beginPath(); ctx.arc(gx * w / 8, gy * h / 4, 3.2, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    });
+  };
+
+  // The big moon: a warm cream disc with soft maria, rim-lit
+  // craters and grain — painted to be looked AT through the dome,
+  // so it carries its detail in the texture (artistry standard:
+  // texture is the detail). Features thin out near the left and
+  // right edges so the sphere's wrap seam stays quiet.
+  CCW.gardenMoonTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      var g = ctx.createRadialGradient(w * 0.42, h * 0.40, 20, w / 2, h / 2, w * 0.52);
+      g.addColorStop(0, '#fdf6da');
+      g.addColorStop(0.6, '#f5e5b4');
+      g.addColorStop(1, '#e2cc90');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(4177);
+      var maria = [[0.34, 0.30, 62], [0.55, 0.24, 44], [0.64, 0.44, 54], [0.42, 0.55, 48], [0.28, 0.62, 34], [0.60, 0.68, 38]];
+      for (var m = 0; m < maria.length; m++) {
+        ctx.fillStyle = 'rgba(176,160,132,0.30)';
+        ctx.beginPath();
+        ctx.ellipse(maria[m][0] * w, maria[m][1] * h, maria[m][2], maria[m][2] * 0.72, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      for (var c = 0; c < 30; c++) {
+        var cx = (0.12 + rnd() * 0.76) * w, cy = rnd() * h, cr = 5 + rnd() * 15;
+        ctx.fillStyle = 'rgba(186,166,124,0.30)';
+        ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,252,238,0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, cr, Math.PI * 0.9, Math.PI * 1.7); ctx.stroke();
+      }
+      for (var s = 0; s < 1600; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(160,138,92,0.10)' : 'rgba(255,255,255,0.12)';
+        ctx.fillRect(rnd() * w, rnd() * h, 1.8, 1.8);
+      }
+      var limb = ctx.createRadialGradient(w / 2, h / 2, w * 0.30, w / 2, h / 2, w * 0.52);
+      limb.addColorStop(0, 'rgba(120,95,40,0)');
+      limb.addColorStop(1, 'rgba(120,95,40,0.22)');
+      ctx.fillStyle = limb;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // The moon's halo: a warm radial wash carried on alpha, drawn
+  // on a billboard so it breathes round the moon from any seat.
+  CCW.gardenMoonHaloTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      var g = ctx.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
+      g.addColorStop(0, 'rgba(255,244,205,0.80)');
+      g.addColorStop(0.35, 'rgba(255,238,190,0.34)');
+      g.addColorStop(1, 'rgba(255,238,190,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // One soft glow dot — the firefly and dust-mote particle sprite.
+  CCW.gardenGlowDotTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 64, 64, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      var g = ctx.createRadialGradient(w / 2, h / 2, 1, w / 2, h / 2, w / 2);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(0.4, 'rgba(255,240,200,0.55)');
+      g.addColorStop(1, 'rgba(255,240,200,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // Ivy: painted vines and leaf clusters on transparency — a top
+  // garland band with strands hanging down it, coral and pink
+  // blossoms, gold only as berry pinpoints. Draped over the herb
+  // shelves, the wallpaper panels, the dome rim and the towers:
+  // the painting's ivy-covered bookcases, at garden scale.
+  CCW.gardenIvyTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      var rnd = prand(7331);
+      var greens = ['#2d6a4f', '#17a398', '#3f9e4d', '#1e5c46', '#57b25e', '#2e8b6e'];
+      function leaf(cx, cy, len, ang) {
+        ctx.save();
+        ctx.translate(cx, cy); ctx.rotate(ang);
+        ctx.fillStyle = greens[Math.floor(rnd() * greens.length)];
+        ctx.beginPath();
+        ctx.ellipse(0, 0, len / 2, len * 0.20, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(228,255,236,0.45)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(-len / 2 + 3, 0); ctx.lineTo(len / 2 - 3, 0); ctx.stroke();
+        ctx.restore();
+      }
+      function vine(x0, y0, x1, y1, x2, y2, leaves) {
+        ctx.strokeStyle = '#1e5c46';
+        ctx.lineWidth = 3.4;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.quadraticCurveTo(x1, y1, x2, y2);
+        ctx.stroke();
+        for (var i = 0; i < leaves; i++) {
+          var t = 0.12 + rnd() * 0.84;
+          var px = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * x1 + t * t * x2;
+          var py = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * y1 + t * t * y2;
+          leaf(px + (rnd() - 0.5) * 26, py + (rnd() - 0.5) * 18, 30 + rnd() * 30, rnd() * Math.PI * 2);
+        }
+      }
+      // The garland band across the top.
+      for (var gv = 0; gv < 9; gv++) {
+        var gx = gv * w / 8;
+        vine(gx, 6, gx + w / 16, 66 + rnd() * 40, gx + w / 8, 10, 7);
+      }
+      // Hanging strands, longest mid-canvas.
+      for (var sv = 0; sv < 11; sv++) {
+        var sx = 20 + rnd() * (w - 40);
+        vine(sx, 10, sx + (rnd() - 0.5) * 70, h * (0.28 + rnd() * 0.2),
+             sx + (rnd() - 0.5) * 46, h * (0.45 + rnd() * 0.42), 6);
+      }
+      // Loose leaf fall through the body of the drape.
+      for (var lf = 0; lf < 120; lf++) {
+        leaf(rnd() * w, rnd() * h * 0.92, 24 + rnd() * 30, rnd() * Math.PI * 2);
+      }
+      // Blossoms: coral and hot pink, the painting's flowers in
+      // the house's own colors.
+      var blos = [P.coral, P.pinkHot, '#ffb3c8', P.coral];
+      for (var bl = 0; bl < 46; bl++) {
+        var bx = rnd() * w, by = rnd() * h * 0.85, br = 4 + rnd() * 5;
+        ctx.fillStyle = blos[Math.floor(rnd() * blos.length)];
+        for (var pt = 0; pt < 5; pt++) {
+          var pa = pt / 5 * Math.PI * 2;
+          ctx.beginPath();
+          ctx.arc(bx + Math.cos(pa) * br * 0.62, by + Math.sin(pa) * br * 0.62, br * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = P.goldSoft;
+        ctx.beginPath(); ctx.arc(bx, by, br * 0.34, 0, Math.PI * 2); ctx.fill();
+      }
+      // Gold berry pinpoints — fine-line gold, never a field.
+      ctx.fillStyle = 'rgba(245,197,66,0.9)';
+      for (var gb = 0; gb < 26; gb++) {
+        ctx.beginPath();
+        ctx.arc(rnd() * w, rnd() * h * 0.8, 1.8 + rnd() * 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  };
+
+  // A throw pillow for the cushion circle: plum velvet carrying a
+  // gold crescent and three small stars — her saga emblem, sewn
+  // soft. Gold stays line-and-glyph here, never a field.
+  CCW.gardenMoonPillowTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      ctx.fillStyle = '#5e2560';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(9182);
+      for (var s = 0; s < 4200; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.10)';
+        ctx.fillRect(rnd() * w, rnd() * h, 1.5, 2.4);
+      }
+      ctx.strokeStyle = 'rgba(245,197,66,0.55)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, w - 20, h - 20);
+      ctx.fillStyle = P.goldSoft;
+      ctx.beginPath(); ctx.arc(w / 2, h / 2, 46, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#4a1a4e';
+      ctx.beginPath(); ctx.arc(w / 2 + 20, h / 2 - 10, 39, 0, Math.PI * 2); ctx.fill();
+      star(ctx, w / 2 + 34, h / 2 + 26, 10, P.goldSoft);
+      star(ctx, 52, 52, 8, 'rgba(245,197,66,0.85)');
+      star(ctx, w - 52, h - 52, 8, 'rgba(245,197,66,0.85)');
+      star(ctx, w - 56, 56, 6, 'rgba(255,243,214,0.9)');
+    });
+  };
+
+  // The terrace medallion under the cushion circle: a plum stone
+  // round painted with a ring of twelve moons and stars and a
+  // soft gold heart-glow — the painting's glowing center, set in
+  // the floor where the cushions gather. Corners stay transparent
+  // so the polka floor breathes around it.
+  CCW.gardenMedallionTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      var cx = w / 2, cy = h / 2;
+      var g = ctx.createRadialGradient(cx, cy, 30, cx, cy, w * 0.495);
+      g.addColorStop(0, '#57255e');
+      g.addColorStop(0.7, '#43134a');
+      g.addColorStop(1, '#2e0b33');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(cx, cy, w * 0.495, 0, Math.PI * 2); ctx.fill();
+      var rnd = prand(6210);
+      for (var s = 0; s < 5200; s++) {
+        var ra = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * w * 0.49;
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.10)';
+        ctx.fillRect(cx + Math.cos(ra) * rr, cy + Math.sin(ra) * rr, 2.2, 2.2);
+      }
+      var heart = ctx.createRadialGradient(cx, cy, 6, cx, cy, w * 0.20);
+      heart.addColorStop(0, 'rgba(255,216,130,0.5)');
+      heart.addColorStop(1, 'rgba(255,216,130,0)');
+      ctx.fillStyle = heart;
+      ctx.beginPath(); ctx.arc(cx, cy, w * 0.20, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(245,197,66,0.9)';
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(cx, cy, w * 0.475, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,111,97,0.75)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(cx, cy, w * 0.335, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(23,163,152,0.8)';
+      ctx.beginPath(); ctx.arc(cx, cy, w * 0.315, 0, Math.PI * 2); ctx.stroke();
+      for (var k = 0; k < 12; k++) {
+        var a = k / 12 * Math.PI * 2;
+        var gx = cx + Math.cos(a) * w * 0.405, gy = cy + Math.sin(a) * w * 0.405;
+        if (k % 2 === 0) {
+          ctx.fillStyle = P.goldSoft;
+          ctx.beginPath(); ctx.arc(gx, gy, 17, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#43134a';
+          ctx.beginPath(); ctx.arc(gx + 7, gy - 4, 14, 0, Math.PI * 2); ctx.fill();
+        } else {
+          star(ctx, gx, gy, 17, P.goldSoft);
+        }
+        ctx.fillStyle = 'rgba(45,226,230,0.85)';
+        var da = (k + 0.5) / 12 * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(da) * w * 0.405, cy + Math.sin(da) * w * 0.405, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  };
+
+  // Mottled stone / plaster: soft blotches, grain speckle, a
+  // shaded foot and hairline cracks — the basin's teal stone and
+  // the towers' cream plaster, so no Garden surface is a bare
+  // flat fill any more.
+  CCW.gardenStoneTexture = function (scene, B, name, base, fleck) {
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = base;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(5150 + base.length * 131);
+      for (var i = 0; i < 44; i++) {
+        ctx.fillStyle = fleck;
+        ctx.globalAlpha = 0.07 + rnd() * 0.10;
+        ctx.beginPath();
+        ctx.ellipse(rnd() * w, rnd() * h, 24 + rnd() * 70, 16 + rnd() * 48, rnd() * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      for (var d = 0; d < 16; d++) {
+        ctx.fillStyle = 'rgba(0,0,0,0.05)';
+        ctx.beginPath();
+        ctx.ellipse(rnd() * w, rnd() * h, 18 + rnd() * 44, 12 + rnd() * 30, rnd() * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      for (var s = 0; s < 2800; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+        ctx.fillRect(rnd() * w, rnd() * h, 1.8, 1.8);
+      }
+      ctx.strokeStyle = 'rgba(0,0,0,0.10)';
+      ctx.lineWidth = 1.2;
+      for (var cr = 0; cr < 5; cr++) {
+        var x = rnd() * w, y = rnd() * h * 0.5;
+        ctx.beginPath(); ctx.moveTo(x, y);
+        for (var seg = 0; seg < 4; seg++) { x += (rnd() - 0.5) * 34; y += 18 + rnd() * 22; ctx.lineTo(x, y); }
+        ctx.stroke();
+      }
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, 'rgba(255,255,255,0.08)');
+      g.addColorStop(1, 'rgba(0,0,0,0.12)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // The leaf-pod chair's hood: ONE great leaf — a deep green
+  // gradient with a lit central vein, side veins, moonlit mottle
+  // and a shaded rim. The pod is a leaf you sit inside.
+  CCW.gardenPodLeafTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#2e8b6e');
+      g.addColorStop(0.5, '#22705c');
+      g.addColorStop(1, '#17452f');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(3141);
+      for (var i = 0; i < 30; i++) {
+        ctx.fillStyle = 'rgba(190,255,205,' + (0.05 + rnd() * 0.08) + ')';
+        ctx.beginPath();
+        ctx.ellipse(rnd() * w, rnd() * h, 20 + rnd() * 52, 12 + rnd() * 32, rnd() * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(224,242,182,0.60)';
+      ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.moveTo(w / 2, 6); ctx.lineTo(w / 2, h - 6); ctx.stroke();
+      ctx.lineWidth = 2.6;
+      ctx.strokeStyle = 'rgba(224,242,182,0.40)';
+      for (var v = 0; v < 7; v++) {
+        var vy = 40 + v * 66;
+        ctx.beginPath(); ctx.moveTo(w / 2, vy); ctx.lineTo(w * 0.10, vy + 52); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w / 2, vy); ctx.lineTo(w * 0.90, vy + 52); ctx.stroke();
+      }
+      for (var s = 0; s < 2200; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)';
+        ctx.fillRect(rnd() * w, rnd() * h, 1.8, 1.8);
+      }
+      var vg = ctx.createRadialGradient(w / 2, h / 2, w * 0.28, w / 2, h / 2, w * 0.72);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, 'rgba(6,30,18,0.30)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // A hanging ornament on its gold cord: variant 0 a crescent
+  // moon, variant 1 a star — saga glyphs, gold with a painted
+  // glow, on transparency so the cord draws its own line down
+  // from the dome ribs.
+  CCW.gardenOrnamentTexture = function (scene, B, name, variant) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 256, 512, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = 'rgba(245,197,66,0.9)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(w / 2, 0);
+      ctx.quadraticCurveTo(w / 2 + 7, 130, w / 2, 252);
+      ctx.stroke();
+      ctx.save();
+      ctx.shadowColor = 'rgba(245,197,66,0.85)';
+      ctx.shadowBlur = 16;
+      if (variant === 0) {
+        ctx.fillStyle = P.goldSoft;
+        ctx.beginPath(); ctx.arc(w / 2, 330, 56, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath(); ctx.arc(w / 2 + 24, 316, 46, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      } else {
+        star(ctx, w / 2, 330, 60, P.goldSoft);
+        star(ctx, w / 2, 330, 26, '#fff3d6');
+      }
+      ctx.restore();
+      star(ctx, w / 2 - 52, 428, 11, 'rgba(245,197,66,0.9)');
+      star(ctx, w / 2 + 48, 452, 8, 'rgba(255,243,214,0.9)');
+      ctx.fillStyle = P.tealBright;
+      ctx.beginPath(); ctx.arc(w / 2 + 30, 420, 4.4, 0, Math.PI * 2); ctx.fill();
     });
   };
 

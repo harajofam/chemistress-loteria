@@ -3745,17 +3745,50 @@
    * round-3 lesson applied — a warm rig scoped to this room's
    * meshes only, every material's maxSimultaneousLights raised
    * at creation.
+   *
+   * MOON GARDEN (realism pass, 2026-11-04): Jay sent a concept
+   * painting — "The Moon Garden," a glass-domed conservatory
+   * under a big moon — and asked to get as close to its realism
+   * as we can. This room is the proof room: the flat glass roof
+   * becomes a true GLASS DOME with iron ribs and the BIG MOON
+   * overhead (moonlight washing in, moon-and-star ornaments
+   * hanging under the dome), the breathing stools become the
+   * painting's CUSHION CIRCLE around the breath fountain (whose
+   * pacer orb now breathes — the deferred animation pass, on a
+   * slow nine-second cycle), a LEAF-POD chair signs the right
+   * side, ivy drapes the shelves, panels, rim and towers,
+   * lanterns warm the paths, fireflies and motes drift, and the
+   * last flat fills (shelf carcass, tower columns, basin) take
+   * painted velvet and mottled stone. Jay's palette law
+   * overrides the painting's gloom: this moonlit garden is
+   * LUMINOUS — hot pink, teal and plum, gold a fine line, navy
+   * only as the sky the moon hangs in. Everything the room
+   * already promised is preserved verbatim (consent banner,
+   * landed line, 22 jars, towers, host's corner, gate, the
+   * Wall Life panels and their shop targets).
    */
   function buildGardenInterior(scene, B, zone, add) {
     var P = CCW.PALETTE;
     var uv = outward(zone);
     var pinkWallTex = CCW.penpalPinkWallTexture(scene, B, 'garden-int-pinkwall-tex');
     var floorTex = CCW.gardenFloorTexture(scene, B, 'garden-int-floor-tex');
-    var roofTex = CCW.gardenRoofTexture(scene, B, 'garden-int-roof-tex');
     var glassTex = CCW.gardenGlassTexture(scene, B, 'garden-int-glass-tex');
     var woodTex = CCW.woodTexture(scene, B, 'garden-int-wood-tex');
     var leafTex = CCW.leafTexture(scene, B, 'garden-int-leaf-tex');
     var scrollTex = CCW.gardenScrollTexture(scene, B, 'garden-int-scroll-tex');
+    // MOON GARDEN painters (realism pass): dome glass at two
+    // wrap densities (the lathe wraps its texture round the
+    // whole dome; the flat eaves slab wants fewer, larger panes),
+    // ivy, mottled stone for the basin and the tower columns.
+    var domeGlassTex = CCW.gardenDomeGlassTexture(scene, B, 'garden-int-dome-glass-tex');
+    domeGlassTex.uScale = 6; domeGlassTex.vScale = 2;
+    var eavesGlassTex = CCW.gardenDomeGlassTexture(scene, B, 'garden-int-eaves-glass-tex');
+    eavesGlassTex.uScale = 3; eavesGlassTex.vScale = 1.5;
+    var ivyTex = CCW.gardenIvyTexture(scene, B, 'garden-int-ivy-tex');
+    var stoneTealTex = CCW.gardenStoneTexture(scene, B, 'garden-int-stone-teal-tex',
+      '#0d7a6e', '#7fd8c8');
+    var stoneCreamTex = CCW.gardenStoneTexture(scene, B, 'garden-int-stone-cream-tex',
+      '#f2ede2', '#ffffff');
 
     var intLights = [];
     function roomWorld(lx, ly, lz) {
@@ -3773,13 +3806,101 @@
     floor.material = CCW.texMat(scene, B, 'garden-int-floor-mat', floorTex, {});
     floor.receiveShadows = true;
 
-    // Ceiling: the GLASS ROOF (the greenhouse's departure — no
-    // star chart here; the light pours through teal ironwork).
+    // Ceiling: the GLASS ROOF grows up into the MOON GARDEN's
+    // DOME (realism pass). A thin glass EAVES slab stays at the
+    // wall line (it covers the room's corners, which the round
+    // dome cannot reach, and keeps the name the house knows);
+    // above it the true dome springs — a lathe of glass under
+    // iron ribs (next section) — with the BIG MOON beyond it
+    // and moonlight washing in. Navy lives only in the sky the
+    // moon hangs in; the glass itself is teal-aqua and lit.
     var ceiling = add(B.MeshBuilder.CreateBox('garden-int-ceiling',
-      { width: 13.6, height: 0.25, depth: 14.4 }, scene));
-    ceiling.position.set(0, 7.12, -7.5);
-    ceiling.material = CCW.texMat(scene, B, 'garden-int-ceiling-mat', roofTex,
+      { width: 13.6, height: 0.18, depth: 14.4 }, scene));
+    ceiling.position.set(0, 7.05, -7.5);
+    ceiling.material = CCW.texMat(scene, B, 'garden-int-ceiling-mat', eavesGlassTex,
+      { alpha: true, emissive: true });
+    ceiling.material.emissiveColor = new B.Color3(0.14, 0.14, 0.14);
+    // GLASS OPACITY (both roof layers): texMat's alpha path
+    // sets opacityTexture = the color texture, whose opacity
+    // Babylon reads from the GREEN channel — aqua (G≈0.9) came
+    // out ~90% opaque and buried the moon (bisected in the
+    // render pass; the naked dome + moon is perfect). So the
+    // roof glass drops the opacity texture entirely and takes
+    // a plain uniform material alpha over an opaque-painted
+    // texture — the oldest, most predictable transparency
+    // there is. The pane pattern reads through the RGB.
+    ceiling.material.opacityTexture = null;
+    ceiling.material.alpha = 0.22;
+
+    // The dome profile, shared by the glass lathe and the iron
+    // ribs: an ellipse arc — radius 6.9 (just inside the walls),
+    // rising 3.85 from its springing at y 6.3 to an apex of
+    // 10.15. The exponent keeps the shoulders full, like the
+    // painting's conservatory dome.
+    function domeProfile(a) {
+      return [6.9 * Math.cos(a), 3.85 * Math.pow(Math.sin(a), 0.92)];
+    }
+    var domePts = [];
+    for (var di = 0; di <= 12; di++) {
+      var dp = domeProfile(di / 12 * Math.PI / 2);
+      domePts.push(new B.Vector3(Math.max(0.02, dp[0]), dp[1], 0));
+    }
+    var dome = add(B.MeshBuilder.CreateLathe('garden-int-dome',
+      { shape: domePts, tessellation: 28 }, scene));
+    dome.position.set(0, 6.3, -7.5);
+    dome.material = CCW.texMat(scene, B, 'garden-int-dome-mat', domeGlassTex,
+      { alpha: true, emissive: true });
+    dome.material.emissiveColor = new B.Color3(0.16, 0.16, 0.16);
+    dome.material.opacityTexture = null; // uniform material alpha — see the eaves note
+    dome.material.alpha = 0.15;
+
+    // THE BIG MOON, hung beyond the glass (local y 13.4 — above
+    // the whole structure, seen through dome and eaves alike),
+    // with a billboarded halo so it glows round from any seat.
+    var moonTex = CCW.gardenMoonTexture(scene, B, 'garden-int-moon-tex');
+    var moon = add(B.MeshBuilder.CreateSphere('garden-int-moon',
+      { diameter: 3.1, segments: 20 }, scene));
+    moon.position.set(0, 13.4, -10.6);
+    moon.material = CCW.texMat(scene, B, 'garden-int-moon-mat', moonTex,
       { emissive: true });
+    moon.material.emissiveColor = new B.Color3(0.92, 0.88, 0.74);
+    moon.material.diffuseColor = new B.Color3(0.25, 0.25, 0.25);
+    var halo = add(B.MeshBuilder.CreatePlane('garden-int-moon-halo',
+      { width: 7.6, height: 7.6 }, scene));
+    halo.position.set(0, 13.4, -10.6);
+    halo.billboardMode = B.Mesh.BILLBOARDMODE_ALL;
+    halo.material = CCW.texMat(scene, B, 'garden-int-moon-halo-mat',
+      CCW.gardenMoonHaloTexture(scene, B, 'garden-int-moon-halo-tex'),
+      { alpha: true, emissive: true });
+    halo.material.emissiveColor = new B.Color3(0.55, 0.55, 0.55);
+
+    // Moonlight: one cool wash from the moon's quarter, scoped
+    // to this room like the rest of the rig — the dome's light,
+    // kept gentle so the warm rig still leads (the painting's
+    // silver over the house's warmth, never instead of it).
+    var moonlight = new B.PointLight('garden-int-moonlight',
+      roomWorld(0, 11.6, -9.5), scene);
+    moonlight.intensity = 0.5;
+    moonlight.diffuse = new B.Color3(0.80, 0.88, 1.0);
+    moonlight.range = 24;
+    intLights.push(moonlight);
+
+    // Moon-and-star ornaments hanging under the dome on their
+    // painted gold cords — the painting's ceiling mobiles, in
+    // her saga glyphs. Each faces the fountain it hangs around.
+    var ornTex = [0, 1].map(function (v) {
+      return CCW.gardenOrnamentTexture(scene, B, 'garden-int-ornament-tex-' + v, v);
+    });
+    [[-2.6, -7.5, 5.85], [2.6, -7.5, 5.65], [0, -10.1, 5.95],
+     [0, -4.9, 5.55], [-4.4, -5.2, 5.75], [4.4, -9.8, 5.9]].forEach(function (cfg, i) {
+      var orn = add(B.MeshBuilder.CreatePlane('garden-int-ornament-' + i,
+        { width: 0.85, height: 1.7 }, scene));
+      orn.position.set(cfg[0], cfg[2] - 0.85, cfg[1]);
+      orn.rotation.y = Math.atan2(cfg[0] - 0, cfg[1] - (-7.5));
+      orn.material = CCW.texMat(scene, B, 'garden-int-ornament-mat-' + i,
+        ornTex[i % 2], { alpha: true, emissive: true });
+      orn.material.emissiveColor = new B.Color3(0.45, 0.45, 0.45);
+    });
 
     // Back wall: hot-pink panelling behind the herb shelves.
     var backWall = add(B.MeshBuilder.CreateBox('garden-int-wall-back',
@@ -3821,17 +3942,43 @@
       { fg: P.goldSoft }));
     sign.position.set(0, 5.95, -0.87);
 
-    // ---- The ironwork: ridge + cross beams + coral scrollwork -----
-    var ridge = add(B.MeshBuilder.CreateBox('garden-int-ridge',
-      { width: 0.22, height: 0.22, depth: 14.2 }, scene));
-    ridge.position.set(0, 6.92, -7.5);
-    ridge.material = CCW.mat(scene, B, 'garden-int-ridge-mat', P.tealDeep);
-    [-2.5, -5, -7.5, -10, -12.5].forEach(function (z, i) {
-      var beam = add(B.MeshBuilder.CreateBox('garden-int-beam-' + i,
-        { width: 13.2, height: 0.2, depth: 0.22 }, scene));
-      beam.position.set(0, 6.92, z);
-      beam.material = CCW.mat(scene, B, 'garden-int-beam-mat-' + i, P.tealDeep);
+    // ---- The ironwork: the dome's ribs + coral scrollwork --------
+    // MOON GARDEN: the flat roof's ridge and cross beams are
+    // gone — the dome carries its own ironwork. Eight meridian
+    // ribs ride the profile as TUBES (CreateTorus silently
+    // ignores its arc in this build — the gate-arc lesson), two
+    // latitude rings lie flat around the shell (the fountain-rim
+    // precedent: a torus lies flat by default), a rim ring seats
+    // the springing, and a small gold finial crowns the apex —
+    // a bead, not a field: gold stays a fine line.
+    var ribMat = CCW.mat(scene, B, 'garden-int-dome-rib-mat', P.tealDeep);
+    for (var rk = 0; rk < 8; rk++) {
+      var ribPath = [];
+      for (var ri = 0; ri <= 12; ri++) {
+        var rp = domeProfile(0.05 + (ri / 12) * (Math.PI / 2 - 0.10));
+        ribPath.push(new B.Vector3(rp[0] + 0.045, rp[1], 0));
+      }
+      var rib = add(B.MeshBuilder.CreateTube('garden-int-dome-rib-' + rk,
+        { path: ribPath, radius: 0.05, radialSegments: 8, cap: B.Mesh.CAP_ALL }, scene));
+      rib.position.set(0, 6.3, -7.5);
+      rib.rotation.y = rk * Math.PI / 4;
+      rib.material = ribMat;
+    }
+    [0.85, 1.25].forEach(function (ra, i) {
+      var rprof = domeProfile(ra);
+      var ring = add(B.MeshBuilder.CreateTorus('garden-int-dome-ring-' + i,
+        { diameter: rprof[0] * 2 + 0.06, thickness: 0.055, tessellation: 40 }, scene));
+      ring.position.set(0, 6.3 + rprof[1], -7.5);
+      ring.material = ribMat;
     });
+    var domeRim = add(B.MeshBuilder.CreateTorus('garden-int-dome-rim',
+      { diameter: 13.8, thickness: 0.08, tessellation: 44 }, scene));
+    domeRim.position.set(0, 6.3, -7.5);
+    domeRim.material = ribMat;
+    var finial = add(B.MeshBuilder.CreateSphere('garden-int-dome-finial',
+      { diameter: 0.22, segments: 10 }, scene));
+    finial.position.set(0, 10.22, -7.5);
+    finial.material = CCW.glowMat(scene, B, 'garden-int-dome-finial-mat', P.goldSoft);
     // Coral scrollwork plates at the tops of the glass walls
     // (photo 03's filigree — flat plates carry the art, per the
     // artistry standard). Readable faces toward the room center.
@@ -3848,16 +3995,19 @@
     });
 
     // ---- The herb-jar shelves (the back wall's heart) -------------
+    // MOON GARDEN: the carcass wears painted lavender VELVET now
+    // (nap noise + sheen), not the bare flat fill it shipped with.
     var shelfLav = '#8f7fd4';
+    var shelfVelvetTex = CCW.velvetTexture(scene, B, 'garden-int-shelf-velvet-tex', shelfLav);
     var shelfBack = add(B.MeshBuilder.CreateBox('garden-int-shelf-back',
       { width: 5.7, height: 4.0, depth: 0.1 }, scene));
     shelfBack.position.set(0, 2.5, -14.32);
-    shelfBack.material = CCW.mat(scene, B, 'garden-int-shelf-back-mat', shelfLav);
+    shelfBack.material = CCW.texMat(scene, B, 'garden-int-shelf-back-mat', shelfVelvetTex, {});
     [-2.78, 2.78].forEach(function (x, i) {
       var up = add(B.MeshBuilder.CreateBox('garden-int-shelf-upright-' + i,
         { width: 0.18, height: 4.0, depth: 0.6 }, scene));
       up.position.set(x, 2.5, -14.05);
-      up.material = CCW.mat(scene, B, 'garden-int-shelf-upright-mat-' + i, shelfLav);
+      up.material = CCW.texMat(scene, B, 'garden-int-shelf-upright-mat-' + i, shelfVelvetTex, {});
     });
     [1.15, 2.25, 3.35].forEach(function (y, i) {
       var board = add(B.MeshBuilder.CreateBox('garden-int-shelf-board-' + i,
@@ -3868,7 +4018,7 @@
     var cornice = add(B.MeshBuilder.CreateBox('garden-int-shelf-cornice',
       { width: 5.9, height: 0.16, depth: 0.66 }, scene));
     cornice.position.set(0, 4.55, -14.05);
-    cornice.material = CCW.mat(scene, B, 'garden-int-shelf-cornice-mat', shelfLav);
+    cornice.material = CCW.texMat(scene, B, 'garden-int-shelf-cornice-mat', shelfVelvetTex, {});
     var counter = add(B.MeshBuilder.CreateBox('garden-int-shelf-counter',
       { width: 5.7, height: 0.1, depth: 0.8 }, scene));
     counter.position.set(0, 0.62, -13.95);
@@ -3922,7 +4072,7 @@
       var column = add(B.MeshBuilder.CreateCylinder('garden-int-tower-' + tag + '-column',
         { diameter: 0.6, height: 3.0, tessellation: 14 }, scene));
       column.position.set(x, 1.68, z);
-      column.material = CCW.mat(scene, B, 'garden-int-tower-' + tag + '-column-mat', '#f2ede2');
+      column.material = CCW.texMat(scene, B, 'garden-int-tower-' + tag + '-column-mat', stoneCreamTex, {});
       var cap = add(B.MeshBuilder.CreateCylinder('garden-int-tower-' + tag + '-cap',
         { diameter: 0.68, height: 0.12, tessellation: 14 }, scene));
       cap.position.set(x, 3.24, z);
@@ -4000,7 +4150,7 @@
     var basin = add(B.MeshBuilder.CreateCylinder('garden-int-fountain-basin',
       { diameter: 2.5, height: 0.55, tessellation: 24 }, scene));
     basin.position.set(0, 0.28, -7.2);
-    basin.material = CCW.mat(scene, B, 'garden-int-fountain-basin-mat', P.tealDeep);
+    basin.material = CCW.texMat(scene, B, 'garden-int-fountain-basin-mat', stoneTealTex, {});
     var rim = add(B.MeshBuilder.CreateTorus('garden-int-fountain-rim',
       { diameter: 2.5, thickness: 0.09, tessellation: 28 }, scene));
     // No rotation: Babylon's torus lies FLAT by default, and a
@@ -4023,13 +4173,26 @@
       { diameter: 0.3, height: 0.5, tessellation: 12 }, scene));
     pedestal.position.set(0, 0.72, -7.2);
     pedestal.material = CCW.mat(scene, B, 'garden-int-fountain-pedestal-mat', P.tealDeep);
-    // The pacer orb: a calm glow at the fountain's heart. (Its
-    // slow breathing pulse is a later pass — the world rooms
-    // have no per-frame animation yet; see the notes.)
+    // The pacer orb: a calm glow at the fountain's heart.
     var orb = add(B.MeshBuilder.CreateSphere('garden-int-fountain-orb',
       { diameter: 0.42, segments: 14 }, scene));
     orb.position.set(0, 1.12, -7.2);
     orb.material = CCW.glowMat(scene, B, 'garden-int-fountain-orb-mat', P.goldSoft);
+    // MOON GARDEN: the pacer BREATHES at last — the deferred
+    // animation pass, and the world's first per-frame hook. A
+    // nine-second swell: the orb grows a breath and the water's
+    // glow rises and settles with it, slow enough to sit with.
+    // Registered from the builder and null-safe under the
+    // headless smoke — where the hook never fires the orb simply
+    // rests, exactly as it always did.
+    var breathT0 = Date.now();
+    scene.registerBeforeRender(function () {
+      var bph = 0.5 - 0.5 * Math.cos((Date.now() - breathT0) / 1000 * Math.PI * 2 / 9);
+      var bs = 1 + 0.09 * bph;
+      orb.scaling.set(bs, bs, bs);
+      var bg = 0.20 + 0.13 * bph;
+      water.material.emissiveColor.set(bg, bg, bg);
+    });
 
     // Planters ringing the fountain.
     [[3.05, -7.2], [-3.05, -7.2], [1.55, -10.75], [-1.55, -10.75]].forEach(function (cfg, i) {
@@ -4052,22 +4215,100 @@
       });
     });
 
-    // Breathing-circle stools around the fountain.
-    var stoolVelvets = [
-      CCW.velvetTexture(scene, B, 'garden-int-stool-velvet-0', P.velvetMagenta),
-      CCW.velvetTexture(scene, B, 'garden-int-stool-velvet-1', P.velvetTeal)
-    ];
-    [[1.6, -5.6], [-1.6, -5.6], [1.6, -8.8], [-1.6, -8.8]].forEach(function (cfg, i) {
-      var tag = 'garden-int-stool-' + i;
-      var seat = add(B.MeshBuilder.CreateCylinder(tag + '-seat',
-        { diameter: 0.68, height: 0.12, tessellation: 16 }, scene));
-      seat.position.set(cfg[0], 0.52, cfg[1]);
-      seat.material = CCW.texMat(scene, B, tag + '-seat-mat', stoolVelvets[i % 2], {});
-      var leg = add(B.MeshBuilder.CreateCylinder(tag + '-leg',
-        { diameter: 0.16, height: 0.48, tessellation: 10 }, scene));
-      leg.position.set(cfg[0], 0.24, cfg[1]);
-      leg.material = CCW.mat(scene, B, tag + '-leg-mat', P.plumHouse);
+    // MOON GARDEN: the breathing stools become the painting's
+    // CUSHION CIRCLE — ten plump lathe-turned poufs in cream,
+    // teal and plum velvet gathered round the fountain on a
+    // painted terrace medallion, six of them carrying a plum
+    // moon-glyph throw pillow. The ring is turned 18 degrees so
+    // its gaps face the door and the shelves: nobody's path to
+    // the water is blocked, and the fountain stays the center
+    // it always was.
+    var medallion = add(B.MeshBuilder.CreateDisc('garden-int-medallion',
+      { radius: 3.6, tessellation: 36 }, scene));
+    medallion.rotation.x = Math.PI / 2;
+    medallion.position.set(0, 0.015, -7.2);
+    medallion.material = CCW.texMat(scene, B, 'garden-int-medallion-mat',
+      CCW.gardenMedallionTexture(scene, B, 'garden-int-medallion-tex'),
+      { alpha: true, emissive: true });
+    medallion.material.emissiveColor = new B.Color3(0.30, 0.30, 0.30);
+    var poufProfile = [[0.02, 0], [0.30, 0.005], [0.42, 0.09], [0.465, 0.20],
+      [0.42, 0.31], [0.28, 0.40], [0.02, 0.435]].map(function (pt) {
+      return new B.Vector3(pt[0], pt[1], 0);
     });
+    var poufVelvets = {
+      cream: CCW.velvetTexture(scene, B, 'garden-int-pouf-velvet-cream', '#efe6d4'),
+      teal: CCW.velvetTexture(scene, B, 'garden-int-pouf-velvet-teal', P.velvetTeal),
+      magenta: CCW.velvetTexture(scene, B, 'garden-int-pouf-velvet-magenta', P.velvetMagenta)
+    };
+    var poufKinds = ['cream', 'cream', 'teal', 'cream', 'magenta',
+      'cream', 'cream', 'teal', 'cream', 'magenta'];
+    var moonPillowTex = CCW.gardenMoonPillowTexture(scene, B, 'garden-int-moon-pillow-tex');
+    var crnd = CCW.prand(2718);
+    for (var ck = 0; ck < 10; ck++) {
+      var cang = (ck * 36 + 18) * Math.PI / 180;
+      var crad = 2.95 + (crnd() - 0.5) * 0.09;
+      var cpx = Math.sin(cang) * crad, cpz = -7.2 + Math.cos(cang) * crad;
+      var pouf = add(B.MeshBuilder.CreateLathe('garden-int-cushion-' + ck,
+        { shape: poufProfile, tessellation: 16 }, scene));
+      pouf.position.set(cpx, 0, cpz);
+      pouf.rotation.y = crnd() * Math.PI;
+      var psc = 0.94 + crnd() * 0.12;
+      pouf.scaling.set(psc, psc, psc);
+      pouf.material = CCW.texMat(scene, B, 'garden-int-cushion-mat-' + ck,
+        poufVelvets[poufKinds[ck]], {});
+      if (ck % 2 === 0 || ck === 5) {
+        var pillow = add(B.MeshBuilder.CreateSphere('garden-int-pillow-' + ck,
+          { diameter: 0.52, segments: 12 }, scene));
+        pillow.scaling.set(1, 0.6, 0.42);
+        pillow.position.set(cpx - Math.sin(cang) * 0.08, 0.52,
+          cpz - Math.cos(cang) * 0.08);
+        pillow.rotation.y = cang;
+        pillow.material = CCW.texMat(scene, B, 'garden-int-pillow-mat-' + ck,
+          moonPillowTex, {});
+      }
+    }
+
+    // The LEAF-POD chair — the painting's signature seat, on the
+    // right side facing the fountain: a stone foot, a cream
+    // cushion, a curved stem, and ONE GREAT LEAF for a hood (a
+    // sphere shell cut by arc and slice — the shell covers back
+    // and crown, the opening faces the water). It stands clear
+    // of the bench, the gate path and tower d.
+    var podX = 4.95, podZ = -9.2;
+    var podFace = Math.atan2(0 - podX, -7.2 - podZ);
+    var podBase = add(B.MeshBuilder.CreateCylinder('garden-int-pod-base',
+      { diameter: 1.15, height: 0.14, tessellation: 18 }, scene));
+    podBase.position.set(podX, 0.07, podZ);
+    podBase.material = CCW.texMat(scene, B, 'garden-int-pod-base-mat', stoneTealTex, {});
+    var podSeat = add(B.MeshBuilder.CreateSphere('garden-int-pod-seat',
+      { diameter: 1.25, segments: 16 }, scene));
+    podSeat.scaling.set(1, 0.42, 1);
+    podSeat.position.set(podX, 0.32, podZ);
+    podSeat.material = CCW.texMat(scene, B, 'garden-int-pod-seat-mat',
+      poufVelvets.cream, {});
+    var podStemPath = [[0, 0.10, -0.50], [0, 0.70, -0.78],
+      [0, 1.30, -0.92], [0, 1.75, -0.95]].map(function (pt) {
+      return new B.Vector3(pt[0], pt[1], pt[2]);
+    });
+    var podStem = add(B.MeshBuilder.CreateTube('garden-int-pod-stem',
+      { path: podStemPath, radius: 0.055, radialSegments: 8, cap: B.Mesh.CAP_ALL }, scene));
+    podStem.position.set(podX, 0, podZ);
+    podStem.rotation.y = podFace;
+    podStem.material = CCW.mat(scene, B, 'garden-int-pod-stem-mat', P.tealDeep);
+    var podHood = add(B.MeshBuilder.CreateSphere('garden-int-pod-hood',
+      { diameter: 2.35, segments: 20, arc: 0.5, slice: 0.62 }, scene));
+    podHood.position.set(podX, 1.02, podZ);
+    podHood.rotation.y = podFace;
+    podHood.material = CCW.texMat(scene, B, 'garden-int-pod-hood-mat',
+      CCW.gardenPodLeafTexture(scene, B, 'garden-int-pod-leaf-tex'), {});
+    var podPillow = add(B.MeshBuilder.CreateSphere('garden-int-pod-pillow',
+      { diameter: 0.5, segments: 12 }, scene));
+    podPillow.scaling.set(1, 0.6, 0.42);
+    podPillow.position.set(podX - Math.sin(podFace) * 0.30, 0.52,
+      podZ - Math.cos(podFace) * 0.30);
+    podPillow.rotation.y = podFace;
+    podPillow.material = CCW.texMat(scene, B, 'garden-int-pod-pillow-mat',
+      moonPillowTex, {});
 
     // ---- Hanging plants + shaded pendants over the fountain --------
     [[2.4, -5.0], [-2.4, -5.0], [2.4, -10.0], [-2.4, -10.0]].forEach(function (cfg, i) {
@@ -4237,6 +4478,113 @@
     roomLight.range = 18;
     intLights.push(roomLight);
 
+    // ============================================================
+    // MOON GARDEN ATMOSPHERE (realism pass, 2026-11-04): ivy,
+    // lanterns, fireflies — the painting's living layer.
+    // ============================================================
+    // IVY: painted garlands (one texture, alpha-carried) draped
+    // where the painting grows it — over the herb shelves and
+    // their botanical prints, down the shelf sides, along the
+    // dome's rim, and curling round the hydroponic towers.
+    function ivyPlane(name, wdt, hgt, x, y, z, ry) {
+      var iv = add(B.MeshBuilder.CreatePlane(name, { width: wdt, height: hgt }, scene));
+      iv.position.set(x, y, z);
+      iv.rotation.y = ry;
+      iv.material = CCW.texMat(scene, B, name + '-mat', ivyTex, { alpha: true });
+      return iv;
+    }
+    ivyPlane('garden-int-ivy-shelf', 5.9, 1.05, 0, 4.78, -14.26, Math.PI);
+    ivyPlane('garden-int-ivy-shelf-l', 0.95, 3.4, -2.99, 2.45, -14.26, Math.PI);
+    ivyPlane('garden-int-ivy-shelf-r', 0.95, 3.4, 2.99, 2.45, -14.26, Math.PI);
+    ivyPlane('garden-int-ivy-panel-l', 2.7, 0.85, -4.75, 4.95, -14.27, Math.PI);
+    ivyPlane('garden-int-ivy-panel-r', 2.7, 0.85, 4.75, 4.95, -14.27, Math.PI);
+    [25, 85, 145, 205, 335].forEach(function (deg, i) {
+      var ga = deg * Math.PI / 180;
+      var gx = Math.cos(ga) * 6.15, gz = -7.5 + Math.sin(ga) * 6.15;
+      ivyPlane('garden-int-ivy-rim-' + i, 3.6, 1.15, gx, 5.72, gz,
+        Math.atan2(-Math.cos(ga), -Math.sin(ga)));
+    });
+    [[-5.8, -3.6, 'a'], [-5.8, -6.8, 'b'], [-5.8, -10.0, 'c'], [5.8, -11.4, 'd']]
+      .forEach(function (tw) {
+        var tx = tw[0], tz = tw[1];
+        var tl = Math.sqrt(tx * tx + (tz + 7.2) * (tz + 7.2));
+        var ox = -tx / tl * 0.36, oz = -(tz + 7.2) / tl * 0.36;
+        ivyPlane('garden-int-ivy-tower-' + tw[2], 1.15, 2.3,
+          tx + ox, 1.95, tz + oz, Math.atan2(ox, oz));
+      });
+
+    // LANTERNS: warm cores in teal cages — four standing along
+    // the cushion circle's diagonal paths, two hanging by the
+    // herb shelves. One shared point light at the fountain
+    // carries their glow for the whole ring (the rig stays
+    // lean: six lights serve this room).
+    function lanternCore(x, y, z, tag) {
+      var core = add(B.MeshBuilder.CreateSphere('garden-int-lantern-' + tag + '-core',
+        { diameter: 0.15, segments: 10 }, scene));
+      core.position.set(x, y, z);
+      core.material = CCW.glowMat(scene, B, 'garden-int-lantern-' + tag + '-core-mat', P.goldSoft);
+      var cage = add(B.MeshBuilder.CreateCylinder('garden-int-lantern-' + tag + '-cage',
+        { diameterTop: 0.16, diameterBottom: 0.21, height: 0.27, tessellation: 10 }, scene));
+      cage.position.set(x, y, z);
+      cage.material = CCW.mat(scene, B, 'garden-int-lantern-' + tag + '-cage-mat', P.tealDeep);
+    }
+    [45, 135, 225, 315].forEach(function (deg, i) {
+      var la = deg * Math.PI / 180;
+      var lx = Math.sin(la) * 4.35, lz = -7.2 + Math.cos(la) * 4.35;
+      var post = add(B.MeshBuilder.CreateCylinder('garden-int-lantern-' + i + '-post',
+        { diameter: 0.055, height: 0.62, tessellation: 8 }, scene));
+      post.position.set(lx, 0.31, lz);
+      post.material = CCW.mat(scene, B, 'garden-int-lantern-' + i + '-post-mat', P.tealDeep);
+      lanternCore(lx, 0.78, lz, '' + i);
+    });
+    [-3.35, 3.35].forEach(function (hx, i) {
+      var cord = add(B.MeshBuilder.CreateCylinder('garden-int-lantern-hang-' + i + '-cord',
+        { diameter: 0.025, height: 0.85, tessellation: 6 }, scene));
+      cord.position.set(hx, 4.20, -13.85);
+      cord.material = CCW.mat(scene, B, 'garden-int-lantern-hang-' + i + '-cord-mat', P.plumHouse);
+      lanternCore(hx, 3.62, -13.85, 'hang-' + i);
+    });
+    var lanternLight = new B.PointLight('garden-int-lantern-light',
+      roomWorld(0, 2.6, -7.2), scene);
+    lanternLight.intensity = 0.55;
+    lanternLight.diffuse = new B.Color3(1.0, 0.76, 0.45);
+    lanternLight.range = 9;
+    intLights.push(lanternLight);
+
+    // FIREFLIES + MOTES: two soft particle swarms (no meshes —
+    // the census never sees them). The fireflies drift gold and
+    // teal-green over the planting, slow and buoyant; the motes
+    // are pollen in the moonlight, smaller and paler. Additive
+    // blending over the glow-dot sprite: light, never gloom.
+    var glowDotTex = CCW.gardenGlowDotTexture(scene, B, 'garden-int-glowdot-tex');
+    function makeSwarm(name, capacity, rate, sizeMin, sizeMax, lifeMin, lifeMax,
+                       c1, c2, powerMax) {
+      var ps = new B.ParticleSystem(name, capacity, scene);
+      ps.particleTexture = glowDotTex;
+      ps.emitter = roomWorld(0, 2.0, -7.5);
+      ps.minEmitBox = new B.Vector3(-6.1, -1.3, -6.3);
+      ps.maxEmitBox = new B.Vector3(6.1, 2.8, 6.3);
+      ps.color1 = c1;
+      ps.color2 = c2;
+      ps.colorDead = new B.Color4(0, 0, 0, 0);
+      ps.minSize = sizeMin;
+      ps.maxSize = sizeMax;
+      ps.minLifeTime = lifeMin;
+      ps.maxLifeTime = lifeMax;
+      ps.emitRate = rate;
+      ps.blendMode = B.ParticleSystem.BLENDMODE_ONEONE;
+      ps.minEmitPower = 0.02;
+      ps.maxEmitPower = powerMax;
+      ps.direction1 = new B.Vector3(-0.4, 0.22, -0.4);
+      ps.direction2 = new B.Vector3(0.4, 0.55, 0.4);
+      ps.gravity = new B.Vector3(0, 0.012, 0);
+      ps.start();
+      return ps;
+    }
+    makeSwarm('garden-int-fireflies', 90, 12, 0.05, 0.15, 4, 9,
+      new B.Color4(1.0, 0.83, 0.42, 1.0), new B.Color4(0.55, 0.95, 0.75, 1.0), 0.07);
+    makeSwarm('garden-int-motes', 40, 5, 0.02, 0.045, 6, 12,
+      new B.Color4(1.0, 0.97, 0.85, 0.8), new B.Color4(0.85, 0.92, 1.0, 0.8), 0.03);
 
     // ============================================================
     // WALL LIFE (2026-11-04): the back wall's bare pink flanks
