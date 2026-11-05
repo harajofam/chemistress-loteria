@@ -2977,6 +2977,566 @@
     };
   }
 
+  /*
+   * The Therapeutics Garden INTERIOR (M2b interior 4 of 5,
+   * 2026-11-04) — the Greenhouse (interiors addendum: "The
+   * Therapeutics Garden → the Greenhouse"; design section 3.4).
+   *
+   * References: Jay's greenhouse photo (interior-refs/03) + the
+   * collage's bottom-left panel (01-BL) + the same greenhouse in
+   * the 2026-11-04 collage. A glass-roofed pink-and-teal
+   * greenhouse: teal ironwork with CORAL SCROLLWORK, hydroponic
+   * towers of greens, shelves of labeled herb jars, hanging
+   * plants, a teal bench with cushions, and the TEAL POLKA-DOT
+   * FLOOR. The palette law holds inside it: hot pink carries the
+   * solid walls (front + back, the shared pink panelling), teal
+   * is the ironwork and the floor, plum appears only as small
+   * furniture, navy NOWHERE (the ceiling is glass, not the star
+   * chart — the greenhouse's one structural departure, straight
+   * from the photos), and gold stays a fine line (the return
+   * ring, the house beacon, excepted as in every interior).
+   *
+   * The room's furniture of care (design section 3.4): the
+   * CONSENT BANNER hangs at the door — what this room is, what
+   * it is not, the quiet rules — as a dressed plaque (the
+   * every-visit acknowledgment tap is a Phase 3 door mechanic,
+   * flagged in GARDEN-BUILD-NOTES.md, not faked here); the
+   * BREATH FOUNTAIN sits at the center among the planters, its
+   * water drawn with ripple rings and a calm glowing orb (the
+   * world has no per-frame room animation today, so the pacer
+   * breathes in a later pass — also flagged in the notes); the
+   * HOST'S CORNER by the door holds the space; and the GROUNDING
+   * EXIT is the garden gate — the room's return pad under a
+   * green arch, riding straight back to the Plaza hearth.
+   *
+   * LANDED LINE: the plan names NO landed line for this room,
+   * so none is invented — buildWorld keeps the world's generic
+   * fallback for the garden ("You are at the Therapeutics
+   * Garden."). A house-pattern candidate waits in
+   * GARDEN-BUILD-NOTES.md for Jay's word; swapping it in is one
+   * string in buildWorld.
+   *
+   * ARRIVAL: the house pattern — the Plaza pad lands INSIDE,
+   * just past the door, facing the fountain and the herb
+   * shelves; the room's return pad rides home. LIGHTING: the
+   * round-3 lesson applied — a warm rig scoped to this room's
+   * meshes only, every material's maxSimultaneousLights raised
+   * at creation.
+   */
+  function buildGardenInterior(scene, B, zone, add) {
+    var P = CCW.PALETTE;
+    var uv = outward(zone);
+    var pinkWallTex = CCW.penpalPinkWallTexture(scene, B, 'garden-int-pinkwall-tex');
+    var floorTex = CCW.gardenFloorTexture(scene, B, 'garden-int-floor-tex');
+    var roofTex = CCW.gardenRoofTexture(scene, B, 'garden-int-roof-tex');
+    var glassTex = CCW.gardenGlassTexture(scene, B, 'garden-int-glass-tex');
+    var woodTex = CCW.woodTexture(scene, B, 'garden-int-wood-tex');
+    var leafTex = CCW.leafTexture(scene, B, 'garden-int-leaf-tex');
+    var scrollTex = CCW.gardenScrollTexture(scene, B, 'garden-int-scroll-tex');
+
+    var intLights = [];
+    function roomWorld(lx, ly, lz) {
+      var a = zone.angleDeg * Math.PI / 180 + Math.PI;
+      var ca = Math.cos(a), sa = Math.sin(a);
+      return new B.Vector3(
+        uv[0] * CCW.ZONE_RADIUS + lx * ca + lz * sa, ly,
+        uv[1] * CCW.ZONE_RADIUS - lx * sa + lz * ca);
+    }
+
+    // ---- Room shell (the shared interior volume) ------------------
+    var floor = add(B.MeshBuilder.CreateBox('garden-int-floor',
+      { width: 13.4, height: 0.12, depth: 14.2 }, scene));
+    floor.position.set(0, -0.06, -7.5);
+    floor.material = CCW.texMat(scene, B, 'garden-int-floor-mat', floorTex, {});
+    floor.receiveShadows = true;
+
+    // Ceiling: the GLASS ROOF (the greenhouse's departure — no
+    // star chart here; the light pours through teal ironwork).
+    var ceiling = add(B.MeshBuilder.CreateBox('garden-int-ceiling',
+      { width: 13.6, height: 0.25, depth: 14.4 }, scene));
+    ceiling.position.set(0, 7.12, -7.5);
+    ceiling.material = CCW.texMat(scene, B, 'garden-int-ceiling-mat', roofTex,
+      { emissive: true });
+
+    // Back wall: hot-pink panelling behind the herb shelves.
+    var backWall = add(B.MeshBuilder.CreateBox('garden-int-wall-back',
+      { width: 14, height: 7, depth: 0.5 }, scene));
+    backWall.position.set(0, 3.5, -14.65);
+    backWall.material = CCW.texMat(scene, B, 'garden-int-wall-back-mat', pinkWallTex, {});
+
+    // Side walls: GLASS — teal mullions over a soft-focus garden.
+    [-6.75, 6.75].forEach(function (x, i) {
+      var side = add(B.MeshBuilder.CreateBox('garden-int-wall-' + (i ? 'right' : 'left'),
+        { width: 0.5, height: 7, depth: 14.3 }, scene));
+      side.position.set(x, 3.5, -7.5);
+      side.material = CCW.texMat(scene, B, 'garden-int-wall-side-mat-' + i, glassTex, {});
+    });
+
+    // Interior face of the front wall + the door, seen from inside.
+    var front = add(B.MeshBuilder.CreateBox('garden-int-front-panel',
+      { width: 13, height: 7, depth: 0.15 }, scene));
+    front.position.set(0, 3.5, -0.68);
+    front.material = CCW.texMat(scene, B, 'garden-int-front-mat', pinkWallTex, {});
+    var doorFrameIn = add(B.MeshBuilder.CreateBox('garden-int-door-frame',
+      { width: 4.0, height: 5.2, depth: 0.12 }, scene));
+    doorFrameIn.position.set(0, 2.6, -0.78);
+    doorFrameIn.material = CCW.mat(scene, B, 'garden-int-door-frame-mat', P.tealDeep);
+    var doorGlowIn = add(B.MeshBuilder.CreatePlane('garden-int-door-glow',
+      { width: 3.4, height: 4.6 }, scene));
+    // No half-turn: the readable -Z face points into the room.
+    doorGlowIn.position.set(0, 2.3, -0.86);
+    doorGlowIn.material = CCW.mat(scene, B, 'garden-int-door-glow-mat', P.teal,
+      { emissive: P.teal });
+
+    // The room sign over the door, inside (house pattern).
+    var signTrim = add(B.MeshBuilder.CreateBox('garden-int-sign-trim',
+      { width: 5.0, height: 1.05, depth: 0.1 }, scene));
+    signTrim.position.set(0, 5.95, -0.80);
+    signTrim.material = CCW.mat(scene, B, 'garden-int-sign-trim-mat', P.tealDeep);
+    var sign = add(CCW.makeLabel(scene, B, 'garden-int-sign',
+      ['Therapeutics Garden', 'The Wellness Garden — breathe'], 4.7, 0.9,
+      { fg: P.goldSoft }));
+    sign.position.set(0, 5.95, -0.87);
+
+    // ---- The ironwork: ridge + cross beams + coral scrollwork -----
+    var ridge = add(B.MeshBuilder.CreateBox('garden-int-ridge',
+      { width: 0.22, height: 0.22, depth: 14.2 }, scene));
+    ridge.position.set(0, 6.92, -7.5);
+    ridge.material = CCW.mat(scene, B, 'garden-int-ridge-mat', P.tealDeep);
+    [-2.5, -5, -7.5, -10, -12.5].forEach(function (z, i) {
+      var beam = add(B.MeshBuilder.CreateBox('garden-int-beam-' + i,
+        { width: 13.2, height: 0.2, depth: 0.22 }, scene));
+      beam.position.set(0, 6.92, z);
+      beam.material = CCW.mat(scene, B, 'garden-int-beam-mat-' + i, P.tealDeep);
+    });
+    // Coral scrollwork plates at the tops of the glass walls
+    // (photo 03's filigree — flat plates carry the art, per the
+    // artistry standard). Readable faces toward the room center.
+    [-1, 1].forEach(function (sideSign) {
+      [-2.5, -7.5, -12.5].forEach(function (z, i) {
+        var idx = (sideSign < 0 ? 0 : 3) + i;
+        var scroll = add(B.MeshBuilder.CreatePlane('garden-int-scroll-' + idx,
+          { width: 1.9, height: 1.15 }, scene));
+        scroll.position.set(sideSign * 6.44, 5.9, z);
+        scroll.rotation.y = sideSign < 0 ? -Math.PI / 2 : Math.PI / 2;
+        scroll.material = CCW.texMat(scene, B, 'garden-int-scroll-mat-' + idx,
+          scrollTex, { alpha: true });
+      });
+    });
+
+    // ---- The herb-jar shelves (the back wall's heart) -------------
+    var shelfLav = '#8f7fd4';
+    var shelfBack = add(B.MeshBuilder.CreateBox('garden-int-shelf-back',
+      { width: 5.7, height: 4.0, depth: 0.1 }, scene));
+    shelfBack.position.set(0, 2.5, -14.32);
+    shelfBack.material = CCW.mat(scene, B, 'garden-int-shelf-back-mat', shelfLav);
+    [-2.78, 2.78].forEach(function (x, i) {
+      var up = add(B.MeshBuilder.CreateBox('garden-int-shelf-upright-' + i,
+        { width: 0.18, height: 4.0, depth: 0.6 }, scene));
+      up.position.set(x, 2.5, -14.05);
+      up.material = CCW.mat(scene, B, 'garden-int-shelf-upright-mat-' + i, shelfLav);
+    });
+    [1.15, 2.25, 3.35].forEach(function (y, i) {
+      var board = add(B.MeshBuilder.CreateBox('garden-int-shelf-board-' + i,
+        { width: 5.5, height: 0.09, depth: 0.55 }, scene));
+      board.position.set(0, y, -14.05);
+      board.material = CCW.texMat(scene, B, 'garden-int-shelf-board-mat-' + i, woodTex, {});
+    });
+    var cornice = add(B.MeshBuilder.CreateBox('garden-int-shelf-cornice',
+      { width: 5.9, height: 0.16, depth: 0.66 }, scene));
+    cornice.position.set(0, 4.55, -14.05);
+    cornice.material = CCW.mat(scene, B, 'garden-int-shelf-cornice-mat', shelfLav);
+    var counter = add(B.MeshBuilder.CreateBox('garden-int-shelf-counter',
+      { width: 5.7, height: 0.1, depth: 0.8 }, scene));
+    counter.position.set(0, 0.62, -13.95);
+    counter.material = CCW.texMat(scene, B, 'garden-int-shelf-counter-mat', woodTex, {});
+    // The jars: three drawn kinds (lavender / chamomile / rose),
+    // six to a shelf, a breath of handmade jitter in each row.
+    var jarTex = [0, 1, 2].map(function (v) {
+      return CCW.gardenJarTexture(scene, B, 'garden-int-jar-tex-' + v, v);
+    });
+    var jrnd = CCW.prand(4157);
+    var jarIdx = 0;
+    [1.15, 2.25, 3.35].forEach(function (boardY, row) {
+      for (var col = 0; col < 6; col++) {
+        var jar = add(B.MeshBuilder.CreateCylinder('garden-int-jar-' + jarIdx,
+          { diameter: 0.32, height: 0.52, tessellation: 12 }, scene));
+        jar.position.set(-2.3 + col * 0.92 + (jrnd() - 0.5) * 0.03,
+          boardY + 0.045 + 0.26, -14.05 + (jrnd() - 0.5) * 0.03);
+        jar.material = CCW.texMat(scene, B, 'garden-int-jar-mat-' + jarIdx,
+          jarTex[(col + row) % 3], {});
+        jarIdx++;
+      }
+    });
+    // Four larger jars on the counter.
+    [-2.0, -0.7, 0.7, 2.0].forEach(function (x, i) {
+      var cjar = add(B.MeshBuilder.CreateCylinder('garden-int-cjar-' + i,
+        { diameter: 0.42, height: 0.66, tessellation: 12 }, scene));
+      cjar.position.set(x, 0.67 + 0.33, -13.9);
+      cjar.material = CCW.texMat(scene, B, 'garden-int-cjar-mat-' + i,
+        jarTex[(i + 1) % 3], {});
+    });
+    // Botanical study prints above the shelves (emblem frames).
+    [-1.9, 0, 1.9].forEach(function (x, i) {
+      var frame = add(B.MeshBuilder.CreateBox('garden-int-print-' + i + '-frame',
+        { width: 1.3, height: 1.6, depth: 0.09 }, scene));
+      frame.position.set(x, 5.55, -14.36);
+      frame.material = CCW.mat(scene, B, 'garden-int-print-frame-mat-' + i, P.tealDeep);
+      var art = add(B.MeshBuilder.CreatePlane('garden-int-print-' + i,
+        { width: 1.16, height: 1.46 }, scene));
+      art.rotation.y = Math.PI; // back wall: readable face toward the room
+      art.position.set(x, 5.55, -14.3);
+      art.material = CCW.texMat(scene, B, 'garden-int-print-mat-' + i,
+        CCW.gardenBotanicalTexture(scene, B, 'garden-int-print-tex-' + i, i), {});
+    });
+
+    // ---- Hydroponic towers of greens -------------------------------
+    function tower(x, z, tag) {
+      var base = add(B.MeshBuilder.CreateCylinder('garden-int-tower-' + tag + '-base',
+        { diameter: 0.84, height: 0.18, tessellation: 14 }, scene));
+      base.position.set(x, 0.09, z);
+      base.material = CCW.mat(scene, B, 'garden-int-tower-' + tag + '-base-mat', P.tealDeep);
+      var column = add(B.MeshBuilder.CreateCylinder('garden-int-tower-' + tag + '-column',
+        { diameter: 0.6, height: 3.0, tessellation: 14 }, scene));
+      column.position.set(x, 1.68, z);
+      column.material = CCW.mat(scene, B, 'garden-int-tower-' + tag + '-column-mat', '#f2ede2');
+      var cap = add(B.MeshBuilder.CreateCylinder('garden-int-tower-' + tag + '-cap',
+        { diameter: 0.68, height: 0.12, tessellation: 14 }, scene));
+      cap.position.set(x, 3.24, z);
+      cap.material = CCW.mat(scene, B, 'garden-int-tower-' + tag + '-cap-mat', P.tealDeep);
+      [0, Math.PI / 2, Math.PI / 4, Math.PI / 4 + Math.PI / 2].forEach(function (ry, li) {
+        var leaf = add(B.MeshBuilder.CreatePlane('garden-int-tower-' + tag + '-leaf-' + li,
+          { width: 0.85, height: 0.85 }, scene));
+        leaf.position.set(x, li < 2 ? 1.15 : 2.15, z);
+        leaf.rotation.y = ry;
+        leaf.material = CCW.texMat(scene, B, 'garden-int-tower-' + tag + '-leaf-mat-' + li,
+          leafTex, { alpha: true });
+      });
+    }
+    tower(-5.8, -3.6, 'a');
+    tower(-5.8, -6.8, 'b');
+    tower(-5.8, -10.0, 'c');
+    tower(5.8, -11.4, 'd');
+
+    // ---- The teal bench, with cushions and potted herbs ------------
+    var benchTex = CCW.gardenBenchTexture(scene, B, 'garden-int-bench-tex');
+    var benchSeat = add(B.MeshBuilder.CreateBox('garden-int-bench-seat',
+      { width: 0.62, height: 0.09, depth: 2.6 }, scene));
+    benchSeat.position.set(6.14, 0.55, -5.6);
+    benchSeat.material = CCW.texMat(scene, B, 'garden-int-bench-seat-mat', benchTex, {});
+    var benchBack = add(B.MeshBuilder.CreateBox('garden-int-bench-back',
+      { width: 0.09, height: 0.85, depth: 2.6 }, scene));
+    benchBack.position.set(6.4, 1.15, -5.6);
+    benchBack.material = CCW.texMat(scene, B, 'garden-int-bench-back-mat', benchTex, {});
+    [-6.85, -4.35].forEach(function (z, i) {
+      var sideP = add(B.MeshBuilder.CreateBox('garden-int-bench-side-' + i,
+        { width: 0.6, height: 0.52, depth: 0.09 }, scene));
+      sideP.position.set(6.14, 0.26, z);
+      sideP.material = CCW.mat(scene, B, 'garden-int-bench-side-mat-' + i, P.tealDeep);
+    });
+    var cushionTex = CCW.velvetTexture(scene, B, 'garden-int-cushion-tex', '#7fc8a9');
+    [-6.2, -5.0].forEach(function (z, i) {
+      var cush = add(B.MeshBuilder.CreateBox('garden-int-bench-cushion-' + i,
+        { width: 0.5, height: 0.1, depth: 1.0 }, scene));
+      cush.position.set(6.12, 0.65, z);
+      cush.rotation.z = 0.04;
+      cush.material = CCW.texMat(scene, B, 'garden-int-bench-cushion-mat-' + i, cushionTex, {});
+    });
+    [-6.55, -5.6, -4.65].forEach(function (z, i) {
+      var pot = add(B.MeshBuilder.CreateCylinder('garden-int-bench-pot-' + i,
+        { diameterTop: 0.2, diameterBottom: 0.15, height: 0.22, tessellation: 10 }, scene));
+      pot.position.set(6.14, 0.71, z);
+      pot.material = CCW.mat(scene, B, 'garden-int-bench-pot-mat-' + i, '#b06a3b');
+      var leaf = add(B.MeshBuilder.CreatePlane('garden-int-bench-leaf-' + i,
+        { width: 0.5, height: 0.5 }, scene));
+      leaf.position.set(6.14, 0.98, z);
+      leaf.rotation.y = i * Math.PI / 3;
+      leaf.material = CCW.texMat(scene, B, 'garden-int-bench-leaf-mat-' + i,
+        leafTex, { alpha: true });
+    });
+    // The copper watering can, resting by the bench (photo 03).
+    var canBody = add(B.MeshBuilder.CreateCylinder('garden-int-can-body',
+      { diameter: 0.34, height: 0.3, tessellation: 12 }, scene));
+    canBody.position.set(5.3, 0.15, -4.1);
+    canBody.material = CCW.mat(scene, B, 'garden-int-can-body-mat', '#b06a3b');
+    var canSpout = add(B.MeshBuilder.CreateCylinder('garden-int-can-spout',
+      { diameter: 0.05, height: 0.42, tessellation: 8 }, scene));
+    canSpout.position.set(5.08, 0.3, -4.1);
+    canSpout.rotation.z = 0.8;
+    canSpout.material = CCW.mat(scene, B, 'garden-int-can-spout-mat', '#b06a3b');
+    var canHandle = add(B.MeshBuilder.CreateTorus('garden-int-can-handle',
+      { diameter: 0.3, thickness: 0.035, tessellation: 14, arc: Math.PI }, scene));
+    // Stood upright, the (full — see the gate note: arc is
+    // ignored in this build) torus reads as the can's loop
+    // handle; its lower half hides inside the can body.
+    canHandle.rotation.x = -Math.PI / 2;
+    canHandle.position.set(5.3, 0.3, -4.1);
+    canHandle.material = CCW.mat(scene, B, 'garden-int-can-handle-mat', '#8a4f2a');
+
+    // ---- The breath fountain, among the planters -------------------
+    var basin = add(B.MeshBuilder.CreateCylinder('garden-int-fountain-basin',
+      { diameter: 2.5, height: 0.55, tessellation: 24 }, scene));
+    basin.position.set(0, 0.28, -7.2);
+    basin.material = CCW.mat(scene, B, 'garden-int-fountain-basin-mat', P.tealDeep);
+    var rim = add(B.MeshBuilder.CreateTorus('garden-int-fountain-rim',
+      { diameter: 2.5, thickness: 0.09, tessellation: 28 }, scene));
+    // No rotation: Babylon's torus lies FLAT by default, and a
+    // basin rim must hug the basin. rotation.x = PI/2 stood it up
+    // as a hoop over the fountain — the render pass caught it.
+    rim.position.set(0, 0.57, -7.2);
+    rim.material = CCW.mat(scene, B, 'garden-int-fountain-rim-mat', P.teal);
+    var water = add(B.MeshBuilder.CreateDisc('garden-int-fountain-water',
+      { radius: 1.14, tessellation: 28 }, scene));
+    water.rotation.x = Math.PI / 2;
+    water.position.set(0, 0.565, -7.2);
+    var waterTex = CCW.gardenWaterTexture(scene, B, 'garden-int-water-tex');
+    water.material = CCW.texMat(scene, B, 'garden-int-fountain-water-mat', waterTex, {});
+    // A soft glow only: texMat's full emissive (0.55) rendered the
+    // water neon-bright in the render pass; 0.22 keeps it luminous
+    // and calm. The disc also sits just above the basin's cap now.
+    water.material.emissiveTexture = waterTex;
+    water.material.emissiveColor = new B.Color3(0.22, 0.22, 0.22);
+    var pedestal = add(B.MeshBuilder.CreateCylinder('garden-int-fountain-pedestal',
+      { diameter: 0.3, height: 0.5, tessellation: 12 }, scene));
+    pedestal.position.set(0, 0.72, -7.2);
+    pedestal.material = CCW.mat(scene, B, 'garden-int-fountain-pedestal-mat', P.tealDeep);
+    // The pacer orb: a calm glow at the fountain's heart. (Its
+    // slow breathing pulse is a later pass — the world rooms
+    // have no per-frame animation yet; see the notes.)
+    var orb = add(B.MeshBuilder.CreateSphere('garden-int-fountain-orb',
+      { diameter: 0.42, segments: 14 }, scene));
+    orb.position.set(0, 1.12, -7.2);
+    orb.material = CCW.glowMat(scene, B, 'garden-int-fountain-orb-mat', P.goldSoft);
+
+    // Planters ringing the fountain.
+    [[3.05, -7.2], [-3.05, -7.2], [1.55, -10.75], [-1.55, -10.75]].forEach(function (cfg, i) {
+      var px = cfg[0], pz = cfg[1], tag = 'garden-int-planter-' + i;
+      var pot = add(B.MeshBuilder.CreateCylinder(tag + '-pot',
+        { diameterTop: 0.68, diameterBottom: 0.52, height: 0.5, tessellation: 12 }, scene));
+      pot.position.set(px, 0.25, pz);
+      pot.material = CCW.mat(scene, B, tag + '-pot-mat', i % 2 ? P.tealDeep : P.coral);
+      var soil = add(B.MeshBuilder.CreateDisc(tag + '-soil',
+        { radius: 0.3, tessellation: 14 }, scene));
+      soil.rotation.x = Math.PI / 2;
+      soil.position.set(px, 0.51, pz);
+      soil.material = CCW.mat(scene, B, tag + '-soil-mat', '#3a2415');
+      [0, Math.PI / 2].forEach(function (ry, li) {
+        var leaf = add(B.MeshBuilder.CreatePlane(tag + '-leaf-' + li,
+          { width: 1.05, height: 1.05 }, scene));
+        leaf.position.set(px, 0.98, pz);
+        leaf.rotation.y = ry + i * 0.4;
+        leaf.material = CCW.texMat(scene, B, tag + '-leaf-mat-' + li, leafTex, { alpha: true });
+      });
+    });
+
+    // Breathing-circle stools around the fountain.
+    var stoolVelvets = [
+      CCW.velvetTexture(scene, B, 'garden-int-stool-velvet-0', P.velvetMagenta),
+      CCW.velvetTexture(scene, B, 'garden-int-stool-velvet-1', P.velvetTeal)
+    ];
+    [[1.6, -5.6], [-1.6, -5.6], [1.6, -8.8], [-1.6, -8.8]].forEach(function (cfg, i) {
+      var tag = 'garden-int-stool-' + i;
+      var seat = add(B.MeshBuilder.CreateCylinder(tag + '-seat',
+        { diameter: 0.68, height: 0.12, tessellation: 16 }, scene));
+      seat.position.set(cfg[0], 0.52, cfg[1]);
+      seat.material = CCW.texMat(scene, B, tag + '-seat-mat', stoolVelvets[i % 2], {});
+      var leg = add(B.MeshBuilder.CreateCylinder(tag + '-leg',
+        { diameter: 0.16, height: 0.48, tessellation: 10 }, scene));
+      leg.position.set(cfg[0], 0.24, cfg[1]);
+      leg.material = CCW.mat(scene, B, tag + '-leg-mat', P.plumHouse);
+    });
+
+    // ---- Hanging plants + shaded pendants over the fountain --------
+    [[2.4, -5.0], [-2.4, -5.0], [2.4, -10.0], [-2.4, -10.0]].forEach(function (cfg, i) {
+      var tag = 'garden-int-hang-' + i;
+      var cord = add(B.MeshBuilder.CreateCylinder(tag + '-cord',
+        { diameter: 0.03, height: 1.4, tessellation: 6 }, scene));
+      cord.position.set(cfg[0], 6.2, cfg[1]);
+      cord.material = CCW.mat(scene, B, tag + '-cord-mat', P.plumHouse);
+      var pot = add(B.MeshBuilder.CreateCylinder(tag + '-pot',
+        { diameterTop: 0.4, diameterBottom: 0.3, height: 0.26, tessellation: 10 }, scene));
+      pot.position.set(cfg[0], 5.38, cfg[1]);
+      pot.material = CCW.mat(scene, B, tag + '-pot-mat', i % 2 ? P.coral : P.tealDeep);
+      [0, Math.PI / 2].forEach(function (ry, li) {
+        var leaf = add(B.MeshBuilder.CreatePlane(tag + '-leaf-' + li,
+          { width: 0.85, height: 0.85 }, scene));
+        leaf.position.set(cfg[0], 5.72, cfg[1]);
+        leaf.rotation.y = ry + i * 0.7;
+        leaf.material = CCW.texMat(scene, B, tag + '-leaf-mat-' + li, leafTex, { alpha: true });
+      });
+    });
+    [-1.7, 1.7].forEach(function (px, i) {
+      var cord = add(B.MeshBuilder.CreateCylinder('garden-int-pendant-' + i + '-cord',
+        { diameter: 0.025, height: 1.75, tessellation: 6 }, scene));
+      cord.position.set(px, 6.02, -7.2);
+      cord.material = CCW.mat(scene, B, 'garden-int-pendant-cord-mat-' + i, P.plumHouse);
+      var globe = add(B.MeshBuilder.CreateSphere('garden-int-pendant-' + i + '-globe',
+        { diameter: 0.4, segments: 12 }, scene));
+      globe.position.set(px, 4.92, -7.2);
+      globe.material = CCW.glowMat(scene, B, 'garden-int-pendant-globe-mat-' + i,
+        i ? '#ff7ab0' : P.goldSoft);
+      var shade = add(B.MeshBuilder.CreateCylinder('garden-int-pendant-' + i + '-shade',
+        { diameterTop: 0.14, diameterBottom: 0.48, height: 0.26, tessellation: 14, openEnded: true }, scene));
+      shade.position.set(px, 5.1, -7.2);
+      shade.material = CCW.mat(scene, B, 'garden-int-pendant-shade-mat-' + i, P.tealDeep);
+      var pLight = new B.PointLight('garden-int-pendant-light-' + i,
+        roomWorld(px, 4.95, -7.2), scene);
+      pLight.intensity = 0.5;
+      pLight.diffuse = new B.Color3(1.0, 0.78, 0.55);
+      pLight.range = 6.5;
+      intLights.push(pLight);
+    });
+
+    // ---- By the door: the consent banner + the host's corner -------
+    var bannerBack = add(B.MeshBuilder.CreateBox('garden-int-banner-back',
+      { width: 2.9, height: 1.9, depth: 0.1 }, scene));
+    bannerBack.position.set(-4.35, 3.3, -0.80);
+    bannerBack.material = CCW.mat(scene, B, 'garden-int-banner-back-mat', P.plumHouse);
+    var banner = add(B.MeshBuilder.CreatePlane('garden-int-banner',
+      { width: 2.7, height: 1.7 }, scene));
+    // No half-turn: front wall, readable face into the room.
+    banner.position.set(-4.35, 3.3, -0.87);
+    banner.material = CCW.texMat(scene, B, 'garden-int-banner-mat',
+      CCW.gardenBannerTexture(scene, B, 'garden-int-banner-tex'), {});
+
+    var hostSign = add(CCW.makeLabel(scene, B, 'garden-int-host-sign',
+      ['Holding the space', 'the host tends this room'], 2.2, 0.55, { fg: P.goldSoft }));
+    hostSign.position.set(4.35, 2.6, -0.87);
+    var hostTop = add(B.MeshBuilder.CreateCylinder('garden-int-host-table-top',
+      { diameter: 0.6, height: 0.05, tessellation: 14 }, scene));
+    hostTop.position.set(4.35, 0.58, -1.6);
+    hostTop.material = CCW.texMat(scene, B, 'garden-int-host-table-top-mat', woodTex, {});
+    var hostLeg = add(B.MeshBuilder.CreateCylinder('garden-int-host-table-leg',
+      { diameter: 0.07, height: 0.55, tessellation: 8 }, scene));
+    hostLeg.position.set(4.35, 0.28, -1.6);
+    hostLeg.material = CCW.mat(scene, B, 'garden-int-host-table-leg-mat', P.plumHouse);
+    var hostCandle = add(B.MeshBuilder.CreateCylinder('garden-int-host-candle',
+      { diameter: 0.09, height: 0.22, tessellation: 10 }, scene));
+    hostCandle.position.set(4.35, 0.72, -1.6);
+    hostCandle.material = CCW.mat(scene, B, 'garden-int-host-candle-mat', P.cream);
+    var hostFlame = add(B.MeshBuilder.CreateSphere('garden-int-host-flame',
+      { diameter: 0.085, segments: 8 }, scene));
+    hostFlame.position.set(4.35, 0.9, -1.6);
+    hostFlame.material = CCW.glowMat(scene, B, 'garden-int-host-flame-mat', P.goldSoft);
+
+    // Dried lavender bundles hanging by the bench (photo 03).
+    [-8.6, -3.4].forEach(function (z, i) {
+      var stem = add(B.MeshBuilder.CreateCylinder('garden-int-lavender-' + i + '-stem',
+        { diameter: 0.035, height: 0.5, tessellation: 6 }, scene));
+      stem.position.set(6.32, 2.85, z);
+      stem.material = CCW.mat(scene, B, 'garden-int-lavender-stem-mat-' + i, '#8a7a4a');
+      var head = add(B.MeshBuilder.CreateCylinder('garden-int-lavender-' + i + '-head',
+        { diameterTop: 0.05, diameterBottom: 0.16, height: 0.42, tessellation: 8 }, scene));
+      head.position.set(6.32, 2.4, z);
+      head.material = CCW.mat(scene, B, 'garden-int-lavender-head-mat-' + i, P.velvetLavender);
+    });
+
+    // Corner plants flanking the herb shelves.
+    function cornerPlant(px, pz, tag) {
+      var pot = add(B.MeshBuilder.CreateCylinder('garden-int-plant-' + tag + '-pot',
+        { diameterTop: 0.5, diameterBottom: 0.38, height: 0.56, tessellation: 12 }, scene));
+      pot.position.set(px, 0.28, pz);
+      pot.material = CCW.mat(scene, B, 'garden-int-plant-' + tag + '-pot-mat', P.coral);
+      var crown = add(B.MeshBuilder.CreateSphere('garden-int-plant-' + tag + '-crown',
+        { diameter: 0.32, segments: 8 }, scene));
+      crown.position.set(px, 0.66, pz);
+      crown.material = CCW.mat(scene, B, 'garden-int-plant-' + tag + '-crown-mat', '#1e5c46');
+      for (var li = 0; li < 3; li++) {
+        var leaf = add(B.MeshBuilder.CreatePlane('garden-int-plant-' + tag + '-leaf-' + li,
+          { width: 1.25, height: 1.25 }, scene));
+        leaf.position.set(px, 1.2, pz);
+        leaf.rotation.y = li * Math.PI / 3;
+        leaf.material = CCW.texMat(scene, B, 'garden-int-plant-' + tag + '-leaf-mat-' + li,
+          leafTex, { alpha: true });
+      }
+    }
+    cornerPlant(-4.6, -13.6, 'l');
+    cornerPlant(4.6, -13.6, 'r');
+
+    // ---- The garden gate: the grounding exit (return pad) ----------
+    [-1.15, 1.15].forEach(function (off, i) {
+      var post = add(B.MeshBuilder.CreateCylinder('garden-int-gate-post-' + i,
+        { diameter: 0.13, height: 2.3, tessellation: 10 }, scene));
+      post.position.set(4.7 + off, 1.15, -2.3);
+      post.material = CCW.mat(scene, B, 'garden-int-gate-post-mat-' + i, P.tealDeep);
+    });
+    // The gate arch is a semicircular TUBE, not a torus arc:
+    // this Babylon build's CreateTorus silently IGNORES its arc
+    // option (vertex-probed 2026-11-04: arc:PI generates a full
+    // ring), so a torus "arc" sprung at post-top height renders
+    // its lower half floating in mid-air — the render pass caught
+    // exactly that. The tube path is the precise semicircle the
+    // gate leaves below ride on (radius 1.15 in the XY plane).
+    var gatePath = [];
+    for (var ga = 0; ga <= 12; ga++) {
+      var gang = (ga / 12) * Math.PI;
+      gatePath.push(new B.Vector3(Math.cos(gang) * 1.15, Math.sin(gang) * 1.15, 0));
+    }
+    var gateArc = add(B.MeshBuilder.CreateTube('garden-int-gate-arc',
+      { path: gatePath, radius: 0.04, radialSegments: 8, cap: B.Mesh.CAP_ALL }, scene));
+    gateArc.position.set(4.7, 2.3, -2.3);
+    gateArc.material = CCW.mat(scene, B, 'garden-int-gate-arc-mat', P.tealDeep);
+    [0.55, Math.PI / 2, Math.PI - 0.55].forEach(function (ang, li) {
+      var leaf = add(B.MeshBuilder.CreatePlane('garden-int-gate-leaf-' + li,
+        { width: 0.55, height: 0.55 }, scene));
+      leaf.position.set(4.7 + Math.cos(ang) * 1.15, 2.3 + Math.sin(ang) * 1.15, -2.3);
+      leaf.rotation.y = li * Math.PI / 3;
+      leaf.material = CCW.texMat(scene, B, 'garden-int-gate-leaf-mat-' + li,
+        leafTex, { alpha: true });
+    });
+    var padTex = CCW.padTexture(scene, B, 'garden-int-pad-tex', P.teal);
+    var returnPad = add(B.MeshBuilder.CreateDisc('garden-int-return-pad',
+      { radius: 1.5, tessellation: 28 }, scene));
+    returnPad.rotation.x = Math.PI / 2;
+    returnPad.position.set(4.7, 0.04, -2.3);
+    returnPad.material = CCW.texMat(scene, B, 'garden-int-return-pad-mat', padTex,
+      { alpha: true, emissive: true });
+    var returnRing = add(B.MeshBuilder.CreateTorus('garden-int-return-ring',
+      { diameter: 3.0, thickness: 0.07, tessellation: 32 }, scene));
+    returnRing.rotation.x = Math.PI / 2;
+    returnRing.position.set(4.7, 0.05, -2.3);
+    returnRing.material = CCW.glowMat(scene, B, 'garden-int-return-ring-mat', P.gold);
+    var returnSign = add(CCW.makeLabel(scene, B, 'garden-int-return-sign',
+      ['↩ The Plaza'], 1.8, 0.45, { fg: P.goldSoft }));
+    returnSign.position.set(4.7, 1.85, -2.38);
+
+    // ---- The room's lights -------------------------------------------
+    var roomHemi = new B.HemisphericLight('garden-int-hemi',
+      new B.Vector3(0, 1, 0), scene);
+    roomHemi.intensity = 0.75;
+    roomHemi.diffuse = new B.Color3(1.0, 0.86, 0.66);
+    roomHemi.groundColor = new B.Color3(0.36, 0.24, 0.28);
+    intLights.push(roomHemi);
+    var roomLight = new B.PointLight('garden-int-light',
+      roomWorld(0, 5.4, -7.5), scene);
+    roomLight.intensity = 0.65;
+    roomLight.diffuse = new B.Color3(1.0, 0.78, 0.54);
+    roomLight.range = 18;
+    intLights.push(roomLight);
+
+    // Scope the rig to the room + lift the light cap (see header).
+    var intMeshes = scene.meshes.filter(function (m) {
+      return m.name.indexOf('garden-int-') === 0;
+    });
+    intLights.forEach(function (l) { l.includedOnlyMeshes = intMeshes; });
+    var sceneLightCount = scene.lights.length;
+    intMeshes.forEach(function (m) {
+      if (m.material && m.material.maxSimultaneousLights !== undefined &&
+          m.material.maxSimultaneousLights < sceneLightCount) {
+        m.material.maxSimultaneousLights = sceneLightCount;
+      }
+    });
+
+    return {
+      returnPad: returnPad,
+      returnRing: returnRing,
+      entrance: {
+        position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
+        target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
+      }
+    };
+  }
+
   function buildZone(scene, B, zone) {
     var P = CCW.PALETTE;
     var theta = zone.angleDeg * Math.PI / 180;
@@ -3135,6 +3695,16 @@
       result.threshold = penInterior.entrance;
       result.interiorReturn = { mesh: penInterior.returnPad, ringMesh: penInterior.returnRing };
       result.penpal = penInterior.penpal;
+    }
+    if (zone.id === 'garden') {
+      // The Therapeutics Garden (M2b): same arrival pattern — the
+      // Plaza pad lands INSIDE, just past the door, facing the
+      // breath fountain and the herb shelves; the room's own
+      // return pad (the garden gate) rides home. See
+      // buildGardenInterior's header.
+      var gInterior = buildGardenInterior(scene, B, zone, add);
+      result.threshold = gInterior.entrance;
+      result.interiorReturn = { mesh: gInterior.returnPad, ringMesh: gInterior.returnRing };
     }
     return result;
   }

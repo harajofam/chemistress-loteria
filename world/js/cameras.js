@@ -291,6 +291,12 @@
         // own local frame.
         angleDeg: 300, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
         minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
+      },
+      { // The Therapeutics Garden, angleDeg 240 (M2b interior
+        // 4 of 5): same room volume again, same gate/clamp
+        // numbers in its own local frame.
+        angleDeg: 240, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
+        minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
       }
     ]
   };

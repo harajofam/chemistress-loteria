@@ -2883,4 +2883,457 @@
       });
     });
   };
+  // ==================================================================
+  // THE THERAPEUTICS GARDEN (M2b interior 4 of 5, 2026-11-04) — the
+  // greenhouse painters. Everything procedural in the house style
+  // (deterministic prand seeds, Georgia serif, <=1024px a side),
+  // drawn from Jay's greenhouse photos (interior-refs/03 + the
+  // collage's bottom-left panel): the teal polka-dot floor, the
+  // glass roof in its teal ironwork, glass side walls looking out
+  // on green, labeled herb jars, botanical study prints, coral
+  // scrollwork, and the consent banner the design hangs at the
+  // greenhouse door (design section 3.4).
+
+  // The signature floor: bright teal with big cream polka dots
+  // (photo 03), a soft grain, and a baked pool of light at center.
+  CCW.gardenFloorTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 1024, function (ctx, w, h) {
+      var g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, '#12b5a5');
+      g.addColorStop(0.5, '#0ea08e');
+      g.addColorStop(1, '#0b8a7d');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(2718);
+      for (var s = 0; s < 5200; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,60,50,0.06)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.2, 2.2);
+      }
+      // Polka dots: offset rows, a soft shaded rim so each dot
+      // sits ON the floor rather than floating over it.
+      var pitch = 128, rad = 37;
+      for (var row = 0; row * pitch < h + pitch; row++) {
+        for (var col = -1; col * pitch < w + pitch; col++) {
+          var cx = col * pitch + (row % 2 ? pitch / 2 : 0);
+          var cy = row * pitch;
+          ctx.fillStyle = 'rgba(0,70,60,0.20)';
+          ctx.beginPath(); ctx.arc(cx + 3, cy + 5, rad, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = P.cream;
+          ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.35)';
+          ctx.beginPath(); ctx.arc(cx - rad * 0.3, cy - rad * 0.35, rad * 0.45, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      var rg = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, 620);
+      rg.addColorStop(0, 'rgba(255,250,225,0.13)');
+      rg.addColorStop(1, 'rgba(0,50,60,0.10)');
+      ctx.fillStyle = rg;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // The glass roof: pale aqua panes in a teal ironwork grid, sun
+  // streaks laid diagonally, leaf shadows soft at the edges — a
+  // roof the light pours through (photo 03 + collage BL).
+  CCW.gardenRoofTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#d8f6f2');
+      g.addColorStop(0.55, '#a8e6e0');
+      g.addColorStop(1, '#8fd8dd');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(3141);
+      // Soft out-of-focus leaf shadows drifting at the edges.
+      for (var b = 0; b < 26; b++) {
+        var bx = rnd() * w, by = rnd() < 0.5 ? rnd() * 90 : h - rnd() * 90;
+        ctx.fillStyle = 'rgba(46,125,79,' + (0.05 + rnd() * 0.08) + ')';
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 30 + rnd() * 60, 14 + rnd() * 26, rnd() * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Sun streaks.
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      ctx.rotate(-0.5);
+      for (var st = -3; st <= 3; st++) {
+        ctx.fillStyle = 'rgba(255,255,240,' + (st === 0 ? 0.20 : 0.10) + ')';
+        ctx.fillRect(st * 150 - 26, -h, 52, h * 2);
+      }
+      ctx.restore();
+      // The ironwork: teal mullions with a lit top edge.
+      function bar(x, y, bw, bh) {
+        ctx.fillStyle = P.tealDeep;
+        ctx.fillRect(x, y, bw, bh);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.fillRect(x, y, bw, 2.5);
+      }
+      for (var vx = 0; vx <= 8; vx++) bar(vx * w / 8 - 5, 0, 10, h);
+      for (var hy = 0; hy <= 4; hy++) bar(0, hy * h / 4 - 5, w, 10);
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 7;
+      ctx.strokeRect(3, 3, w - 6, h - 6);
+      for (var s2 = 0; s2 < 1600; s2++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.10)' : 'rgba(11,122,112,0.08)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2, 2);
+      }
+    });
+  };
+
+  // The glass side walls: teal mullions with arched tops over a
+  // soft-focus garden — layered green-gold foliage blobs behind
+  // glass, so the room feels planted in green (depth cue, per the
+  // artistry standard), never a flat fill.
+  CCW.gardenGlassTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 512, function (ctx, w, h) {
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#bfe8c8');
+      g.addColorStop(0.6, '#7cc98d');
+      g.addColorStop(1, '#4da763');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(1618);
+      var greens = ['#2e7d4f', '#57a773', '#8fce6e', '#c9e88a', '#3d9970'];
+      for (var b = 0; b < 90; b++) {
+        ctx.fillStyle = greens[Math.floor(rnd() * greens.length)];
+        ctx.globalAlpha = 0.16 + rnd() * 0.22;
+        ctx.beginPath();
+        ctx.ellipse(rnd() * w, rnd() * h, 26 + rnd() * 90, 18 + rnd() * 60,
+          rnd() * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // Warm light patches through the leaves.
+      for (var lp = 0; lp < 10; lp++) {
+        var lx = rnd() * w, ly = rnd() * h * 0.6;
+        var lg = ctx.createRadialGradient(lx, ly, 4, lx, ly, 90 + rnd() * 80);
+        lg.addColorStop(0, 'rgba(255,246,200,0.35)');
+        lg.addColorStop(1, 'rgba(255,246,200,0)');
+        ctx.fillStyle = lg;
+        ctx.fillRect(0, 0, w, h);
+      }
+      // Darker hedge line at the foot.
+      ctx.fillStyle = 'rgba(24,80,46,0.35)';
+      ctx.fillRect(0, h * 0.86, w, h * 0.14);
+      // The mullion grid: four bays, arched tops (drawn, the way
+      // the Library draws its arches into the texture).
+      var bay = w / 4;
+      function vbar(x) {
+        ctx.fillStyle = P.tealDeep;
+        ctx.fillRect(x - 6, 0, 12, h);
+        ctx.fillStyle = 'rgba(255,255,255,0.30)';
+        ctx.fillRect(x - 6, 0, 3, h);
+      }
+      for (var v = 0; v <= 4; v++) vbar(v * bay);
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(0, h * 0.52, w, 10);
+      ctx.fillRect(0, h - 12, w, 12);
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 11;
+      for (var a2 = 0; a2 < 4; a2++) {
+        ctx.beginPath();
+        ctx.arc(a2 * bay + bay / 2, h * 0.52, bay / 2 - 4, Math.PI, 0);
+        ctx.stroke();
+      }
+      // A glass sheen.
+      var sg = ctx.createLinearGradient(0, 0, w, h);
+      sg.addColorStop(0, 'rgba(255,255,255,0.16)');
+      sg.addColorStop(0.4, 'rgba(255,255,255,0.02)');
+      sg.addColorStop(1, 'rgba(255,255,255,0.08)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(0, 0, w, h);
+    });
+  };
+
+  // One herb jar, wrapped on a cylinder: glass shading at the
+  // wrap edges, the contents, a wooden lid band at the top, and a
+  // cream label with the herb's name in serif — the apothecary
+  // jars of photo 03. Variants: 0 lavender, 1 chamomile, 2 rose.
+  CCW.gardenJarTexture = function (scene, B, name, variant) {
+    var P = CCW.PALETTE;
+    var kinds = [
+      { fill: '#6d5ba8', fleck: '#9d8fd0', dark: '#4a3d78', word: 'LAVENDER' },
+      { fill: '#c9a86a', fleck: '#efe0b0', dark: '#96762f', word: 'CHAMOMILE' },
+      { fill: '#c65b7d', fleck: '#eda4bc', dark: '#96405c', word: 'ROSE PETALS' }
+    ];
+    var k = kinds[variant % kinds.length];
+    return CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      // Babylon wraps a cylinder's texture so drawn text reads
+      // MIRRORED from outside (proven by the garden render pass:
+      // every shelf label read backwards). Pre-flip the drawing
+      // so the wrapped jar reads correctly.
+      ctx.translate(w, 0); ctx.scale(-1, 1);
+      ctx.fillStyle = k.fill;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(500 + variant * 131);
+      for (var s = 0; s < 700; s++) {
+        ctx.fillStyle = rnd() > 0.45 ? k.fleck : k.dark;
+        ctx.globalAlpha = 0.25 + rnd() * 0.4;
+        ctx.fillRect(rnd() * w, 60 + rnd() * (h - 70), 3.4, 5.5);
+      }
+      ctx.globalAlpha = 1;
+      // Glass shading: lit center, shaded wrap edges.
+      var g = ctx.createLinearGradient(0, 0, w, 0);
+      g.addColorStop(0, 'rgba(30,10,40,0.38)');
+      g.addColorStop(0.18, 'rgba(255,255,255,0.20)');
+      g.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+      g.addColorStop(0.82, 'rgba(255,255,255,0.16)');
+      g.addColorStop(1, 'rgba(30,10,40,0.38)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      // The wooden lid.
+      ctx.fillStyle = '#7a4a22';
+      ctx.fillRect(0, 0, w, 34);
+      ctx.fillStyle = 'rgba(255,220,160,0.35)';
+      ctx.fillRect(0, 4, w, 5);
+      ctx.fillStyle = 'rgba(40,20,5,0.45)';
+      ctx.fillRect(0, 30, w, 4);
+      // The cream label.
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(28, 108, w - 56, 74);
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 3;
+      ctx.strokeRect(34, 114, w - 68, 62);
+      ctx.fillStyle = '#3d1247';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 30px Georgia, serif';
+      ctx.fillText(k.word, w / 2, 146);
+    });
+  };
+
+  // A botanical study print for the wall over the herb shelves:
+  // cream field, a teal frame line with a fine gold inner line
+  // (emblem language), the plant drawn by hand, its name in
+  // serif beneath. Variants: 0 lavender, 1 leaf study, 2 calendula.
+  CCW.gardenBotanicalTexture = function (scene, B, name, variant) {
+    var P = CCW.PALETTE;
+    var words = ['LAVENDER', 'LEAF STUDY', 'CALENDULA'];
+    return CCW.canvasTexture(scene, B, name, 512, 640, function (ctx, w, h) {
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(900 + variant * 77);
+      for (var s = 0; s < 500; s++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(190,150,95,0.07)' : 'rgba(255,255,255,0.12)';
+        ctx.fillRect(rnd() * w, rnd() * h, 2, 2);
+      }
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 9;
+      ctx.strokeRect(20, 20, w - 40, h - 40);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2.5;
+      ctx.strokeRect(38, 38, w - 76, h - 76);
+      star(ctx, 66, 66, 13, P.goldSoft);
+      star(ctx, w - 66, 66, 13, P.goldSoft);
+      var cx = w / 2;
+      if (variant === 0) {
+        // Lavender: three stems, purple bud clusters.
+        [-52, 0, 52].forEach(function (off, si) {
+          ctx.strokeStyle = '#2e7d4f'; ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.moveTo(cx + off * 0.4, 470);
+          ctx.quadraticCurveTo(cx + off * 1.3, 320, cx + off, 190);
+          ctx.stroke();
+          for (var b = 0; b < 9; b++) {
+            var t = b / 9, bx = cx + off + Math.sin(t * 2.2) * 6 * (off ? Math.sign(off) : 0.3);
+            var by = 195 + t * 110;
+            ctx.fillStyle = b % 2 ? '#8f7fd4' : '#6d5ba8';
+            ctx.beginPath();
+            ctx.ellipse(bx, by, 11, 17, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = '#57a773';
+          ctx.beginPath();
+          ctx.ellipse(cx + off * 0.5 - 20, 420, 26, 9, -0.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      } else if (variant === 1) {
+        // A leaf study: one great leaf, veins drawn, two small.
+        ctx.strokeStyle = '#2e7d4f'; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(cx, 480); ctx.lineTo(cx, 170); ctx.stroke();
+        ctx.fillStyle = '#3d9970';
+        ctx.beginPath();
+        ctx.moveTo(cx, 160);
+        ctx.quadraticCurveTo(cx + 130, 260, cx + 30, 430);
+        ctx.quadraticCurveTo(cx, 470, cx - 30, 430);
+        ctx.quadraticCurveTo(cx - 130, 260, cx, 160);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(253,243,227,0.75)'; ctx.lineWidth = 3;
+        for (var vn = 0; vn < 6; vn++) {
+          var vy = 220 + vn * 40;
+          ctx.beginPath(); ctx.moveTo(cx, vy); ctx.lineTo(cx + 58 - vn * 6, vy + 34); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx, vy); ctx.lineTo(cx - 58 + vn * 6, vy + 34); ctx.stroke();
+        }
+        ctx.fillStyle = '#57a773';
+        [-120, 120].forEach(function (off) {
+          ctx.beginPath();
+          ctx.ellipse(cx + off, 440, 34, 15, off > 0 ? -0.5 : 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      } else {
+        // Calendula: a many-petalled amber bloom.
+        var fx = cx, fy = 300;
+        for (var p = 0; p < 16; p++) {
+          var ang = (p / 16) * Math.PI * 2;
+          ctx.fillStyle = p % 2 ? '#e8871e' : P.coral;
+          ctx.beginPath();
+          ctx.ellipse(fx + Math.cos(ang) * 62, fy + Math.sin(ang) * 62,
+            34, 15, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#ffd873';
+        ctx.beginPath(); ctx.arc(fx, fy, 34, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#c65a1e';
+        ctx.beginPath(); ctx.arc(fx, fy, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#2e7d4f'; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(fx, 340); ctx.quadraticCurveTo(fx - 14, 420, fx - 6, 480); ctx.stroke();
+        ctx.fillStyle = '#57a773';
+        ctx.beginPath(); ctx.ellipse(fx - 44, 428, 34, 13, -0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(fx + 40, 448, 30, 12, 0.5, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = '#7a1042';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 44px Georgia, serif';
+      ctx.fillText(words[variant % words.length], cx, 552);
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(cx - 90, 512, 180, 4);
+    });
+  };
+
+  // The consent banner at the greenhouse door (design section
+  // 3.4): what this room is, what it is not, and the quiet rules
+  // — in the design's own words, kindly and plainly, on cream
+  // with the house frame lines.
+  CCW.gardenBannerTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 640, function (ctx, w, h) {
+      ctx.fillStyle = P.cream;
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = P.tealDeep; ctx.lineWidth = 8;
+      ctx.strokeRect(18, 18, w - 36, h - 36);
+      ctx.strokeStyle = P.gold; ctx.lineWidth = 2.5;
+      ctx.strokeRect(32, 32, w - 64, h - 64);
+      star(ctx, 84, 88, 17, P.goldSoft);
+      star(ctx, w - 84, 88, 17, P.goldSoft);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#7a1042';
+      ctx.font = 'bold 60px Georgia, serif';
+      ctx.fillText('THE WELLNESS GARDEN', w / 2, 88);
+      ctx.fillStyle = P.tealDeep;
+      ctx.fillRect(w / 2 - 260, 132, 520, 5);
+      ctx.fillStyle = '#3d1247';
+      ctx.font = '45px Georgia, serif';
+      var lines = [
+        'A fellowship and breathing space —',
+        'company for quiet moments.',
+        'It is not therapy, counseling,',
+        'or medical care, and it does not',
+        'try to be. It is a garden.',
+        '',
+        'Soft voices. Advice only when asked.',
+        "What's shared here stays here.",
+        'Leave quietly any time — the gate is',
+        'always open. No explaining needed.'
+      ];
+      lines.forEach(function (ln, i) {
+        ctx.fillText(ln, w / 2, 186 + i * 46);
+      });
+    });
+  };
+
+  // The teal bench's slats (photo 03): horizontal teal boards,
+  // shaded gaps, wood grain, a baked top light.
+  CCW.gardenBenchTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 256, function (ctx, w, h) {
+      ctx.fillStyle = '#0b6b62';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(6022);
+      var slatH = h / 4;
+      for (var r = 0; r < 4; r++) {
+        var g = ctx.createLinearGradient(0, r * slatH, 0, (r + 1) * slatH);
+        g.addColorStop(0, '#14a08e');
+        g.addColorStop(0.75, P.tealDeep);
+        g.addColorStop(1, '#084f47');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, r * slatH + 3, w, slatH - 6);
+        for (var s = 0; s < 260; s++) {
+          ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,40,35,0.08)';
+          ctx.fillRect(rnd() * w, r * slatH + 3 + rnd() * (slatH - 6), 8 + rnd() * 22, 1.4);
+        }
+      }
+    });
+  };
+
+  // The breath fountain's water: concentric ripples on teal,
+  // sparkles, a calm bright heart — drawn for the basin disc.
+  CCW.gardenWaterTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      var g = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, 256);
+      g.addColorStop(0, '#3fd8c8');
+      g.addColorStop(0.6, '#12b5a5');
+      g.addColorStop(1, '#0b8a7d');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      for (var r = 30; r < 250; r += 26) {
+        ctx.strokeStyle = 'rgba(253,243,227,' + (0.34 - r / 900) + ')';
+        ctx.lineWidth = 3.4;
+        ctx.beginPath(); ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2); ctx.stroke();
+      }
+      var rnd = prand(808);
+      for (var s = 0; s < 130; s++) {
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.25 + rnd() * 0.4) + ')';
+        ctx.fillRect(rnd() * w, rnd() * h, 2.6, 2.6);
+      }
+    });
+  };
+
+  // Coral scrollwork for the tops of the glass walls (photo 03's
+  // filigree spandrels): drawn on transparency, hung as flat
+  // plates — the artistry standard's flat-surface rule.
+  CCW.gardenScrollTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 256, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = P.coral;
+      ctx.fillStyle = P.coral;
+      ctx.lineWidth = 9;
+      ctx.lineCap = 'round';
+      // A horizontal garland line with curls, drops, and a heart.
+      ctx.beginPath();
+      ctx.moveTo(18, 52); ctx.lineTo(w - 18, 52);
+      ctx.stroke();
+      [70, 150, 362, 442].forEach(function (cx) {
+        ctx.beginPath();
+        ctx.arc(cx, 84, 26, Math.PI * 0.15, Math.PI * 1.55);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, 84, 10, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      [110, 256, 402].forEach(function (cx) {
+        ctx.beginPath();
+        ctx.moveTo(cx, 52); ctx.lineTo(cx, 108);
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx, 122, 9, 0, Math.PI * 2); ctx.fill();
+      });
+      // The heart at center.
+      ctx.beginPath();
+      ctx.moveTo(w / 2, 196);
+      ctx.bezierCurveTo(w / 2 - 74, 128, w / 2 - 40, 58, w / 2, 96);
+      ctx.bezierCurveTo(w / 2 + 40, 58, w / 2 + 74, 128, w / 2, 196);
+      ctx.closePath();
+      ctx.fillStyle = '#ff5c8a';
+      ctx.fill();
+      ctx.strokeStyle = P.coral; ctx.lineWidth = 5;
+      ctx.stroke();
+      // Leaves along the line.
+      ctx.fillStyle = '#e7549a';
+      [36, 196, 316, 476].forEach(function (cx) {
+        ctx.beginPath();
+        ctx.ellipse(cx, 38, 17, 8, 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
