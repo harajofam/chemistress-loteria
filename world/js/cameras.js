@@ -297,6 +297,18 @@
         // numbers in its own local frame.
         angleDeg: 240, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
         minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
+      },
+      { // The Creator Studio, angleDeg 0 (M2b interior 5 of 5):
+        // same room volume again, same gate/clamp numbers in its
+        // own local frame. This zone shares the +Z axis with the
+        // spawn chapel: in the 0-degree local frame (lx = -x,
+        // lz = 24 - z) the chapel wall (z 18.8-19.6) sits at
+        // lz +4.8 and the spawn at lz +9 — both beyond gateMaxLz
+        // 1.0, so neither is ever claimed as this room, and the
+        // interior landing (radius 27, lz -3) clears the gate
+        // cleanly. Verified by the smoke15 studio clamp block.
+        angleDeg: 0, gateHalfX: 7.5, gateMinLz: -15.5, gateMaxLz: 1.0,
+        minLx: -6.1, maxLx: 6.1, minLz: -14.0, maxLz: -1.1, maxY: 6.6
       }
     ]
   };
