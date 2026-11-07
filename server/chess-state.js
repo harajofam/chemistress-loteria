@@ -24,6 +24,7 @@ class ChessPlayer extends Schema {
 }
 defineTypes(ChessPlayer, {
   name: 'string',
+  avatar: 'string', // presence summary (server/presence.js), sanitized on join
   seat: 'number',
   side: 'number',
   ready: 'boolean',
