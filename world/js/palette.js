@@ -4728,6 +4728,12 @@
     });
   };
 
+  // House-wide aliases (Light Lab rollout, 2026-11-06): the
+  // Studio's worn-surface painters, reused by every room in the
+  // rollout so honest wear reads the same house-wide.
+  CCW.wornWoodTexture = CCW.studioWornWoodTexture;
+  CCW.wornPaintTexture = CCW.studioWornPaintTexture;
+
   // Contact shadow: a soft radial dark, white heart to black
   // rim — carried on the GREEN channel of an opacityTexture
   // (the house opacity rule), so the material stays pure black
