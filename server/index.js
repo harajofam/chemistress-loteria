@@ -36,6 +36,7 @@ const { ChemistressCheckersRoom } = require('./checkers-room');
 const { ChemistressChessRoom } = require('./chess-room');
 const { ChemistressMancalaRoom } = require('./mancala-room');
 const { ChemistressBackgammonRoom } = require('./backgammon-room');
+const { ChemistressLoungeRoom } = require('./lounge-room');
 const auth = require('./auth');
 const { mountFilmRail, ALLOWLIST_SIZE } = require('./film-rail');
 const { mountPenpal } = require('./penpal');
@@ -138,6 +139,7 @@ gameServer.define('chemistress_checkers', ChemistressCheckersRoom);
 gameServer.define('chemistress_chess', ChemistressChessRoom);
 gameServer.define('chemistress_mancala', ChemistressMancalaRoom);
 gameServer.define('chemistress_backgammon', ChemistressBackgammonRoom);
+gameServer.define('chemistress_lounge', ChemistressLoungeRoom);
 
 gameServer
   .listen(PORT)

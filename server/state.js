@@ -33,6 +33,7 @@ class Player extends Schema {
 }
 defineTypes(Player, {
   name: 'string',
+  avatar: 'string', // presence summary (server/presence.js), sanitized on join
   seat: 'number',
   ready: 'boolean',
   isCaller: 'boolean',

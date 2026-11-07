@@ -55,6 +55,7 @@
 
 const { Room } = require('colyseus');
 const { loungeAuth, memberName } = require('./auth');
+const { sanitizeAvatarSummary } = require('./presence');
 const { ChessPlayer, ChessState } = require('./chess-state');
 const C = require('./chess');
 
@@ -97,6 +98,7 @@ class ChemistressChessRoom extends Room {
     const side = taken.has(C.PINK) ? C.TEAL : C.PINK;
     const player = new ChessPlayer();
     player.name = memberName(client, options);
+    player.avatar = sanitizeAvatarSummary(options && options.avatar);
     player.seat = side;
     player.side = side;
     player.ready = false;

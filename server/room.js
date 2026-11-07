@@ -27,6 +27,7 @@
 
 const { Room } = require('colyseus');
 const { loungeAuth, memberName } = require('./auth');
+const { sanitizeAvatarSummary } = require('./presence');
 const { Tile, Player, LoteriaState } = require('./state');
 const { loadDeckIds, mulberry32, shuffledOrder, drawBoard, deckHash } = require('./deck');
 const { TILE_COUNT, checkWin } = require('./win');
@@ -76,6 +77,7 @@ class ChemistressLoteriaRoom extends Room {
   onJoin(client, options = {}) {
     const player = new Player();
     player.name = memberName(client, options);
+    player.avatar = sanitizeAvatarSummary(options && options.avatar);
     player.seat = this.nextSeat++;
     player.ready = false;
     player.isCaller = false;
