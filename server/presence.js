@@ -26,11 +26,15 @@
 //   weight 0..1 (style)
 
 const { Schema, MapSchema, defineTypes } = require('@colyseus/schema');
+const { GardenState } = require('./garden-state');
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const HAIR_STYLES = ['cap', 'bun', 'long', 'curls', 'shaved'];
 const BUILDS = ['slim', 'natural', 'broad'];
-const ACCESSORIES = ['none', 'glasses', 'hat'];
+// 'sprig' (Care-and-Grow, 2026-11-07): the bloom sprig a member
+// may wear once their Garden tomato vine has bloomed — a surface
+// style item under the same law as glasses and the hat.
+const ACCESSORIES = ['none', 'glasses', 'hat', 'sprig'];
 
 const DEFAULT_SUMMARY = {
   skin: '#c68863', eye: '#4a3226', build: 'natural',
@@ -70,13 +74,14 @@ function sanitizeAvatarSummary(input) {
   return JSON.stringify(out);
 }
 
-// The one seat truth for the whole lounge. Parlor seats: the four
-// physical tables x two stools (backgammon is a wall motif today —
-// no table, no seats; Jay's call). Theater seats: six spots whose
-// positions each visitor's own skin view resolves locally (skins
-// are personal views of the same room).
+// The one seat truth for the whole lounge. Parlor seats: the five
+// physical tables x two stools (backgammon gained its table in the
+// Care-and-Grow pass, 2026-11-07 — Jay approved all five tables
+// seated alike). Theater seats: six spots whose positions each
+// visitor's own skin view resolves locally (skins are personal
+// views of the same room).
 const PARLOR_SEATS = [];
-for (const g of ['dominoes', 'checkers', 'chess', 'mancala']) {
+for (const g of ['dominoes', 'checkers', 'chess', 'mancala', 'backgammon']) {
   PARLOR_SEATS.push(g + '-a', g + '-b');
 }
 const THEATER_SEATS = [];
@@ -125,12 +130,14 @@ class LoungeState extends Schema {
     this.players = new MapSchema();
     this.seats = new MapSchema();
     this.film = new FilmState();
+    this.garden = new GardenState();
   }
 }
 defineTypes(LoungeState, {
   players: { map: PresencePlayer },
   seats: { map: SeatHolder },
   film: FilmState,
+  garden: GardenState,
 });
 
 module.exports = {
