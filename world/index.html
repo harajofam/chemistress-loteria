@@ -10,9 +10,9 @@
   ?v= token. Her phone once kept serving a cached build after a new
   deploy shipped, so she reviewed the OLD Plaza. RULE FOR EVERY
   DEPLOY: increment the token on ALL of these URLs in the same edit.
-  Current token: 2026-11-04-22 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6, the Theater view-glide fix + entrance-pad hit-area widening is -7, the Library poster gallery is -8, the Pen-Pal Post interior is -9, the Theater theme-picker preview is -10, the Therapeutics Garden interior is -11, the Creator Studio interior + Jay's approved Garden landed line is -12, the Wall Life pass — wallpaper feature walls, framed art, neon, pin boards and the shop cards — is -13, the Theater skin rework — each skin its own layout, aisle, and Sit & Watch seat — is -14, the combined server pass — the Phase 3 members' door client (door.js), films on the great glass via the film rail, and shared Pen-Pal mail — is -15, the film-glass fix is -16, the Moon Garden realism pass — the Therapeutics Garden's glass dome, big moon, cushion circle, leaf-pod chair, ivy, lanterns and fireflies — is -17, the Garden consent-banner relocation to eye height beside the door is -18, the camera fix pass — aspect-aware field of view, pinch zoom, and the notice board's lines painted to fit their board — is -19, the Light Lab pass — the Creator Studio as test room for Jay's contrast + light-as-material principles: backlit cabinet glass with fresnel + palette reflections, relief-lit art, velvet sheen, a stained-glass light pool, contact shadows, string lights — is -20, the Light Lab house-wide rollout — the same three principles carried to the Plaza and every remaining room: contact shadows and warm pools grounding every structure, palette-environment reflections on glass/metal/lacquer, relief from each artwork's own painting, velvet fresnel on seating, worn wood where hands touch, three new room-scoped lights (Theater glass spill, Library saga light, Pen-Pal board light), and the Garden's planters lit from within like the dusk photo — is -21, the Presence & Seats pass — create-your-character under Jay's avatar law (designed once, kept; surface-only changes later), visitors present to each other as their characters, sit-down seats with a game view at the Parlor tables and real seats in the Theater with server-stamped film alignment, and dressed doorways: a floating name label, lit threshold, fine-line edging, wider pads — is -22).
+  Current token: 2026-11-04-23 (M1 was -1, the interior -2, phone fixes -3, the parlor re-dress -4, the world fix pass -5, lighting round 2 -6, the light-cap fix -7; the Theater interior opens the 2026-11-04 series at -1, the parlor game-table wiring is -2, the Library interior is -3, the Theater re-dress + watch build is -4, the art-form redirect (surrealism + pop art) is -5, the Viewer Mode build is -6, the Theater view-glide fix + entrance-pad hit-area widening is -7, the Library poster gallery is -8, the Pen-Pal Post interior is -9, the Theater theme-picker preview is -10, the Therapeutics Garden interior is -11, the Creator Studio interior + Jay's approved Garden landed line is -12, the Wall Life pass — wallpaper feature walls, framed art, neon, pin boards and the shop cards — is -13, the Theater skin rework — each skin its own layout, aisle, and Sit & Watch seat — is -14, the combined server pass — the Phase 3 members' door client (door.js), films on the great glass via the film rail, and shared Pen-Pal mail — is -15, the film-glass fix is -16, the Moon Garden realism pass — the Therapeutics Garden's glass dome, big moon, cushion circle, leaf-pod chair, ivy, lanterns and fireflies — is -17, the Garden consent-banner relocation to eye height beside the door is -18, the camera fix pass — aspect-aware field of view, pinch zoom, and the notice board's lines painted to fit their board — is -19, the Light Lab pass — the Creator Studio as test room for Jay's contrast + light-as-material principles: backlit cabinet glass with fresnel + palette reflections, relief-lit art, velvet sheen, a stained-glass light pool, contact shadows, string lights — is -20, the Light Lab house-wide rollout — the same three principles carried to the Plaza and every remaining room: contact shadows and warm pools grounding every structure, palette-environment reflections on glass/metal/lacquer, relief from each artwork's own painting, velvet fresnel on seating, worn wood where hands touch, three new room-scoped lights (Theater glass spill, Library saga light, Pen-Pal board light), and the Garden's planters lit from within like the dusk photo — is -21, the Presence & Seats pass — create-your-character under Jay's avatar law (designed once, kept; surface-only changes later), visitors present to each other as their characters, sit-down seats with a game view at the Parlor tables and real seats in the Theater with server-stamped film alignment, and dressed doorways: a floating name label, lit threshold, fine-line edging, wider pads — is -22, the Care-and-Grow pass — the Garden keeps plants: one companion tomato vine per member at the planters along the left wall (five stages, three states, never dies, needs pause while away), two community beds with a first-names-only tender board, lit channels as the state readout, a bloom sprig earned for the character studio, and Backgammon's own table in the Game Parlor with two seats, a state sign and a game view like its four elders — is -23).
 -->
-<link rel="stylesheet" href="css/world.css?v=2026-11-04-22">
+<link rel="stylesheet" href="css/world.css?v=2026-11-04-23">
 </head>
 <body>
 <canvas id="world-canvas" touch-action="none"></canvas>
@@ -125,6 +125,33 @@ window.setTimeout(function () {
   <span id="seat-bar-text" role="status"></span>
   <button id="seat-bar-start" type="button" class="btn btn-parlor" hidden>▶ Start</button>
   <button id="seat-bar-stand" type="button" class="btn">Stand up</button>
+</div>
+
+<!--
+  Garden care card (Care-and-Grow pass, 2026-11-07): shown by
+  main.js when a visitor taps a planter, a community bed, the
+  watering can or the spray bottle in the Therapeutics Garden.
+  Bound by cameras.js wireGardenCard; its words are computed by
+  garden.js from the lounge room's synced garden state. The
+  plant NEVER dies and its needs pause while its person is away
+  — the card says so in the plant's own state line. The three
+  care buttons appear only for the visitor's own vine or a
+  community bed; another member's vine shows its truth and no
+  buttons. Nothing here is a link and nothing navigates.
+-->
+<div id="garden-card" class="game-card" hidden role="dialog" aria-labelledby="garden-card-title">
+  <div class="game-card-box">
+    <p class="game-card-kicker">The Therapeutics Garden · Care &amp; Grow</p>
+    <h2 id="garden-card-title">Your tomato vine</h2>
+    <p id="garden-card-state"></p>
+    <p id="garden-card-needs"></p>
+    <div class="game-card-actions">
+      <button id="garden-water" type="button" class="btn btn-parlor">💧 Water</button>
+      <button id="garden-light" type="button" class="btn">☀️ Open the shade</button>
+      <button id="garden-company" type="button" class="btn">🪑 Sit a while</button>
+      <button id="garden-close" type="button" class="btn">Back to the garden</button>
+    </div>
+  </div>
 </div>
 
 <!--
@@ -282,13 +309,14 @@ window.setTimeout(function () {
   break silently). The world pins its own copy and never borrows the
   game's files.
 -->
-<script src="vendor/babylon.js?v=2026-11-04-22"></script>
-<script src="js/palette.js?v=2026-11-04-22"></script>
-<script src="js/plaza.js?v=2026-11-04-22"></script>
-<script src="js/cameras.js?v=2026-11-04-22"></script>
-<script src="../colyseus.js?v=2026-11-04-22"></script>
-<script src="js/presence.js?v=2026-11-04-22"></script>
-<script src="js/main.js?v=2026-11-04-22"></script>
+<script src="vendor/babylon.js?v=2026-11-04-23"></script>
+<script src="js/palette.js?v=2026-11-04-23"></script>
+<script src="js/plaza.js?v=2026-11-04-23"></script>
+<script src="js/cameras.js?v=2026-11-04-23"></script>
+<script src="../colyseus.js?v=2026-11-04-23"></script>
+<script src="js/presence.js?v=2026-11-04-23"></script>
+<script src="js/garden.js?v=2026-11-04-23"></script>
+<script src="js/main.js?v=2026-11-04-23"></script>
 <!--
   The members' door (Phase 3, Layer B): ../../door.js is the shared
   door script from the client root (the same file the game pages
@@ -297,7 +325,7 @@ window.setTimeout(function () {
   DOMContentLoaded, when door.js has executed, and a door.js hiccup
   can never trip the boot guard above into failing the whole world.
 -->
-<script src="../door.js?v=2026-11-04-22"></script>
+<script src="../door.js?v=2026-11-04-23"></script>
 <script>
 /* If the library itself failed to load or parse (the old-Safari
    failure shape), say so in plain language instead of sitting blank. */
