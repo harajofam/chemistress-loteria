@@ -4107,6 +4107,22 @@
       medallion(w * 0.75, h * 0.25, 88);
       medallion(w * 0.25, h * 0.75, 88);
       medallion(w * 0.75, h * 0.75, 88);
+      // Wear (DEPTH IS HONESTY, 2026-11-06): the rug has been
+      // walked on by makers — soft faded patches where feet
+      // pass and fine scuff speckle over the field. Lived-in,
+      // not dirty: the pattern still sings through it.
+      for (var wp = 0; wp < 7; wp++) {
+        var wx = w * (0.2 + rnd() * 0.6), wy = h * (0.2 + rnd() * 0.6), wr = 60 + rnd() * 130;
+        var wg = ctx.createRadialGradient(wx, wy, 0, wx, wy, wr);
+        wg.addColorStop(0, 'rgba(255,226,190,0.10)');
+        wg.addColorStop(1, 'rgba(255,226,190,0)');
+        ctx.fillStyle = wg;
+        ctx.fillRect(wx - wr, wy - wr, wr * 2, wr * 2);
+      }
+      for (var sc = 0; sc < 260; sc++) {
+        ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,220,180,0.06)' : 'rgba(24,6,28,0.08)';
+        ctx.fillRect(rnd() * w, rnd() * h, 5 + rnd() * 14, 1.6);
+      }
       // A baked center light — the room's warmth pools mid-rug.
       var g = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, w * 0.72);
       g.addColorStop(0, 'rgba(255,214,150,0.20)');
@@ -4166,6 +4182,21 @@
       ctx.textBaseline = 'middle';
       ctx.font = 'bold 30px Georgia, serif';
       ctx.fillText(k.word, w / 2, 146);
+      // Patina (DEPTH IS HONESTY, 2026-11-06): settled dust at
+      // the jar's foot, a soft wear smudge across the glass,
+      // and the label's corner rubbed pale — jars that have
+      // LIVED on this shelf, their age worn with confidence.
+      var dg = ctx.createLinearGradient(0, h - 46, 0, h);
+      dg.addColorStop(0, 'rgba(58,38,20,0)');
+      dg.addColorStop(1, 'rgba(58,38,20,0.35)');
+      ctx.fillStyle = dg;
+      ctx.fillRect(0, h - 46, w, 46);
+      ctx.fillStyle = 'rgba(255,246,225,0.10)';
+      ctx.beginPath();
+      ctx.ellipse(w * 0.30, h * 0.38, 52, 20, -0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(253,243,227,0.38)';
+      ctx.fillRect(30, 110, 16, 10);
     });
   };
 
@@ -4403,6 +4434,332 @@
       });
     });
   };
+  /*
+   * ============================================================
+   * LIGHT LAB helpers (2026-11-06, token -20) — Jay's two new
+   * principles (ARTISTRY-STANDARD.md): CONTRAST IS THE DETAIL
+   * (the Trailmakers principle: definition lives in value
+   * contrast and material response, not geometry) and LIGHT IS
+   * A BUILDING MATERIAL (the Redstone-glass principle: the
+   * engine's own light and translucency, repurposed as
+   * construction). These helpers are the kit: one shared
+   * palette environment, real glass, velvet that answers light
+   * at grazing angles, and the Studio's glow / pool / shadow
+   * painters. First proven in the Creator Studio; house-wide
+   * rollout waits for Jay's verdict (Moon Garden pattern).
+   * ============================================================
+   */
+
+  // The one shared environment: the palette painted as a sky —
+  // warm cream light above, the room's pink middle, a teal
+  // horizon band, plum floor below, with soft warm glows (the
+  // string-light warmth of photo 01) — sampled by every glass,
+  // metal and ceramic surface that opts in, so all reflections
+  // agree about what world they are in. Equirectangular so a
+  // StandardMaterial reflectionTexture can wrap it. Cached per
+  // scene: one texture serves the whole world.
+  CCW.paletteEnvTexture = function (scene, B) {
+    if (scene.__ccwPaletteEnv) return scene.__ccwPaletteEnv;
+    var P = CCW.PALETTE;
+    var tex = CCW.canvasTexture(scene, B, 'ccw-palette-env-tex', 1024, 512,
+      function (ctx, w, h) {
+        var g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0.00, '#fdf3e3'); // warm cream light above
+        g.addColorStop(0.30, '#ffb7d5'); // pink wash
+        g.addColorStop(0.46, '#ff2e88'); // hot pink band
+        g.addColorStop(0.52, '#12c2b2'); // the teal horizon
+        g.addColorStop(0.58, '#0b7a70');
+        g.addColorStop(0.75, '#3d1247'); // plum wall depth
+        g.addColorStop(1.00, '#1a051f'); // plum floor
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+        // Soft warm glows — lamps and string lights in the
+        // reflected world (drawn wide: equirect wraps).
+        var rnd = prand(777);
+        for (var i = 0; i < 14; i++) {
+          var gx = rnd() * w, gy = h * (0.30 + rnd() * 0.22), gr = 40 + rnd() * 90;
+          var rg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+          rg.addColorStop(0, 'rgba(255,216,115,0.85)');
+          rg.addColorStop(1, 'rgba(255,216,115,0)');
+          ctx.fillStyle = rg;
+          ctx.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
+        }
+        // Cool teal glints low in the frame (glass, water, jars).
+        for (var j = 0; j < 10; j++) {
+          var tx = rnd() * w, ty = h * (0.55 + rnd() * 0.2), tr = 26 + rnd() * 60;
+          var tg = ctx.createRadialGradient(tx, ty, 0, tx, ty, tr);
+          tg.addColorStop(0, 'rgba(120,240,225,0.55)');
+          tg.addColorStop(1, 'rgba(120,240,225,0)');
+          ctx.fillStyle = tg;
+          ctx.fillRect(tx - tr, ty - tr, tr * 2, tr * 2);
+        }
+      });
+    tex.coordinatesMode = B.Texture.EQUIRECTANGULAR_MODE;
+    scene.__ccwPaletteEnv = tex;
+    return tex;
+  };
+
+  // Real glass for the Light Lab: a tinted, alpha-blended pane
+  // that ANSWERS light — a firm specular, the shared palette
+  // environment reflected, and a reflection fresnel so the
+  // reflection stays shy face-on and blooms at grazing angles
+  // (the way real glass behaves, and the way the eye reads
+  // "glass" at all). opts: alpha, emissive (kept from the old
+  // flat-glass recipe so the pane keeps its lit-depth tint).
+  CCW.glassMat = function (scene, B, name, tintHex, opts) {
+    opts = opts || {};
+    var m = new B.StandardMaterial(name, scene);
+    m.diffuseColor = hex(B, tintHex);
+    m.specularColor = new B.Color3(0.65, 0.65, 0.65);
+    if (opts.emissive) m.emissiveColor = hex(B, opts.emissive);
+    if (opts.alpha !== undefined) {
+      m.alpha = opts.alpha;
+      m.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+    }
+    m.reflectionTexture = CCW.paletteEnvTexture(scene, B);
+    var fr = new B.FresnelParameters();
+    fr.bias = 0.12;
+    fr.power = 2.0;
+    fr.leftColor = new B.Color3(0.22, 0.22, 0.22);
+    fr.rightColor = new B.Color3(1, 1, 1);
+    m.reflectionFresnelParameters = fr;
+    m.backFaceCulling = false;
+    return m;
+  };
+
+  // Velvet that behaves like velvet: dark and quiet face-on,
+  // lit at the edges. The sheen color rides the emissive
+  // channel through an emissive fresnel (black face-on, full at
+  // grazing), and a matching diffuse fresnel deepens the
+  // face-on value a touch — contrast doing the detailing.
+  CCW.velvetSheen = function (B, material, sheenHex, intensity) {
+    var c = hex(B, sheenHex);
+    material.emissiveColor = new B.Color3(
+      c.r * intensity, c.g * intensity, c.b * intensity);
+    var ef = new B.FresnelParameters();
+    ef.bias = 0.02;
+    ef.power = 2.6;
+    ef.leftColor = new B.Color3(0, 0, 0);
+    ef.rightColor = new B.Color3(1, 1, 1);
+    material.emissiveFresnelParameters = ef;
+    var df = new B.FresnelParameters();
+    df.bias = 0.0;
+    df.power = 2.0;
+    df.leftColor = new B.Color3(0.84, 0.84, 0.84);
+    df.rightColor = new B.Color3(1, 1, 1);
+    material.diffuseFresnelParameters = df;
+    return material;
+  };
+
+  // The cabinet's lit-from-within back (photo 01: the jars glow
+  // against a warm interior): plum at the edges breathing into
+  // a warm amber heart, with the faintest shelf shadow lines so
+  // the rows keep their rhythm. Carried emissive by its
+  // material, so the panel itself is a light source's portrait.
+  CCW.studioCabinetGlowTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      var g = ctx.createRadialGradient(w / 2, h / 2, 40, w / 2, h / 2, w * 0.72);
+      g.addColorStop(0, '#ffbe6e');
+      g.addColorStop(0.45, '#d98a4e');
+      g.addColorStop(0.75, '#7a3a52');
+      g.addColorStop(1, P.plumHouse);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      // Shelf shadow lines at the jar boards' rhythm.
+      ctx.fillStyle = 'rgba(42,10,51,0.35)';
+      [0.22, 0.47, 0.72].forEach(function (fy) {
+        ctx.fillRect(0, h * fy, w, 7);
+      });
+      ctx.fillStyle = 'rgba(255,230,180,0.20)';
+      [0.22, 0.47, 0.72].forEach(function (fy) {
+        ctx.fillRect(0, h * fy + 7, w, 3);
+      });
+    });
+  };
+
+  // A pool of stained-glass light on the floor, as if a tall
+  // floral window stood just out of frame: soft dappled blobs
+  // in the glass's own colors over a gentle elliptical falloff,
+  // alpha in the canvas so the rug shows through between the
+  // dapples. Drawn diagonally — thrown light never lands square.
+  CCW.stainedPoolTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 512, 384, function (ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      var cols = [P.pinkHot, P.teal, P.goldSoft, P.velvetLavender, P.coral, '#57d8c9'];
+      var rnd = prand(4242);
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      ctx.rotate(-0.32);
+      ctx.translate(-w / 2, -h / 2);
+      for (var i = 0; i < 30; i++) {
+        // Cluster toward the middle, sparse at the rim.
+        var bx = w / 2 + (rnd() + rnd() - 1) * w * 0.36;
+        var by = h / 2 + (rnd() + rnd() - 1) * h * 0.34;
+        var br = 18 + rnd() * 52;
+        var rg = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+        var col = cols[i % cols.length];
+        rg.addColorStop(0, col);
+        rg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = 0.16 + rnd() * 0.22;
+        ctx.fillStyle = rg;
+        ctx.fillRect(bx - br, by - br, br * 2, br * 2);
+      }
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      // The overall falloff: multiply the whole pool toward its
+      // rim with destination-out so the edge dissolves.
+      var fall = ctx.createRadialGradient(w / 2, h / 2, h * 0.18, w / 2, h / 2, w * 0.52);
+      fall.addColorStop(0, 'rgba(0,0,0,0)');
+      fall.addColorStop(1, 'rgba(0,0,0,1)');
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = fall;
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+    });
+  };
+
+  // Worn paint (DEPTH IS HONESTY, 2026-11-06): painted wood
+  // that has LIVED — a lavender cabinet finish with grain
+  // streaks under the paint, pale rubs where hands and jars
+  // have passed, a few honest scuffs, and soft tonal patches
+  // where the light has rested for years. Not distressed for
+  // fashion: worn with confidence, and the room's key light
+  // (the cabinet's own warm point) rakes across it.
+  CCW.studioWornPaintTexture = function (scene, B, name, baseHex) {
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = baseHex || '#8f7fd4';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(90211);
+      // Soft tonal patches — sun and shadow have rested here.
+      for (var p = 0; p < 7; p++) {
+        var px = rnd() * w, py = rnd() * h, pr = 70 + rnd() * 150;
+        var pg = ctx.createRadialGradient(px, py, 0, px, py, pr);
+        pg.addColorStop(0, rnd() > 0.5 ? 'rgba(255,246,255,0.10)' : 'rgba(70,54,130,0.12)');
+        pg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = pg;
+        ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+      }
+      // Paint grain: long vertical streaks, light and deep.
+      for (var i = 0; i < 150; i++) {
+        ctx.strokeStyle = rnd() > 0.5 ? 'rgba(238,230,255,0.06)' : 'rgba(84,66,150,0.07)';
+        ctx.lineWidth = 1 + rnd() * 2.2;
+        var gx = rnd() * w;
+        ctx.beginPath();
+        ctx.moveTo(gx, rnd() * h * 0.3);
+        ctx.lineTo(gx + (rnd() - 0.5) * 9, h * (0.6 + rnd() * 0.4));
+        ctx.stroke();
+      }
+      // Pale rubs — the wear of hands, jars, and years.
+      for (var r = 0; r < 42; r++) {
+        ctx.strokeStyle = 'rgba(246,240,255,' + (0.05 + rnd() * 0.10) + ')';
+        ctx.lineWidth = 1 + rnd() * 1.6;
+        var rx = rnd() * w, ry = rnd() * h;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx + (rnd() - 0.5) * 46, ry + (rnd() - 0.5) * 10);
+        ctx.stroke();
+      }
+      // Honest scuffs: sparse, dark, unhidden.
+      for (var s = 0; s < 12; s++) {
+        ctx.strokeStyle = 'rgba(46,32,84,' + (0.10 + rnd() * 0.14) + ')';
+        ctx.lineWidth = 0.8 + rnd() * 1.2;
+        var sx = rnd() * w, sy = rnd() * h;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + (rnd() - 0.5) * 60, sy + (rnd() - 0.5) * 22);
+        ctx.stroke();
+      }
+    });
+  };
+
+  // Worn wood (DEPTH IS HONESTY, 2026-11-06): the work
+  // table's truth — warm brown grain with knots, hand-polished
+  // sheen patches where makers lean and slide their jars, and
+  // fine scratches that stay visible. The Studio's own painter;
+  // the shared woodTexture (other rooms) is untouched.
+  CCW.studioWornWoodTexture = function (scene, B, name) {
+    return CCW.canvasTexture(scene, B, name, 512, 512, function (ctx, w, h) {
+      ctx.fillStyle = '#8a5a33';
+      ctx.fillRect(0, 0, w, h);
+      var rnd = prand(60227);
+      // Long grain along the board.
+      for (var i = 0; i < 170; i++) {
+        ctx.strokeStyle = rnd() > 0.45 ? 'rgba(58,32,12,0.13)' : 'rgba(214,164,102,0.10)';
+        ctx.lineWidth = 0.8 + rnd() * 2.4;
+        var gy = rnd() * h;
+        ctx.beginPath();
+        ctx.moveTo(0, gy);
+        ctx.bezierCurveTo(w * 0.3, gy + (rnd() - 0.5) * 14,
+          w * 0.7, gy + (rnd() - 0.5) * 14, w, gy + (rnd() - 0.5) * 8);
+        ctx.stroke();
+      }
+      // Knots: the tree, remembered.
+      for (var k = 0; k < 3; k++) {
+        var kx = w * (0.2 + rnd() * 0.6), ky = h * (0.2 + rnd() * 0.6);
+        for (var ring = 5; ring > 0; ring--) {
+          ctx.strokeStyle = 'rgba(52,28,10,' + (0.10 + (5 - ring) * 0.05) + ')';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.ellipse(kx, ky, ring * 7, ring * 4.4, 0.3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      // Hand-polished sheen: soft light where work happens.
+      for (var p = 0; p < 5; p++) {
+        var px = rnd() * w, py = rnd() * h, pr = 60 + rnd() * 120;
+        var pg = ctx.createRadialGradient(px, py, 0, px, py, pr);
+        pg.addColorStop(0, 'rgba(255,214,150,0.12)');
+        pg.addColorStop(1, 'rgba(255,214,150,0)');
+        ctx.fillStyle = pg;
+        ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+      }
+      // Fine scratches, worn openly.
+      for (var s = 0; s < 30; s++) {
+        ctx.strokeStyle = rnd() > 0.5 ? 'rgba(255,226,180,0.10)' : 'rgba(40,20,6,0.12)';
+        ctx.lineWidth = 0.8;
+        var sx = rnd() * w, sy = rnd() * h;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + (rnd() - 0.5) * 70, sy + (rnd() - 0.5) * 12);
+        ctx.stroke();
+      }
+    });
+  };
+
+  // Contact shadow: a soft radial dark, white heart to black
+  // rim — carried on the GREEN channel of an opacityTexture
+  // (the house opacity rule), so the material stays pure black
+  // and only the gradient speaks. Grounds a piece of furniture:
+  // it sits IN the room, not on it.
+  CCW.contactShadowTexture = function (scene, B, name) {
+    var tex = CCW.canvasTexture(scene, B, name, 256, 256, function (ctx, w, h) {
+      // A soft footprint (third-render catch, the real one):
+      // Babylon's opacity sampling reads the texture's ALPHA
+      // channel — an earlier version of this painter filled
+      // an OPAQUE background, pinning alpha at 1.0 everywhere,
+      // so every falloff painted into RGB was silently ignored
+      // and the decals rendered as uniform slabs. The canvas
+      // now stays TRANSPARENT and nested ellipses stack their
+      // alpha source-over into a true ramp: ~0.8 at the heart,
+      // ~0.09 at the rim, 0 outside. UV stretching aspect-
+      // matches the ellipse to each footprint (a wide cabinet,
+      // a long table) for free.
+      var steps = 18;
+      for (var i = 0; i < steps; i++) {
+        var t = i / steps;
+        var rx = (w / 2) * (1 - t * 0.68), ry = (h / 2) * (1 - t * 0.68);
+        ctx.fillStyle = 'rgba(255,255,255,0.085)';
+        ctx.beginPath();
+        ctx.ellipse(w / 2, h / 2, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    tex.hasAlpha = true;
+    return tex;
+  };
+
   /*
    * neonSignTexture (WALL LIFE pass, 2026-11-04) — the Creator
    * Studio's "Good Vibes Only" treatment, generalized so the
