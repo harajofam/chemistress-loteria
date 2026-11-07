@@ -64,7 +64,13 @@
   ];
   var ACCESSORIES = [
     { id: 'none', label: 'None' }, { id: 'glasses', label: 'Glasses' },
-    { id: 'hat', label: 'Hat' }
+    { id: 'hat', label: 'Hat' },
+    // The bloom sprig (Care-and-Grow, 2026-11-07): an earned style
+    // item — offered in the studio only once the member's Garden
+    // tomato vine has bloomed (garden.js sets
+    // CCW.gardenBloomUnlocked). Still just an accessory under the
+    // law: surface-only, like glasses and the hat.
+    { id: 'sprig', label: 'Bloom sprig 🌸' }
   ];
   // Palette-law clothing defaults: hot pink/coral lead, teal
   // second, plum velvet, cream + lavender to breathe.
@@ -169,6 +175,30 @@
       return true;
     } catch (e) { return false; }
   };
+
+  // The companion plant's key (Care-and-Grow design §5): minted
+  // ONCE, additively, into the same local profile — an extra
+  // field the avatar law does not govern (it is not part of the
+  // character; it is the plant's name tag). When the members'
+  // door is enforced, the server re-keys the same plant to the
+  // verified user id; a guest's plant stays device-local, exactly
+  // like a guest's character.
+  CCW.ensurePlantId = function (profile) {
+    if (!profile) return null;
+    if (typeof profile.plantId === 'string' &&
+        /^[A-Za-z0-9-]{8,64}$/.test(profile.plantId)) {
+      return profile.plantId;
+    }
+    var id = 'plant-' + Date.now().toString(36) + '-' +
+      Math.random().toString(36).slice(2, 10);
+    profile.plantId = id;
+    CCW.saveAvatarProfile(profile);
+    return id;
+  };
+
+  // Raised by garden.js when this visitor's own vine has bloomed
+  // — unlocks the bloom sprig in the character studio above.
+  CCW.gardenBloomUnlocked = false;
 
   // ---------------- 2. The figure builder --------------------------
   // Proportions (root at the feet): hips 0.90, shoulders 1.44,
@@ -300,6 +330,30 @@
           { diameter: 0.46, height: 0.025, tessellation: 16 }, scene), 0, 0.1, 0, mats.top);
         part(accG, B.MeshBuilder.CreateCylinder(tag + 'hat-top',
           { diameter: 0.26, height: 0.14, tessellation: 14 }, scene), 0, 0.18, 0, mats.top);
+      } else if (s.acc === 'sprig') {
+        // The bloom sprig: a small green stem tucked at the side
+        // of the head, two leaves and one coral blossom with a
+        // gold heart — grown in the Therapeutics Garden, worn
+        // anywhere. Curved parts only, like the rest of the figure.
+        var stemMat = CCW.mat(scene, B, tag + 'sprig-stem-mat', '#2e7d46');
+        var leafMatS = CCW.mat(scene, B, tag + 'sprig-leaf-mat', '#3f9e58');
+        var stem = part(accG, B.MeshBuilder.CreateCylinder(tag + 'sprig-stem',
+          { diameter: 0.02, height: 0.17, tessellation: 6 }, scene), 0.155, 0.1, 0, stemMat);
+        stem.rotation.z = -0.4;
+        var leaf1 = part(accG, B.MeshBuilder.CreateSphere(tag + 'sprig-leaf-1',
+          { diameter: 0.075, segments: 8 }, scene), 0.185, 0.13, 0.02, leafMatS);
+        leaf1.scaling.set(1.5, 0.4, 0.75);
+        leaf1.rotation.z = 0.5;
+        var leaf2 = part(accG, B.MeshBuilder.CreateSphere(tag + 'sprig-leaf-2',
+          { diameter: 0.065, segments: 8 }, scene), 0.175, 0.07, -0.02, leafMatS);
+        leaf2.scaling.set(1.4, 0.4, 0.7);
+        leaf2.rotation.z = 0.9;
+        part(accG, B.MeshBuilder.CreateSphere(tag + 'sprig-blossom',
+          { diameter: 0.075, segments: 10 }, scene), 0.185, 0.2, 0,
+          CCW.mat(scene, B, tag + 'sprig-blossom-mat', '#ff7a59'));
+        part(accG, B.MeshBuilder.CreateSphere(tag + 'sprig-heart',
+          { diameter: 0.032, segments: 8 }, scene), 0.185, 0.2, 0.032,
+          CCW.glowMat(scene, B, tag + 'sprig-heart-mat', CCW.PALETTE.goldSoft));
       }
     }
 
@@ -524,7 +578,13 @@
       body.appendChild(swatchRow('Bottoms', BOT_COLORS,
         function () { return draft.style.bot; },
         function (v) { draft.style.bot = v; }));
-      body.appendChild(chipRow('Accessory', ACCESSORIES,
+      // The sprig is offered only once it has been EARNED (the
+      // member's Garden vine has bloomed — garden.js raises
+      // CCW.gardenBloomUnlocked) or when it is already worn.
+      var accOptions = ACCESSORIES.filter(function (o) {
+        return o.id !== 'sprig' || CCW.gardenBloomUnlocked || draft.style.acc === 'sprig';
+      });
+      body.appendChild(chipRow('Accessory', accOptions,
         function () { return draft.style.acc; },
         function (v) { draft.style.acc = v; }));
       body.appendChild(weightRow(
@@ -597,6 +657,7 @@
     var profile = CCW.loadAvatarProfile();
     var myName = (profile && profile.name) || 'Visitor';
     var mySummary = CCW.avatarSummary(profile || CCW.defaultAvatarProfile());
+    var myPlantId = profile ? CCW.ensurePlantId(profile) : null;
 
     var room = null;
     var myTag = 'f' + Math.random().toString(36).slice(2, 10);
@@ -632,6 +693,7 @@
           profile = next;
           myName = next.name || 'Visitor';
           mySummary = CCW.avatarSummary(next);
+          myPlantId = CCW.ensurePlantId(next);
           if (myFigure) { myFigure.applySummary(mySummary); myFigure.setName(myName); }
           if (room) {
             // Re-join is the clean way to republish identity +
@@ -694,7 +756,7 @@
     function refreshSignsAndBar() {
       var holders = seatHolders();
       // Table signs: the room's plain truth, redrawn on change.
-      ['dominoes', 'checkers', 'chess', 'mancala'].forEach(function (g) {
+      ['dominoes', 'checkers', 'chess', 'mancala', 'backgammon'].forEach(function (g) {
         var a = holders[g + '-a'], b = holders[g + '-b'];
         var line, key;
         if (a && b) { line = 'Both seated — ready to play!'; }
@@ -820,6 +882,7 @@
       try {
         var client = new C.Client(resolveWsUrl(env.root));
         var joinOpts = { name: myName, avatar: JSON.stringify(mySummary) };
+        if (myPlantId) joinOpts.plantId = myPlantId;
         var doorP = (env.root.LoungeDoor && env.root.LoungeDoor.ready)
           ? env.root.LoungeDoor.ready().catch(function () { return null; })
           : Promise.resolve(null);
@@ -921,6 +984,11 @@
       needsProfile: function () { return !profile; },
       openStudio: function () { if (studio) studio.open(); },
       seatedId: function () { return mySeat; },
+      // The Garden's seam (garden.js): the live room, my plant's
+      // key, my name — read-only views of the controller's truth.
+      room: function () { return room; },
+      myPlantId: function () { return myPlantId; },
+      myName: function () { return myName; },
       stand: stand,
       handlePick: function (mesh) {
         if (!mesh || !mesh.name) return false;
