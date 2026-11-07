@@ -663,6 +663,61 @@
     baseB.position.set(0, 0.17, -14.38);
     baseB.material = CCW.mat(scene, B, 'parlor-int-baseboard-back-mat', '#5b2a78');
 
+    // ============================================================
+    // LIGHT LAB (house-wide rollout, 2026-11-06): CONTRAST IS
+    // THE DETAIL. The neon already carries light-as-material in
+    // this room; this pass grounds it — contact shadows under
+    // the four game tables, velvet fresnel on the stool seats,
+    // relief on the motif + poster art, the palette environment
+    // answering in the gold table trim, and a deeper hemisphere
+    // ground so the neon reads against real shadow. No new
+    // lights; the tables' play is untouched.
+    // ============================================================
+    var parlorEnvTex = CCW.paletteEnvTexture(scene, B);
+    var parlorShadowMat = new B.StandardMaterial('parlor-int-ll-shadow-mat', scene);
+    parlorShadowMat.diffuseColor = new B.Color3(0, 0, 0);
+    parlorShadowMat.opacityTexture =
+      CCW.contactShadowTexture(scene, B, 'parlor-int-ll-shadow-tex');
+    parlorShadowMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    parlorShadowMat.disableLighting = true;
+    parlorShadowMat.depthWrite = false;
+    parlorShadowMat.zOffset = -2;
+    parlorShadowMat.alpha = 0.55;
+    [T_DOM, T_CHK, T_CHS, T_MAN].forEach(function (tp, i) {
+      var tsh = add(B.MeshBuilder.CreatePlane('parlor-int-ll-table-shadow-' + i,
+        { width: 2.9, height: 2.9 }, scene));
+      tsh.rotation.x = Math.PI / 2;
+      tsh.position.set(tp.x, 0.015, tp.z);
+      tsh.material = parlorShadowMat;
+    });
+    function parlorHex(c) {
+      function pp(v) {
+        var s = Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16);
+        return s.length < 2 ? '0' + s : s;
+      }
+      return '#' + pp(c.r) + pp(c.g) + pp(c.b);
+    }
+    scene.materials.forEach(function (m) {
+      if (m.name.indexOf('parlor-int-stool-') === 0 &&
+          m.name.indexOf('-seat-mat') > 0) {
+        CCW.velvetSheen(B, m, parlorHex(m.diffuseColor), 0.5);
+      }
+      if (m.name.indexOf('parlor-int-table-') === 0 &&
+          m.name.indexOf('-trim-mat') > 0) {
+        m.reflectionTexture = parlorEnvTex;
+        m.specularColor = new B.Color3(0.55, 0.55, 0.55);
+      }
+    });
+    scene.meshes.forEach(function (m) {
+      if ((m.name.indexOf('parlor-int-motif-') === 0 ||
+           m.name.indexOf('parlor-int-poster-') === 0) &&
+          m.name.indexOf('-frame') < 0 && m.material &&
+          m.material.diffuseTexture) {
+        m.material.bumpTexture = m.material.diffuseTexture;
+      }
+    });
+    roomHemi.groundColor = new B.Color3(0.30, 0.15, 0.23);
+
     // Scope the room's lights to the room (lighting round 2): every
     // mesh built above carries the 'parlor-int-' prefix, and
     // includedOnlyMeshes keeps the interior rig — hemisphere,
@@ -1949,6 +2004,113 @@
     houseLight.range = 15;
     intLights.push(houseLight);
 
+    // ============================================================
+    // LIGHT LAB (house-wide rollout, 2026-11-06): CONTRAST IS
+    // THE DETAIL, per skin, each within its own mood. Dream Pop
+    // and Physical Church gain backlit-glass behavior (one warm
+    // spill light at the great window), stained-glass pools on
+    // the floor, and grounded seating; EMBLEM POSTER STAYS DARK
+    // (Jay's standing decision) — it gains only grounding inside
+    // its own layout, never brightness. SKIN-ENGINE RULE kept:
+    // nothing here touches a skin-registered material (walls,
+    // floor, runner, glass, board, poster, lamps, benches) —
+    // only layout furniture the skins never re-ink. The seating
+    // shadows ride INSIDE their layout arrays, so each skin
+    // grounds only its own furniture.
+    // ============================================================
+    houseHemi.groundColor = new B.Color3(0.28, 0.14, 0.25);
+    var glassSpill = new B.PointLight('theater-int-glass-spill',
+      roomWorld(0, 3.2, -12.6), scene);
+    glassSpill.intensity = 0.4;
+    glassSpill.diffuse = new B.Color3(1.0, 0.80, 0.52);
+    glassSpill.range = 9;
+    // Deliberately NOT pushed to intLights: like the candle
+    // light, it is room furniture, not a skin look value — the
+    // skin handle's look rig stays exactly three lights, and no
+    // skin ever re-inks this spill. It is scoped by hand below,
+    // once this pass's own meshes exist.
+    var theaterHex = function (c) {
+      function pp(v) {
+        var s = Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16);
+        return s.length < 2 ? '0' + s : s;
+      }
+      return '#' + pp(c.r) + pp(c.g) + pp(c.b);
+    };
+    var theaterShadowMat = new B.StandardMaterial('theater-int-ll-shadow-mat', scene);
+    theaterShadowMat.diffuseColor = new B.Color3(0, 0, 0);
+    theaterShadowMat.opacityTexture =
+      CCW.contactShadowTexture(scene, B, 'theater-int-ll-shadow-tex');
+    theaterShadowMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    theaterShadowMat.disableLighting = true;
+    theaterShadowMat.depthWrite = false;
+    theaterShadowMat.zOffset = -2;
+    theaterShadowMat.alpha = 0.55;
+    function theaterShadow(name, x, z, w, d, layout) {
+      var s = add(B.MeshBuilder.CreatePlane(name, { width: w, height: d }, scene));
+      s.rotation.x = Math.PI / 2;
+      s.position.set(x, 0.015, z);
+      s.material = theaterShadowMat;
+      if (layout) layout.push(s);
+      return s;
+    }
+    // Stained-glass pools: the great window's light, lying on
+    // the floor in front of the stage and mid-aisle. Skeleton
+    // meshes — visible in every skin, dimmed by none.
+    var theaterPoolTex = CCW.stainedPoolTexture(scene, B, 'theater-int-ll-pool-tex');
+    theaterPoolTex.hasAlpha = true;
+    var theaterPoolMat = new B.StandardMaterial('theater-int-ll-pool-mat', scene);
+    theaterPoolMat.diffuseTexture = theaterPoolTex;
+    theaterPoolMat.emissiveTexture = theaterPoolTex;
+    theaterPoolMat.emissiveColor = new B.Color3(0.55, 0.55, 0.55);
+    theaterPoolMat.useAlphaFromDiffuseTexture = true;
+    theaterPoolMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    theaterPoolMat.depthWrite = false;
+    theaterPoolMat.zOffset = -1;
+    theaterPoolMat.backFaceCulling = false;
+    [[0, -11.2, 5.2, 3.4], [0, -6.2, 3.4, 4.6]].forEach(function (pp, i) {
+      var pool = add(B.MeshBuilder.CreatePlane('theater-int-ll-pool-' + i,
+        { width: pp[2], height: pp[3] }, scene));
+      pool.rotation.x = Math.PI / 2;
+      pool.position.set(pp[0], 0.02, pp[1]);
+      pool.material = theaterPoolMat;
+    });
+    // Grounding, per layout.
+    var theaterRows = [-12.1, -10.2, -8.3, -6.4];
+    theaterRows.forEach(function (z, r) {
+      var lp = benchPoses[r * 2], rp = benchPoses[r * 2 + 1];
+      theaterShadow('theater-int-ll-bench-shadow-r' + r + '-l',
+        -3.05 + lp.dx, z + lp.dz, 2.7, 1.3, dreamLayout);
+      theaterShadow('theater-int-ll-bench-shadow-r' + r + '-r',
+        3.05 + rp.dx, z + rp.dz, 2.7, 1.3, dreamLayout);
+      theaterShadow('theater-int-ll-pew-shadow-r' + r + '-l',
+        -2.85, z, 3.4, 1.1, churchLayout);
+      theaterShadow('theater-int-ll-pew-shadow-r' + r + '-r',
+        2.85, z, 3.4, 1.1, churchLayout);
+    });
+    theaterShadow('theater-int-ll-emblem-shadow', 0, -9.05, 9.2, 6.0, emblemLayout);
+    theaterShadow('theater-int-ll-stage-shadow', 0, -13.45, 6.8, 1.9, null);
+    // Velvet fresnel on the un-registered seating only.
+    scene.materials.forEach(function (m) {
+      var n = m.name;
+      if ((n.indexOf('theater-int-dream-cluster-') === 0 &&
+           (n.indexOf('-seat-mat') > 0 || n.indexOf('-back-mat') > 0 ||
+            n.indexOf('-ottoman-mat-') > 0)) ||
+          n.indexOf('theater-int-pew-cushion-mat-') === 0 ||
+          n.indexOf('theater-int-emblem-cushion-mat-') === 0) {
+        CCW.velvetSheen(B, m, theaterHex(m.diffuseColor), 0.5);
+      }
+      if (n.indexOf('theater-int-emblem-medallion-mat-') === 0 ||
+          n === 'theater-int-dream-river-mat') {
+        if (m.diffuseTexture) m.bumpTexture = m.diffuseTexture;
+      }
+    });
+    // The spill's own scope: every theater mesh, this pass's
+    // decals and pools included (the epilogue below scopes only
+    // the intLights rig; this light stands beside it).
+    glassSpill.includedOnlyMeshes = scene.meshes.filter(function (m) {
+      return m.name.indexOf('theater-int-') === 0;
+    });
+
     // Scope the rig to the room + lift the light cap (see header).
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('theater-int-') === 0;
@@ -3140,6 +3302,117 @@
       meshes: [celPanel]
     });
 
+    // ============================================================
+    // LIGHT LAB (house-wide rollout, 2026-11-06): CONTRAST IS
+    // THE DETAIL + LIGHT IS A BUILDING MATERIAL. The CHEAT CODE
+    // saga's place of honor gains its own warm light and the
+    // strongest shelf backlight in the room; every shelf panel
+    // answers with a soft emissive backing and relief from its
+    // own art; the CELESTIAL CARDS wall (Jay's favorite) gets
+    // the relief/backlit treatment; the terrarium's flat glass
+    // becomes real palette glass; seating gains velvet fresnel;
+    // one stained pool and honest grounding shadows finish it.
+    // DEPTH IS HONESTY note: nothing is removed here — this
+    // room's density is Jay's own photo layout; grounding and
+    // contrast carry the depth instead. All words untouched.
+    // ============================================================
+    roomHemi.groundColor = new B.Color3(0.30, 0.15, 0.23);
+    var sagaLight = new B.PointLight('library-int-saga-light',
+      roomWorld(0, 3.2, -12.4), scene);
+    sagaLight.intensity = 0.5;
+    sagaLight.diffuse = new B.Color3(1.0, 0.80, 0.55);
+    sagaLight.range = 7;
+    intLights.push(sagaLight);
+    var libraryHex = function (c) {
+      function pp(v) {
+        var s = Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16);
+        return s.length < 2 ? '0' + s : s;
+      }
+      return '#' + pp(c.r) + pp(c.g) + pp(c.b);
+    };
+    var libraryWornWood = CCW.wornWoodTexture(scene, B, 'library-int-ll-wornwood-tex');
+    scene.materials.forEach(function (m) {
+      var n = m.name;
+      if (n.indexOf('library-int-shelf-') === 0 && n.indexOf('-frame') < 0 &&
+          m.diffuseTexture) {
+        m.emissiveTexture = m.diffuseTexture;
+        var lvl = n === 'library-int-shelf-saga-mat' ? 0.30 : 0.16;
+        m.emissiveColor = new B.Color3(lvl, lvl, lvl);
+        m.bumpTexture = m.diffuseTexture;
+      }
+      if ((n.indexOf('library-int-nook-') === 0 &&
+           (n.indexOf('-seat-mat') > 0 || n.indexOf('-back-mat') > 0)) ||
+          (n.indexOf('library-int-rchair-') === 0 &&
+           (n.indexOf('-seat-mat') > 0 || n.indexOf('-back-mat') > 0))) {
+        CCW.velvetSheen(B, m, libraryHex(m.diffuseColor), 0.5);
+      }
+      if (n === 'library-int-table-top-mat' ||
+          n === 'library-int-sideboard-top-mat' ||
+          (n.indexOf('library-int-nook-') === 0 &&
+           n.indexOf('-table-top-mat') > 0)) {
+        m.diffuseTexture = libraryWornWood;
+      }
+    });
+    var celMat = scene.getMaterialByName('library-int-wallpaper-celestial-mat');
+    if (celMat && celMat.diffuseTexture) {
+      celMat.emissiveTexture = celMat.diffuseTexture;
+      celMat.emissiveColor = new B.Color3(0.30, 0.30, 0.30);
+      celMat.bumpTexture = celMat.diffuseTexture;
+    }
+    scene.meshes.forEach(function (m) {
+      if ((m.name.indexOf('library-int-gallery-') === 0 ||
+           m.name.indexOf('library-int-chart-') === 0 ||
+           m.name.indexOf('library-int-display') === 0 ||
+           m.name.indexOf('library-int-launch') === 0) &&
+          m.material && m.material.diffuseTexture) {
+        m.material.bumpTexture = m.material.diffuseTexture;
+      }
+    });
+    terraGlass.material = CCW.glassMat(scene, B, 'library-int-ll-terrarium-glass-mat',
+      '#fdf3e3', { alpha: 0.30 });
+    var libraryShadowMat = new B.StandardMaterial('library-int-ll-shadow-mat', scene);
+    libraryShadowMat.diffuseColor = new B.Color3(0, 0, 0);
+    libraryShadowMat.opacityTexture =
+      CCW.contactShadowTexture(scene, B, 'library-int-ll-shadow-tex');
+    libraryShadowMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    libraryShadowMat.disableLighting = true;
+    libraryShadowMat.depthWrite = false;
+    libraryShadowMat.zOffset = -2;
+    libraryShadowMat.alpha = 0.55;
+    var libraryShadowCount = 0;
+    function libraryShadow(x, z, w, d) {
+      var s = add(B.MeshBuilder.CreatePlane(
+        'library-int-ll-shadow-' + (libraryShadowCount++),
+        { width: w, height: d }, scene));
+      s.rotation.x = Math.PI / 2;
+      s.position.set(x, 0.015, z);
+      s.material = libraryShadowMat;
+    }
+    libraryShadow(0, -8, 4.0, 2.2);          // the long reading table
+    libraryShadow(-6.19, -2.2, 1.0, 2.3);    // the sideboard
+    libraryShadow(0, -14.1, 13.0, 0.9);      // the back-wall shelf run
+    scene.meshes.slice().forEach(function (m) {
+      if (/^library-int-nook-.-plinth$/.test(m.name)) {
+        libraryShadow(m.position.x, m.position.z, 1.7, 1.7);
+      }
+    });
+    var libraryPoolTex = CCW.stainedPoolTexture(scene, B, 'library-int-ll-pool-tex');
+    libraryPoolTex.hasAlpha = true;
+    var libraryPoolMat = new B.StandardMaterial('library-int-ll-pool-mat', scene);
+    libraryPoolMat.diffuseTexture = libraryPoolTex;
+    libraryPoolMat.emissiveTexture = libraryPoolTex;
+    libraryPoolMat.emissiveColor = new B.Color3(0.55, 0.55, 0.55);
+    libraryPoolMat.useAlphaFromDiffuseTexture = true;
+    libraryPoolMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    libraryPoolMat.depthWrite = false;
+    libraryPoolMat.zOffset = -1;
+    libraryPoolMat.backFaceCulling = false;
+    var libraryPool = add(B.MeshBuilder.CreatePlane('library-int-ll-pool',
+      { width: 4.6, height: 3.4 }, scene));
+    libraryPool.rotation.x = Math.PI / 2;
+    libraryPool.position.set(0.5, 0.02, -7.6);
+    libraryPool.material = libraryPoolMat;
+
     // Scope the rig to the room + lift the light cap (see header).
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('library-int-') === 0;
@@ -3670,6 +3943,88 @@
       note.position.set(np[0], np[1], np[2]);
       note.material = CCW.texMat(scene, B, 'penpal-int-pinboard-note-mat-' + i,
         CCW.paperTexture(scene, B, 'penpal-int-pinboard-note-tex-' + i), {});
+    });
+
+    // ============================================================
+    // LIGHT LAB (house-wide rollout, 2026-11-06): CONTRAST IS
+    // THE DETAIL. The 44 mailbox fronts are Jay's own photo
+    // plates — and they keep their original materials: the
+    // rollout renders proved that relief-from-photo and env
+    // reflection in every strength tried damage the
+    // photographs, so the wall of boxes keeps reading as what
+    // it is — Jay's own photographed metal and wood (the full
+    // finding is recorded with the plate block below).
+    // The Community Board gains its own warm light; the writing
+    // furniture gains velvet fresnel, worn wood, and grounding.
+    // The boxes' tap behavior is untouched.
+    // ============================================================
+    roomHemi.groundColor = new B.Color3(0.30, 0.15, 0.23);
+    var boardLight = new B.PointLight('penpal-int-board-light',
+      roomWorld(-5.2, 3.4, -5.6), scene);
+    boardLight.intensity = 0.5;
+    boardLight.diffuse = new B.Color3(1.0, 0.80, 0.55);
+    boardLight.range = 5;
+    intLights.push(boardLight);
+    // THE PLATES KEEP THEIR ORIGINAL MATERIALS — a rollout
+    // finding, proven across four renders (see
+    // LIGHT-LAB-ROLLOUT-NOTES.md): the 44 fronts are Jay's own
+    // PHOTOGRAPHS, and every material response tried on them
+    // damaged the photographs — a flat palette-env reflection
+    // mirrored them, the glassMat-strength fresnel chromed
+    // them, bump-from-photo drained them (false slopes under
+    // five lights), and even a 0.10 fresnel blew them out
+    // once the bump stopped scattering it (a uniform normal
+    // reflects the bright env coherently). Paintings take
+    // relief (the Studio's flat graphic art); photographs are
+    // already true. This room's Light Lab gains live in its
+    // light, its grounding, its velvet and its worn wood —
+    // the plates are honored by being left exactly as shot.
+    var penpalSheen = {
+      'penpal-int-nook-a-seat-mat': P.velvetMagenta,
+      'penpal-int-nook-a-back-mat': P.velvetMagenta,
+      'penpal-int-nook-b-seat-mat': P.velvetLavender,
+      'penpal-int-nook-b-back-mat': P.velvetLavender,
+      'penpal-int-chair-0-seat-mat': P.velvetMagenta,
+      'penpal-int-chair-0-back-mat': P.velvetMagenta,
+      'penpal-int-chair-1-seat-mat': P.velvetLavender,
+      'penpal-int-chair-1-back-mat': P.velvetLavender
+    };
+    var penpalWornWood = CCW.wornWoodTexture(scene, B, 'penpal-int-ll-wornwood-tex');
+    scene.materials.forEach(function (m) {
+      if (penpalSheen[m.name]) CCW.velvetSheen(B, m, penpalSheen[m.name], 0.5);
+      if (m.name === 'penpal-int-desk-top-mat' ||
+          (m.name.indexOf('penpal-int-nook-') === 0 &&
+           m.name.indexOf('-table-top-mat') > 0)) {
+        m.diffuseTexture = penpalWornWood;
+      }
+    });
+    var penpalShadowMat = new B.StandardMaterial('penpal-int-ll-shadow-mat', scene);
+    penpalShadowMat.diffuseColor = new B.Color3(0, 0, 0);
+    penpalShadowMat.opacityTexture =
+      CCW.contactShadowTexture(scene, B, 'penpal-int-ll-shadow-tex');
+    penpalShadowMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    penpalShadowMat.disableLighting = true;
+    penpalShadowMat.depthWrite = false;
+    penpalShadowMat.zOffset = -2;
+    penpalShadowMat.alpha = 0.55;
+    var penpalShadowCount = 0;
+    function penpalShadow(x, z, w, d) {
+      var s = add(B.MeshBuilder.CreatePlane(
+        'penpal-int-ll-shadow-' + (penpalShadowCount++),
+        { width: w, height: d }, scene));
+      s.rotation.x = Math.PI / 2;
+      s.position.set(x, 0.015, z);
+      s.material = penpalShadowMat;
+    }
+    penpalShadow(0, -8, 3.8, 1.8);        // the writing desk
+    penpalShadow(0, -13.9, 12.4, 0.8);    // the letterbox wall's base
+    scene.meshes.slice().forEach(function (m) {
+      if (/^penpal-int-nook-.-plinth$/.test(m.name)) {
+        penpalShadow(m.position.x, m.position.z, 1.7, 1.7);
+      }
+      if (/^penpal-int-plant-.-pot$/.test(m.name)) {
+        penpalShadow(m.position.x, m.position.z, 1.0, 1.0);
+      }
     });
 
     // Scope the rig to the room + lift the light cap (see header).
@@ -4641,6 +4996,131 @@
         url: CCW.SHOP_LINKS.storefront,
         meshes: [piece.art]
       });
+    });
+
+    // ============================================================
+    // LIGHT LAB (house-wide rollout, 2026-11-06): CONTRAST IS
+    // THE DETAIL + LIGHT IS A BUILDING MATERIAL — ref 08 (the
+    // dusk planters lit from within) made literal: every planter
+    // ringing the fountain gains a warm heart — a lit soil disc
+    // and a translucent glow shell leaking light round the pot,
+    // the way light escapes planter slats at dusk. The glass
+    // house answers the palette environment through a fresnel
+    // (dome, eaves, side glass — the Trailmakers lesson: glass
+    // carries the realism; the water carries none, it already
+    // breathes), the poufs gain velvet
+    // fresnel, the prints and panels gain relief, and the room
+    // grounds itself. NO behavior changes: the breath hook, the
+    // fireflies, the moon and the consent banner are untouched,
+    // and no new lights are added — the glow is emissive
+    // material, not rig.
+    // ============================================================
+    roomHemi.groundColor = new B.Color3(0.29, 0.18, 0.23);
+    var gardenEnvTex = CCW.paletteEnvTexture(scene, B);
+    // The glass answers the palette through a FRESNEL only
+    // (glassMat values): the first rollout render proved a
+    // flat env reflection blows the glass house white and
+    // bleaches the fountain's water and the herb jars' labels
+    // — so the water and the jars carry NO env at all (the
+    // water already breathes; the jars keep their labels),
+    // and the true glass — dome, eaves-glass ceiling, side
+    // walls — reflects quietly face-on and alive at grazing
+    // angles, the way real glass behaves.
+    var gardenGlassFresnel = new B.FresnelParameters();
+    gardenGlassFresnel.bias = 0.12;
+    gardenGlassFresnel.power = 2.0;
+    gardenGlassFresnel.leftColor = new B.Color3(0.22, 0.22, 0.22);
+    gardenGlassFresnel.rightColor = new B.Color3(1, 1, 1);
+    scene.materials.forEach(function (m) {
+      var n = m.name;
+      if (n === 'garden-int-dome-mat' || n === 'garden-int-ceiling-mat') {
+        m.reflectionTexture = gardenEnvTex;
+        m.specularColor = new B.Color3(0.5, 0.5, 0.5);
+        m.reflectionFresnelParameters = gardenGlassFresnel;
+      }
+      // The SIDE walls keep their original material, untouched:
+      // their job is the soft-focus garden vista beyond the
+      // glass (Moon Garden content), and at the landing's
+      // grazing angles even a fresnel reflection mirrors the
+      // bright env and erases it (second rollout render).
+    });
+    var gardenPoufKinds = ['cream', 'cream', 'teal', 'cream', 'magenta',
+      'cream', 'cream', 'teal', 'cream', 'magenta'];
+    var gardenPoufHex = { cream: '#efe6d4', teal: P.velvetTeal, magenta: P.velvetMagenta };
+    for (var gck = 0; gck < 10; gck++) {
+      var poufMat = scene.getMaterialByName('garden-int-cushion-mat-' + gck);
+      if (poufMat) {
+        CCW.velvetSheen(B, poufMat, gardenPoufHex[gardenPoufKinds[gck]], 0.45);
+      }
+    }
+    var podSeatMat = scene.getMaterialByName('garden-int-pod-seat-mat');
+    if (podSeatMat) CCW.velvetSheen(B, podSeatMat, '#efe6d4', 0.45);
+    scene.meshes.forEach(function (m) {
+      if ((/^garden-int-print-\d+$/.test(m.name) ||
+           m.name === 'garden-int-wallpaper-celestial-muses' ||
+           m.name === 'garden-int-wallpaper-dinner-party-blocks') &&
+          m.material && m.material.diffuseTexture) {
+        m.material.bumpTexture = m.material.diffuseTexture;
+      }
+    });
+    var gardenWornWood = CCW.wornWoodTexture(scene, B, 'garden-int-ll-wornwood-tex');
+    scene.materials.forEach(function (m) {
+      if (m.name === 'garden-int-host-table-top-mat' ||
+          (m.name.indexOf('garden-int-shelf-') === 0 &&
+           (m.name.indexOf('board') > 0 || m.name.indexOf('counter') > 0) &&
+           m.diffuseTexture)) {
+        m.diffuseTexture = gardenWornWood;
+      }
+    });
+    // The planters' warm hearts (ref 08).
+    var planterGlowMat = CCW.glowMat(scene, B, 'garden-int-ll-planter-glow-mat', P.goldSoft);
+    var planterShellMat = CCW.glassMat(scene, B, 'garden-int-ll-planter-shell-mat',
+      '#ffb35c', { alpha: 0.32, emissive: '#8a4d14' });
+    scene.meshes.slice().forEach(function (m) {
+      var isPlanter = /^garden-int-planter-\d+-pot$/.test(m.name);
+      var isCorner = /^garden-int-plant-[lr]-pot$/.test(m.name);
+      if (!isPlanter && !isCorner) return;
+      var glow = add(B.MeshBuilder.CreateDisc('garden-int-ll-' + m.name + '-glow',
+        { radius: isPlanter ? 0.30 : 0.22, tessellation: 14 }, scene));
+      glow.rotation.x = Math.PI / 2;
+      glow.position.set(m.position.x, isPlanter ? 0.53 : 0.58, m.position.z);
+      glow.material = planterGlowMat;
+      if (isPlanter) {
+        var shell = add(B.MeshBuilder.CreateCylinder('garden-int-ll-' + m.name + '-shell',
+          { diameterTop: 0.70, diameterBottom: 0.54, height: 0.40,
+            tessellation: 14, openEnded: true }, scene));
+        shell.position.set(m.position.x, 0.25, m.position.z);
+        shell.material = planterShellMat;
+      }
+    });
+    var gardenShadowMat = new B.StandardMaterial('garden-int-ll-shadow-mat', scene);
+    gardenShadowMat.diffuseColor = new B.Color3(0, 0, 0);
+    gardenShadowMat.opacityTexture =
+      CCW.contactShadowTexture(scene, B, 'garden-int-ll-shadow-tex');
+    gardenShadowMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    gardenShadowMat.disableLighting = true;
+    gardenShadowMat.depthWrite = false;
+    gardenShadowMat.zOffset = -2;
+    gardenShadowMat.alpha = 0.55;
+    var gardenShadowCount = 0;
+    function gardenShadow(x, z, w, d) {
+      var s = add(B.MeshBuilder.CreatePlane(
+        'garden-int-ll-shadow-' + (gardenShadowCount++),
+        { width: w, height: d }, scene));
+      s.rotation.x = Math.PI / 2;
+      s.position.set(x, 0.015, z);
+      s.material = gardenShadowMat;
+    }
+    gardenShadow(0, -7.2, 3.2, 3.2);       // the breath fountain's basin
+    gardenShadow(4.95, -9.2, 1.5, 1.5);    // the leaf-pod chair
+    gardenShadow(0, -13.95, 6.2, 1.1);     // the herb-shelf run
+    scene.meshes.slice().forEach(function (m) {
+      if (/^garden-int-tower-.-base$/.test(m.name)) {
+        gardenShadow(m.position.x, m.position.z, 1.2, 1.2);
+      }
+      if (m.name === 'garden-int-bench-seat') {
+        gardenShadow(m.position.x, m.position.z, 1.2, 3.2);
+      }
     });
 
     // Scope the rig to the room + lift the light cap (see header).
@@ -5618,6 +6098,53 @@
         uv[1] * (CCW.ZONE_RADIUS - 3.6)];
     }
 
+    // LIGHT LAB (house-wide rollout, 2026-11-06): every chapel
+    // grounds itself — a contact shadow at the facade's foot
+    // and under the steps, a warm stained pool spilling from
+    // the glowing door, and the palette environment answering
+    // in the gold door frame and sign trim. Materials and
+    // decals only; the Plaza's global rig is unchanged.
+    var zoneEnvTex = CCW.paletteEnvTexture(scene, B);
+    [zone.id + '-door-frame-mat', zone.id + '-sign-trim-mat'].forEach(function (mn) {
+      var zm = scene.getMaterialByName(mn);
+      if (zm) {
+        zm.reflectionTexture = zoneEnvTex;
+        zm.specularColor = new B.Color3(0.55, 0.55, 0.55);
+      }
+    });
+    var zoneShadowMat = new B.StandardMaterial(zone.id + '-ll-shadow-mat', scene);
+    zoneShadowMat.diffuseColor = new B.Color3(0, 0, 0);
+    zoneShadowMat.opacityTexture =
+      CCW.contactShadowTexture(scene, B, zone.id + '-ll-shadow-tex');
+    zoneShadowMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    zoneShadowMat.disableLighting = true;
+    zoneShadowMat.depthWrite = false;
+    zoneShadowMat.zOffset = -2;
+    zoneShadowMat.alpha = 0.5;
+    [[0, 0.6, 13.2, 1.5], [0, 1.7, 6.8, 2.3]].forEach(function (sc, i) {
+      var zsh = add(B.MeshBuilder.CreatePlane(zone.id + '-ll-shadow-' + i,
+        { width: sc[2], height: sc[3] }, scene));
+      zsh.rotation.x = Math.PI / 2;
+      zsh.position.set(sc[0], 0.012, sc[1]);
+      zsh.material = zoneShadowMat;
+    });
+    var zonePoolTex = CCW.stainedPoolTexture(scene, B, zone.id + '-ll-pool-tex');
+    zonePoolTex.hasAlpha = true;
+    var zonePoolMat = new B.StandardMaterial(zone.id + '-ll-pool-mat', scene);
+    zonePoolMat.diffuseTexture = zonePoolTex;
+    zonePoolMat.emissiveTexture = zonePoolTex;
+    zonePoolMat.emissiveColor = new B.Color3(0.5, 0.5, 0.5);
+    zonePoolMat.useAlphaFromDiffuseTexture = true;
+    zonePoolMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    zonePoolMat.depthWrite = false;
+    zonePoolMat.zOffset = -1;
+    zonePoolMat.backFaceCulling = false;
+    var zonePool = add(B.MeshBuilder.CreatePlane(zone.id + '-ll-pool',
+      { width: 5.5, height: 3.2 }, scene));
+    zonePool.rotation.x = Math.PI / 2;
+    zonePool.position.set(0, 0.018, 3.4);
+    zonePool.material = zonePoolMat;
+
     var result = { group: group, meshes: meshes, portalMeshes: [], threshold: threshold, returnPad: pad };
 
     if (zone.id === 'arcade') {
@@ -6028,6 +6555,113 @@
             'By the Library door —', 'tap a framed piece',
             'to see it in the shop.'] }
         ]), {});
+
+    // ============================================================
+    // LIGHT LAB (house-wide rollout, 2026-11-06): the Plaza
+    // itself. CONTRAST IS THE DETAIL — everything standing on
+    // the Plaza grounds itself: contact shadows under the
+    // hearth, its velvet benches, the lamp poles, both boards
+    // and the Shop Window; warm pools lie under the pendant
+    // lamps, the Shop Window and the chapel door; the benches
+    // gain velvet fresnel, the boards and shop art gain relief
+    // from their own faces, the hearth logs gain honest worn
+    // wood, and the palette environment answers in the notice
+    // board's gold. NO new global lights (they would wash
+    // every tuned interior) and nothing removed — the Plaza's
+    // sightlines are its wayfinding. Stripe/brick wall
+    // textures stay with their own queued pass.
+    // ============================================================
+    var plazaEnvTex = CCW.paletteEnvTexture(scene, B);
+    var plazaShadowMat = new B.StandardMaterial('plaza-ll-shadow-mat', scene);
+    plazaShadowMat.diffuseColor = new B.Color3(0, 0, 0);
+    plazaShadowMat.opacityTexture =
+      CCW.contactShadowTexture(scene, B, 'plaza-ll-shadow-tex');
+    plazaShadowMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    plazaShadowMat.disableLighting = true;
+    plazaShadowMat.depthWrite = false;
+    plazaShadowMat.zOffset = -2;
+    plazaShadowMat.alpha = 0.5;
+    var plazaShadowCount = 0;
+    function plazaShadowDisc(x, z, r) {
+      var s = B.MeshBuilder.CreateDisc('plaza-ll-shadow-' + (plazaShadowCount++),
+        { radius: r, tessellation: 24 }, scene);
+      s.rotation.x = Math.PI / 2;
+      s.position.set(x, 0.012, z);
+      s.material = plazaShadowMat;
+      return s;
+    }
+    function plazaShadowPlane(x, z, w, d) {
+      var s = B.MeshBuilder.CreatePlane('plaza-ll-shadow-' + (plazaShadowCount++),
+        { width: w, height: d }, scene);
+      s.rotation.x = Math.PI / 2;
+      s.position.set(x, 0.012, z);
+      s.material = plazaShadowMat;
+      return s;
+    }
+    plazaShadowDisc(0, 0, 2.4);                       // the Hearth
+    [30, 120, 210, 300].forEach(function (deg) {
+      var t = deg * Math.PI / 180;
+      plazaShadowDisc(Math.sin(t) * 5.6, Math.cos(t) * 5.6, 1.5);
+    });
+    [45, 135, 225, 315].forEach(function (deg) {
+      var t = deg * Math.PI / 180;
+      plazaShadowDisc(Math.sin(t) * 13, Math.cos(t) * 13, 0.55);
+    });
+    plazaShadowDisc(4.6, 11.5, 0.6);                  // the notice board post
+    plazaShadowDisc(-4.6, 11.5, 0.6);                 // the pin board post
+    plazaShadowPlane(12.32, 0, 1.3, 4.9);             // the Shop Window posts
+    plazaShadowPlane(12.15, 3.45, 1.1, 2.3);          // the Café Girl plinth
+    plazaShadowPlane(12.15, -3.45, 1.1, 2.3);         // the Chef plinth
+    var plazaPoolTex = CCW.stainedPoolTexture(scene, B, 'plaza-ll-pool-tex');
+    plazaPoolTex.hasAlpha = true;
+    var plazaPoolMat = new B.StandardMaterial('plaza-ll-pool-mat', scene);
+    plazaPoolMat.diffuseTexture = plazaPoolTex;
+    plazaPoolMat.emissiveTexture = plazaPoolTex;
+    plazaPoolMat.emissiveColor = new B.Color3(0.5, 0.5, 0.5);
+    plazaPoolMat.useAlphaFromDiffuseTexture = true;
+    plazaPoolMat.transparencyMode = B.StandardMaterial.MATERIAL_ALPHABLEND;
+    plazaPoolMat.depthWrite = false;
+    plazaPoolMat.zOffset = -1;
+    plazaPoolMat.backFaceCulling = false;
+    [45, 135, 225, 315].forEach(function (deg, i) {
+      var t = deg * Math.PI / 180;
+      var pool = B.MeshBuilder.CreateDisc('plaza-ll-pool-' + i,
+        { radius: 2.3, tessellation: 28 }, scene);
+      pool.rotation.x = Math.PI / 2;
+      pool.position.set(Math.sin(t) * 13, 0.018, Math.cos(t) * 13);
+      pool.material = plazaPoolMat;
+    });
+    [[11.2, 0, 3.6, 4.6], [0, 15.2, 6.4, 3.4]].forEach(function (pc, i) {
+      var pool = B.MeshBuilder.CreatePlane('plaza-ll-pool-' + (4 + i),
+        { width: pc[2], height: pc[3] }, scene);
+      pool.rotation.x = Math.PI / 2;
+      pool.position.set(pc[0], 0.018, pc[1]);
+      pool.material = plazaPoolMat;
+    });
+    var plazaHex = function (c) {
+      function pp(v) {
+        var s = Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16);
+        return s.length < 2 ? '0' + s : s;
+      }
+      return '#' + pp(c.r) + pp(c.g) + pp(c.b);
+    };
+    var plazaWornWood = CCW.wornWoodTexture(scene, B, 'plaza-ll-wornwood-tex');
+    scene.materials.forEach(function (m) {
+      var n = m.name;
+      if (n.indexOf('hearth-bench-mat-') === 0) {
+        CCW.velvetSheen(B, m, plazaHex(m.diffuseColor), 0.5);
+      }
+      if (n.indexOf('hearth-log-mat-') === 0) m.diffuseTexture = plazaWornWood;
+      if (n === 'notice-board-mat') {
+        m.reflectionTexture = plazaEnvTex;
+        m.specularColor = new B.Color3(0.55, 0.55, 0.55);
+      }
+      if ((n === 'notice-face-mat' || n === 'plaza-pinboard-face-mat' ||
+           n === 'plaza-shop-panel-mat' || n === 'plaza-shop-cafe-mat' ||
+           n === 'plaza-shop-chef-mat') && m.diffuseTexture) {
+        m.bumpTexture = m.diffuseTexture;
+      }
+    });
 
     buildEntrance(scene, B);
 
