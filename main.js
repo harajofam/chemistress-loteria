@@ -165,6 +165,20 @@ async function main() {
         const sess = await window.LoungeDoor.ready().catch(() => null);
         if (sess && sess.accessToken) joinOpts.token = sess.accessToken;
       }
+      // Presence (2026-11-06): my character rides along — the
+      // profile this browser keeps (Jay's avatar law: base locked,
+      // style mutable); the server sanitizes what it receives.
+      try {
+        const prof = JSON.parse(localStorage.getItem('ccw-avatar-v1') || 'null');
+        if (prof && prof.base && prof.style) {
+          joinOpts.avatar = JSON.stringify({
+            skin: prof.base.skin, eye: prof.base.eye, build: prof.base.build,
+            hair: prof.style.hair, hairCol: prof.style.hairCol,
+            top: prof.style.top, bot: prof.style.bot, acc: prof.style.acc,
+            weight: prof.style.weight
+          });
+        }
+      } catch (e) { /* no character yet — the server default applies */ }
       room = await client.joinOrCreate(roomName, joinOpts);
       setStatus('Connected. Players: ' + room.state.players.size);
       document.getElementById('btnReady').disabled = false;
