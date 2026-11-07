@@ -178,6 +178,11 @@
     // the shop card; stays null if presence.js failed to load, and
     // the world runs exactly as before without it.
     var presenceCtl = null;
+    // The Garden's care controller (Care-and-Grow pass, 2026-11-07):
+    // companion plants, community beds, the care card — wired below
+    // beside presence; stays null if garden.js failed to load, and
+    // the Garden is simply the Garden without it.
+    var gardenCtl = null;
     // Set when the next film starts because the ROOM is showing it
     // (a seated visitor aligning to the server-stamped epoch), so
     // the start is not re-announced as a fresh showing.
@@ -189,6 +194,7 @@
       if (theaterCtl) theaterCtl.hideCard();
       if (penpalCtl) penpalCtl.hideCard();
       if (shopCard) shopCard.hide();
+      if (gardenCtl && gardenCtl.card) gardenCtl.card.hide();
       glider.start(scene.activeCamera, tele.destPos, tele.destTarget, 1400,
         function () {
           setStatus(tele.landed || ('You have arrived at ' + tele.label + '.'));
@@ -739,6 +745,41 @@
       }
     }
 
+    // ---- Care-and-Grow: the Garden's plants (2026-11-07) --------
+    // The garden controller (garden.js) mirrors the lounge room's
+    // garden state into tomato figures at the planters and beds,
+    // and runs the care card. Its tap targets are the planters,
+    // the beds, the watering can and the spray bottle — a tap
+    // opens the care card; the card's buttons do the tending,
+    // through the room. No server: no plants, and the Garden
+    // waits, exactly as designed.
+    if (CCW.createGarden) {
+      try {
+        gardenCtl = CCW.createGarden({
+          scene: scene, B: B, world: world, document: document,
+          setStatus: setStatus,
+          presence: function () { return presenceCtl; },
+          attachPick: function (meshes, fn) {
+            meshes.forEach(function (mesh) {
+              mesh.actionManager = new B.ActionManager(scene);
+              mesh.actionManager.registerAction(
+                new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(fn)));
+            });
+          }
+        });
+      } catch (e) { gardenCtl = null; }
+    }
+    if (gardenCtl) {
+      gardenCtl.pickMeshes().forEach(function (mesh) {
+        if (!mesh) return;
+        mesh.actionManager = new B.ActionManager(scene);
+        mesh.actionManager.registerAction(
+          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(function () {
+            gardenCtl.handlePick(mesh);
+          })));
+      });
+    }
+
     // Teleport pads: tap/click to ride. Entrance pads also wire
     // their invisible hit proxy (plaza.js) — same ride, a much
     // bigger target than the flat disc alone.
@@ -904,6 +945,9 @@
       // Presence: mirror my camera, walk the other characters
       // toward their truths, watch for a stool to sit on.
       if (presenceCtl) presenceCtl.update(Math.min(0.05, dt / 1000));
+      // Care-and-Grow: keep the Garden's plants, channels and
+      // tender board matched to the room's truth.
+      if (gardenCtl) gardenCtl.update(Math.min(0.05, dt / 1000));
       scene.render();
       if (!overlayHidden) {
         overlayHidden = true;
