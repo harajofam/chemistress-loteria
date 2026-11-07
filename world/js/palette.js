@@ -505,6 +505,61 @@
     });
   };
 
+  // Tabletop board for the Parlor's backgammon table (Care-and-
+  // Grow pass, 2026-11-07 — the fifth table): twelve long points
+  // in coral and teal over the house plum field, a gold bar down
+  // the middle, a fine gold frame. Points alternate house colors
+  // the way the game's own halves mirror each other; the bar is
+  // a LINE of gold, not a field (gold stays a fine line).
+  CCW.backgammonBoardTexture = function (scene, B, name) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 1024, 640, function (ctx, w, h) {
+      ctx.fillStyle = P.plumDeep;
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#2e123e';
+      ctx.fillRect(26, 26, w - 52, h - 52);
+      var x0 = 26, y0 = 26, iw = w - 52, ih = h - 52;
+      var barW = iw * 0.055;
+      var halfW = (iw - barW) / 2;
+      var pw = halfW / 6;
+      var pl = ih * 0.44;
+      for (var half = 0; half < 2; half++) {
+        var hx = x0 + half * (halfW + barW);
+        for (var i = 0; i < 6; i++) {
+          var px = hx + i * pw;
+          ctx.fillStyle = (i + half) % 2 ? P.coral : P.teal;
+          ctx.globalAlpha = 0.92;
+          ctx.beginPath();
+          ctx.moveTo(px + 3, y0);
+          ctx.lineTo(px + pw - 3, y0);
+          ctx.lineTo(px + pw / 2, y0 + pl);
+          ctx.closePath(); ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(px + 3, y0 + ih);
+          ctx.lineTo(px + pw - 3, y0 + ih);
+          ctx.lineTo(px + pw / 2, y0 + ih - pl);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+      // The bar: a gold line with a plum heart.
+      ctx.fillStyle = P.plumHouse;
+      ctx.fillRect(x0 + halfW + 3, y0, barW - 6, ih);
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.8;
+      ctx.strokeRect(x0 + halfW + 3, y0, barW - 6, ih);
+      ctx.globalAlpha = 1;
+      // The frame: gold band, plum keyline.
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 10;
+      ctx.strokeRect(5, 5, w - 10, h - 10);
+      ctx.strokeStyle = P.plumDeep;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(24, 24, w - 48, h - 48);
+    });
+  };
+
   // Framed vintage-style game motifs for the Game Parlor walls —
   // drawn, never photographed: gold frame line on deep plum, the
   // game's signature shapes in house colors. kind: 'domino',
