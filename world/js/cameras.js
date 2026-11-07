@@ -831,6 +831,66 @@
   };
 
   /*
+   * The Garden's care card (Care-and-Grow pass, 2026-11-07):
+   * shown when a visitor taps a planter, a community bed, the
+   * watering can or the spray bottle. It states the plant's
+   * truth in words — its state, its stage, its needs — and, for
+   * the visitor's OWN vine or a community bed, offers the three
+   * acts of care (water, light, company) through the injected
+   * onTend. Another member's vine shows its truth and no buttons:
+   * their plant keeps company with them. Nothing here navigates;
+   * the card's data is computed by garden.js from the room's
+   * synced state, and its words are refreshed as that state
+   * changes (show() with the same target re-renders in place).
+   *
+   * env: { document, onTend } — returns { element, show, hide,
+   * visible, current } or null when the markup is absent.
+   */
+  CCW.wireGardenCard = function (env) {
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var card = doc.getElementById('garden-card');
+    var title = doc.getElementById('garden-card-title');
+    var stateEl = doc.getElementById('garden-card-state');
+    var needsEl = doc.getElementById('garden-card-needs');
+    var waterBtn = doc.getElementById('garden-water');
+    var lightBtn = doc.getElementById('garden-light');
+    var companyBtn = doc.getElementById('garden-company');
+    var closeBtn = doc.getElementById('garden-close');
+    if (!card || !title || !stateEl || !needsEl || !waterBtn ||
+        !lightBtn || !companyBtn || !closeBtn) return null;
+    var onTend = typeof env.onTend === 'function' ? env.onTend : function () {};
+    var current = null;
+    function show(data) {
+      if (!data) return;
+      current = data;
+      title.textContent = data.title;
+      stateEl.textContent = data.stateLine || '';
+      needsEl.textContent = data.needsLine || '';
+      var t = !!data.canTend;
+      waterBtn.hidden = !t;
+      lightBtn.hidden = !t;
+      companyBtn.hidden = !t;
+      card.hidden = false;
+    }
+    function hide() {
+      current = null;
+      card.hidden = true;
+    }
+    waterBtn.addEventListener('click', function () { onTend('water'); });
+    lightBtn.addEventListener('click', function () { onTend('light'); });
+    companyBtn.addEventListener('click', function () { onTend('company'); });
+    closeBtn.addEventListener('click', hide);
+    return {
+      element: card,
+      show: show,
+      hide: hide,
+      visible: function () { return !card.hidden; },
+      current: function () { return current; }
+    };
+  };
+
+  /*
    * The Theater's watch experience (2026-11-04 — Jay's spec: sit
    * and watch the movies, expand to full screen, zoom out to the
    * audience; and her standing rule: live art takes the stage).
