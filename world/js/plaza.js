@@ -139,8 +139,13 @@
     else if (zone.id === 'library') tex = CCW.bookSpinesTexture(scene, B, 'library-spines');
     else if (zone.id === 'penpal') tex = CCW.mailboxTexture(scene, B, 'penpal-boxes');
     else tex = CCW.jarsTexture(scene, B, 'studio-jars');
+    // Transparency Layer: the panel narrows to the facade's
+    // center segment (the window bays flank it now) and shows
+    // the CENTER CROP of its art at native aspect — no squash.
+    tex.uScale = 5.6 / 11.6;
+    tex.uOffset = (1 - tex.uScale) / 2;
     var panel = add(B.MeshBuilder.CreatePlane(zone.id + '-panel',
-      { width: 11.6, height: 5.4 }, scene));
+      { width: 5.6, height: 5.4 }, scene));
     panel.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
     panel.position.set(0, 3.6, 0.63);
     panel.material = CCW.texMat(scene, B, matName, tex, {});
@@ -223,6 +228,49 @@
     base.material = CCW.mat(scene, B, 'parlor-int-table-' + tag + '-base-mat', P.plumHouse);
   }
 
+  // TRANSPARENCY LAYER (Presence & Seats pass, 2026-11-06 — Jay:
+  // "most rooms to carry a greenhouse window wall feel... We
+  // should be able to see others utilizing the rooms from the
+  // outside"; window-wall art direction refs 09 + 10): every
+  // interior's front panel becomes a GREENHOUSE WINDOW WALL in
+  // Jay's French-door language — a PATCHWORK GLASS pane
+  // (translucent palette tints mixed with clear panes, dark
+  // leading; palette.js patchworkGlassTexture) held in a
+  // BUBBLEGUM PINK mullion grid (11 verticals, 4 rails — the
+  // pink frame IS the architecture and reads from across the
+  // Plaza), wearing the house glass treatment (palette
+  // environment + reflection fresnel, shy face-on). The pane
+  // keeps the front panel's name and place; the glass material
+  // is its own (never a skin role, never a photo). The Garden's
+  // glass dome is its conservatory crown (ref 10's pitched glass
+  // roof, arched); its front wall speaks the same pink grid.
+  function glassFrontPanel(scene, B, add, prefix, tintHex, barHex) {
+    var pane = add(B.MeshBuilder.CreateBox(prefix + '-front-panel',
+      { width: 13, height: 7, depth: 0.06 }, scene));
+    pane.position.set(0, 3.5, -0.68);
+    var gm = CCW.glassMat(scene, B, prefix + '-front-glass-mat',
+      '#ffffff', { alpha: 0.999 });
+    gm.diffuseTexture = CCW.patchworkGlassTexture(scene, B,
+      prefix + '-front-patch', 10, 5, prefix);
+    gm.useAlphaFromDiffuseTexture = true;
+    gm.alpha = 1;
+    pane.material = gm;
+    var barMat = CCW.windowFrameMat(scene, B);
+    for (var vi = 0; vi <= 10; vi++) {
+      var bar = add(B.MeshBuilder.CreateBox(prefix + '-front-bar-v' + vi,
+        { width: 0.09, height: 7, depth: 0.14 }, scene));
+      bar.position.set(-6.5 + vi * 1.3, 3.5, -0.68);
+      bar.material = barMat;
+    }
+    [1.4, 2.8, 4.2, 5.6].forEach(function (y, i) {
+      var rail = add(B.MeshBuilder.CreateBox(prefix + '-front-bar-h' + i,
+        { width: 13, height: 0.09, depth: 0.14 }, scene));
+      rail.position.set(0, y, -0.68);
+      rail.material = barMat;
+    });
+    return pane;
+  }
+
   // A velvet stool: round seat on a slim leg.
   function parlorStool(scene, B, add, x, z, velvet, tag) {
     var P = CCW.PALETTE;
@@ -297,10 +345,7 @@
     });
 
     // Interior face of the front wall + the door, seen from inside.
-    var front = add(B.MeshBuilder.CreateBox('parlor-int-front-panel',
-      { width: 13, height: 7, depth: 0.15 }, scene));
-    front.position.set(0, 3.5, -0.68);
-    front.material = CCW.mat(scene, B, 'parlor-int-front-mat', WALL);
+    var front = glassFrontPanel(scene, B, add, 'parlor-int', '#cfe8e2', WALL);
     var doorFrameIn = add(B.MeshBuilder.CreateBox('parlor-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
@@ -814,11 +859,122 @@
           ['parlor-int-motif-2', 'parlor-int-motif-2-frame']) }
     ];
 
+    // ---- PRESENCE & SEATS (2026-11-06, Jay's directives) ---------
+    // Two seats at each PHYSICAL table (backgammon is a wall motif
+    // — no table, so no seats; Jay's call). A seat is a generous
+    // invisible tap proxy over its stool plus the numbers the
+    // presence layer needs: where the character sits (on the
+    // stool, facing the table) and the GAME VIEW — an over-the-
+    // board camera just behind the sitter. Seat state itself lives
+    // on the server (chemistress_lounge room); these descriptors
+    // are shared geometry, identical for every visitor.
+    var seatTables = [
+      { game: 'dominoes', name: 'Dominoes', t: T_DOM, path: '/dominoes/' },
+      { game: 'checkers', name: 'Checkers', t: T_CHK, path: '/checkers/' },
+      { game: 'chess', name: 'Chess', t: T_CHS, path: '/chess/' },
+      { game: 'mancala', name: 'Mancala', t: T_MAN, path: '/mancala/' }
+    ];
+    function arr3(v) { return [v.x, v.y, v.z]; }
+    var parlorSeats = [];
+    seatTables.forEach(function (cfg) {
+      [[0, -1.75, 'a'], [0, 1.75, 'b']].forEach(function (o) {
+        var sx = cfg.t.x + o[0], sz = cfg.t.z + o[1];
+        var seatW = roomWorld(sx, 0, sz);
+        var tableW = roomWorld(cfg.t.x, 0, cfg.t.z);
+        var awayX = seatW.x - tableW.x, awayZ = seatW.z - tableW.z;
+        var awayLen = Math.hypot(awayX, awayZ) || 1;
+        awayX /= awayLen; awayZ /= awayLen;
+        var proxy = add(B.MeshBuilder.CreateCylinder(
+          'parlor-int-seat-' + cfg.game + '-' + o[2] + '-proxy',
+          { diameter: 1.15, height: 1.35, tessellation: 12 }, scene));
+        proxy.position.set(sx, 0.68, sz);
+        proxy.visibility = 0;
+        proxy.isPickable = true;
+        parlorSeats.push({
+          id: cfg.game + '-' + o[2],
+          game: cfg.game,
+          gameName: cfg.name,
+          path: cfg.path,
+          avatarPos: arr3(seatW),
+          avatarRy: Math.atan2(tableW.x - seatW.x, tableW.z - seatW.z),
+          // Game view framing (render-proofed, 2026-11-06): the
+          // camera sits 1.55 behind and 2.02 high — over the
+          // sitter's shoulder, Sims-style. The first framing
+          // (1.04 / 1.58) put the visitor's own character across
+          // the whole frame and hid the board; from here the
+          // character anchors the lower frame and the board +
+          // the other player open up beyond them.
+          camPos: [seatW.x + awayX * 1.55, 2.02, seatW.z + awayZ * 1.55],
+          camTarget: arr3(roomWorld(cfg.t.x, 0.95, cfg.t.z)),
+          proxy: proxy
+        });
+      });
+    });
+
+    // Table state signs: one shared DynamicTexture per table,
+    // drawn on a front + back plane pair so the state reads from
+    // both sides — whose seat is taken is the room's plain truth
+    // (the presence layer redraws these from server seat state).
+    function drawTableSign(tex, title, line2) {
+      var ctx = tex.getContext();
+      var W = 512, H = 256;
+      ctx.fillStyle = '#2a0a33';
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = '#ffd873';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(10, 10, W - 20, H - 20);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fdf3e3';
+      ctx.font = 'bold 64px Georgia, serif';
+      ctx.fillText(title, W / 2, line2 ? 84 : H / 2);
+      if (line2) {
+        ctx.fillStyle = '#ffd873';
+        ctx.font = '40px Georgia, serif';
+        ctx.fillText(line2, W / 2, 178);
+      }
+      tex.update();
+    }
+    var tableSigns = {};
+    seatTables.forEach(function (cfg) {
+      var tex = new B.DynamicTexture('parlor-int-sign-' + cfg.game + '-tex',
+        { width: 512, height: 256 }, scene, true);
+      tex.hasAlpha = false;
+      drawTableSign(tex, cfg.name, 'Take a seat to play');
+      var mat = new B.StandardMaterial('parlor-int-sign-' + cfg.game + '-mat', scene);
+      mat.diffuseTexture = tex;
+      mat.emissiveTexture = tex;
+      mat.disableLighting = true;
+      mat.backFaceCulling = false;
+      var frame = add(B.MeshBuilder.CreateBox('parlor-int-sign-' + cfg.game + '-frame',
+        { width: 2.2, height: 1.1, depth: 0.06 }, scene));
+      frame.position.set(cfg.t.x, 2.62, cfg.t.z);
+      frame.material = CCW.mat(scene, B, 'parlor-int-sign-' + cfg.game + '-frame-mat', P.plumHouse);
+      [Math.PI, 0].forEach(function (ry, i) {
+        var face = add(B.MeshBuilder.CreatePlane(
+          'parlor-int-sign-' + cfg.game + (i ? '-back' : ''),
+          { width: 2.05, height: 1.02 }, scene));
+        face.position.set(cfg.t.x, 2.62, cfg.t.z + (i ? -0.045 : 0.045));
+        face.rotation.y = ry;
+        face.material = mat;
+      });
+      // The interior light-cap lift (earlier in this build) ran
+      // before these materials existed — admit the room's full
+      // light list here too, the same value it used.
+      mat.maxSimultaneousLights = scene.lights.length;
+      frame.material.maxSimultaneousLights = scene.lights.length;
+      tableSigns[cfg.game] = {
+        set: function (line2) { drawTableSign(tex, cfg.name, line2); }
+      };
+    });
+
     return {
       returnPad: returnPad,
       returnRing: returnRing,
       gameTargets: gameTargets,
       shopTargets: shopTargets,
+      seats: parlorSeats,
+      tableSigns: tableSigns,
       entrance: {
         position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
         target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
@@ -1417,10 +1573,7 @@
     });
 
     // Interior face of the front wall + the door, seen from inside.
-    var front = add(B.MeshBuilder.CreateBox('theater-int-front-panel',
-      { width: 13, height: 7, depth: 0.15 }, scene));
-    front.position.set(0, 3.5, -0.68);
-    front.material = CCW.texMat(scene, B, 'theater-int-front-mat', wallTex, {});
+    var front = glassFrontPanel(scene, B, add, 'theater-int', '#cfe8e2', P.plumHouse);
     var doorFrameIn = add(B.MeshBuilder.CreateBox('theater-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
@@ -2227,6 +2380,41 @@
         target: worldArr(roomWorld(0, 2.95, -14.27))
       }
     };
+    // PRESENCE & SEATS (2026-11-06): six real seats per skin,
+    // spread laterally across that skin's own Sit & Watch anchor —
+    // the Dream Pop bench cluster, the Emblem steps bank, the
+    // Physical Church pew. Seat ids are skin-agnostic
+    // ('theater-0'..'theater-5', the server's seat truth); each
+    // visitor's client resolves a seat id through their OWN skin's
+    // spots, since a skin is a personal view of the same room.
+    // avatarPos.y is the figure's ROOT: the seated figure's seat
+    // lands 0.72 above its root, so root = seat surface - 0.72
+    // (Dream Pop's benches hover — the seat does too).
+    var skinSeatRows = {
+      'dream-pop': { lx: -4.5, lz: -6.15, camY: 1.52, surfY: 0.62 },
+      'emblem-poster': { lx: 0, lz: -8.45, camY: 1.80, surfY: 0.90 },
+      'physical-church': { lx: -1.5, lz: -10.2, camY: 1.35, surfY: 0.45 }
+    };
+    var seatsBySkin = {};
+    Object.keys(skinSeatRows).forEach(function (skinId) {
+      var row = skinSeatRows[skinId];
+      var target = skinSeats[skinId].target;
+      // Spot 3 (offset 0) IS the skin's classic Sit & Watch seat —
+      // same roomWorld inputs, so its game view is byte-identical
+      // to views.seat; the presence layer claims it first.
+      seatsBySkin[skinId] = [-1.55, -0.93, -0.31, 0, 0.93, 1.55].map(function (off, i) {
+        var ap = roomWorld(row.lx + off, row.surfY - 0.72, row.lz);
+        var cp = roomWorld(row.lx + off, row.camY, row.lz);
+        return {
+          id: 'theater-' + i,
+          skin: skinId,
+          avatarPos: [ap.x, ap.y, ap.z],
+          avatarRy: Math.atan2(target[0] - ap.x, target[2] - ap.z),
+          camPos: [cp.x, cp.y, cp.z],
+          camTarget: target.slice()
+        };
+      });
+    });
     var skinHandle = {
       roles: skinRoles,
       benches: skinBenches,
@@ -2277,6 +2465,10 @@
         boardMeshes: [progFrame, progBoard],
         screen: screen,
         glassMaterial: glassMaterial,
+        // Transparency Layer (2026-11-06): the greenhouse front's
+        // glass — applyTheaterSkin answers for it per skin (the
+        // Emblem Poster keeps its darkness: its glass goes deep).
+        frontGlass: front.material,
         // The theme-picker's handle (spec §2.1, REWORKED
         // 2026-11-04): the surfaces, light, and decor a skin swaps
         // — plus its layout groups and its Sit & Watch seat, since
@@ -2284,6 +2476,10 @@
         // paint. views.seat always points at the ACTIVE skin's
         // seat; applyTheaterSkin re-points it on every swap.
         skin: skinHandle,
+        // Presence & Seats: the six seats of the ACTIVE skin are
+        // re-pointed by the presence layer as skins swap
+        // (views.seat's precedent) — seatsBySkin is the data.
+        seatsBySkin: seatsBySkin,
         views: {
           landing: entranceView,
           seat: skinSeats['dream-pop'],
@@ -2546,6 +2742,29 @@
     // any swap is the baseline itself — byte-identical materials.
     restoreTheaterBaseline(handle);
     if (id !== 'dream-pop') applyTheaterSkinLook(scene, B, handle, id);
+    // Transparency Layer (2026-11-06): the greenhouse front glass
+    // answers per skin — the pink-grid PATCHWORK shows for Dream
+    // Pop and the Physical Church (tints + clear panes, alpha
+    // from the texture), while the Emblem Poster swaps the
+    // patchwork OFF for a deep flat pane (Jay's standing
+    // decision: Emblem stays dark — its mood is the exception
+    // that proves the transparency rule). The pink grid bars
+    // stay on every skin — the frame is the architecture.
+    if (theater.frontGlass) {
+      var fg = theater.frontGlass;
+      if (!fg.__patchTex && fg.diffuseTexture) fg.__patchTex = fg.diffuseTexture;
+      if (id === 'emblem-poster') {
+        fg.diffuseTexture = null;
+        fg.useAlphaFromDiffuseTexture = false;
+        fg.alpha = 0.92;
+        fg.diffuseColor = B.Color3.FromHexString('#160a1c');
+      } else {
+        if (fg.__patchTex) fg.diffuseTexture = fg.__patchTex;
+        fg.useAlphaFromDiffuseTexture = true;
+        fg.alpha = 1;
+        fg.diffuseColor = B.Color3.FromHexString('#ffffff');
+      }
+    }
     // SKIN REWORK: the LAYOUT swap, asserted on every call so the
     // room can never sit between arrangements — exactly one layout
     // group visible, the straight aisle serving the two front-
@@ -2744,10 +2963,7 @@
     });
 
     // Interior face of the front wall + the door, seen from inside.
-    var front = add(B.MeshBuilder.CreateBox('library-int-front-panel',
-      { width: 13, height: 7, depth: 0.15 }, scene));
-    front.position.set(0, 3.5, -0.68);
-    front.material = CCW.texMat(scene, B, 'library-int-front-mat', wallTex, {});
+    var front = glassFrontPanel(scene, B, add, 'library-int', '#cfe8e2', '#0b7a70');
     var doorFrameIn = add(B.MeshBuilder.CreateBox('library-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
@@ -3555,10 +3771,7 @@
     });
 
     // Interior face of the front wall + the door, seen from inside.
-    var front = add(B.MeshBuilder.CreateBox('penpal-int-front-panel',
-      { width: 13, height: 7, depth: 0.15 }, scene));
-    front.position.set(0, 3.5, -0.68);
-    front.material = CCW.texMat(scene, B, 'penpal-int-front-mat', pinkWallTex, {});
+    var front = glassFrontPanel(scene, B, add, 'penpal-int', '#f6d9e8', P.plumHouse);
     var doorFrameIn = add(B.MeshBuilder.CreateBox('penpal-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
@@ -4272,10 +4485,7 @@
     });
 
     // Interior face of the front wall + the door, seen from inside.
-    var front = add(B.MeshBuilder.CreateBox('garden-int-front-panel',
-      { width: 13, height: 7, depth: 0.15 }, scene));
-    front.position.set(0, 3.5, -0.68);
-    front.material = CCW.texMat(scene, B, 'garden-int-front-mat', pinkWallTex, {});
+    var front = glassFrontPanel(scene, B, add, 'garden-int', '#d8ecd2', P.plumHouse);
     var doorFrameIn = add(B.MeshBuilder.CreateBox('garden-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
@@ -5254,10 +5464,7 @@
       side.position.set(x, 3.5, -7.5);
       side.material = CCW.texMat(scene, B, 'studio-int-wall-side-mat-' + i, pinkWallTex, {});
     });
-    var front = add(B.MeshBuilder.CreateBox('studio-int-front-panel',
-      { width: 13, height: 7, depth: 0.15 }, scene));
-    front.position.set(0, 3.5, -0.68);
-    front.material = CCW.texMat(scene, B, 'studio-int-front-mat', pinkWallTex, {});
+    var front = glassFrontPanel(scene, B, add, 'studio-int', '#e2dcf2', P.plumHouse);
     var doorFrameIn = add(B.MeshBuilder.CreateBox('studio-int-door-frame',
       { width: 4.0, height: 5.2, depth: 0.12 }, scene));
     doorFrameIn.position.set(0, 2.6, -0.78);
@@ -6006,10 +6213,62 @@
     function add(mesh) { mesh.parent = group; meshes.push(mesh); return mesh; }
 
     // Facade + signature panel + cornice + pillars.
+    // TRANSPARENCY LAYER — FACADE WINDOW BAYS (2026-11-06, refs
+    // 09 + 10): the chapel face itself gains two greenhouse
+    // window bays flanking the door, so the room — and the real
+    // people in it, through the interior's own window wall
+    // behind — reads from the Plaza. The plum mass survives as
+    // structure: a center segment behind the door (it keeps the
+    // classic '-facade' name), two piers, lintels and sills.
+    // The signature panel narrows to the center and center-crops
+    // its art, so the chapels keep their stained identity AND
+    // their windows.
+    var facadeMat = CCW.mat(scene, B, zone.id + '-facade-mat', P.plumWall);
     var facade = add(B.MeshBuilder.CreateBox(zone.id + '-facade',
-      { width: 13, height: 7, depth: 1.2 }, scene));
+      { width: 5.8, height: 7, depth: 1.2 }, scene));
     facade.position.set(0, 3.5, 0);
-    facade.material = CCW.mat(scene, B, zone.id + '-facade-mat', P.plumWall);
+    facade.material = facadeMat;
+    [-6.0, 6.0].forEach(function (x, i) {
+      var pier = add(B.MeshBuilder.CreateBox(zone.id + '-facade-pier-' + i,
+        { width: 1.0, height: 7, depth: 1.2 }, scene));
+      pier.position.set(x, 3.5, 0);
+      pier.material = facadeMat;
+      var lintel = add(B.MeshBuilder.CreateBox(zone.id + '-facade-lintel-' + i,
+        { width: 2.6, height: 0.7, depth: 1.2 }, scene));
+      lintel.position.set(x > 0 ? 4.2 : -4.2, 6.65, 0);
+      lintel.material = facadeMat;
+      var sill = add(B.MeshBuilder.CreateBox(zone.id + '-facade-sill-' + i,
+        { width: 2.6, height: 0.9, depth: 1.2 }, scene));
+      sill.position.set(x > 0 ? 4.2 : -4.2, 0.45, 0);
+      sill.material = facadeMat;
+    });
+    [-1, 1].forEach(function (side) {
+      var tag = side < 0 ? 'l' : 'r';
+      var cx = side * 4.2;
+      var bayPane = add(B.MeshBuilder.CreateBox(zone.id + '-bay-pane-' + tag,
+        { width: 2.6, height: 5.4, depth: 0.06 }, scene));
+      bayPane.position.set(cx, 3.6, 0);
+      var bayGlass = CCW.glassMat(scene, B, zone.id + '-bay-glass-mat-' + tag,
+        '#ffffff', { alpha: 0.999 });
+      bayGlass.diffuseTexture = CCW.patchworkGlassTexture(scene, B,
+        zone.id + '-bay-patch-' + tag, 2, 4, zone.id + '-bay-' + tag);
+      bayGlass.useAlphaFromDiffuseTexture = true;
+      bayGlass.alpha = 1;
+      bayPane.material = bayGlass;
+      var bayFrame = CCW.windowFrameMat(scene, B);
+      [-1.3, 0, 1.3].forEach(function (off, vi) {
+        var bv = add(B.MeshBuilder.CreateBox(zone.id + '-bay-bar-' + tag + '-v' + vi,
+          { width: 0.09, height: 5.4, depth: 0.14 }, scene));
+        bv.position.set(cx + off, 3.6, 0);
+        bv.material = bayFrame;
+      });
+      [2.25, 3.6, 4.95].forEach(function (y, hi) {
+        var bh = add(B.MeshBuilder.CreateBox(zone.id + '-bay-bar-' + tag + '-h' + hi,
+          { width: 2.6, height: 0.09, depth: 0.14 }, scene));
+        bh.position.set(cx, y, 0);
+        bh.material = bayFrame;
+      });
+    });
 
     zonePanel(scene, B, zone, add);
 
@@ -6036,11 +6295,61 @@
       { width: 4.0, height: 5.2, depth: 0.3 }, scene));
     doorFrame.position.set(0, 2.6, 0.5);
     doorFrame.material = CCW.mat(scene, B, zone.id + '-door-frame-mat', P.gold);
+    // FRENCH DOORS (Transparency layer, refs 09 + 10): the gold
+    // frame now holds pink French doors — a solid pink lower
+    // panel with a raised inset (ref 09's paneled bottom) and a
+    // patchwork-glass upper (tints + clear panes, 4 x 3) behind
+    // a bubblegum-pink grid with a center stile: two leaves.
+    // You can see the room — and anyone in it — through the door
+    // before you ever step in. The door keeps its classic name.
     var door = add(B.MeshBuilder.CreatePlane(zone.id + '-door',
-      { width: 3.4, height: 4.6 }, scene));
+      { width: 3.4, height: 2.9 }, scene));
     door.rotation.y = Math.PI; // plane faces local -Z; see makeLabel
-    door.position.set(0, 2.3, 0.68);
-    door.material = CCW.mat(scene, B, zone.id + '-door-mat', accent, { emissive: accent });
+    door.position.set(0, 3.15, 0.66);
+    var doorGlass = CCW.glassMat(scene, B, zone.id + '-door-mat',
+      '#ffffff', { alpha: 0.999 });
+    doorGlass.diffuseTexture = CCW.patchworkGlassTexture(scene, B,
+      zone.id + '-door-patch', 4, 3, zone.id + '-door');
+    doorGlass.useAlphaFromDiffuseTexture = true;
+    doorGlass.alpha = 1;
+    door.material = doorGlass;
+    var framePink = CCW.windowFrameMat(scene, B);
+    var doorLower = add(B.MeshBuilder.CreateBox(zone.id + '-door-lower',
+      { width: 3.4, height: 1.7, depth: 0.1 }, scene));
+    doorLower.position.set(0, 0.85, 0.64);
+    doorLower.material = framePink;
+    var doorInset = add(B.MeshBuilder.CreateBox(zone.id + '-door-lower-inset',
+      { width: 2.9, height: 1.2, depth: 0.05 }, scene));
+    doorInset.position.set(0, 0.85, 0.7);
+    doorInset.material = CCW.mat(scene, B, zone.id + '-door-inset-mat', '#e85d9e');
+    [[-1.64, 'v0'], [1.64, 'v1']].forEach(function (pair) {
+      var bv = add(B.MeshBuilder.CreateBox(zone.id + '-door-bar-' + pair[1],
+        { width: 0.12, height: 4.6, depth: 0.12 }, scene));
+      bv.position.set(pair[0], 2.3, 0.7);
+      bv.material = framePink;
+    });
+    var doorStile = add(B.MeshBuilder.CreateBox(zone.id + '-door-bar-c',
+      { width: 0.12, height: 2.9, depth: 0.12 }, scene));
+    doorStile.position.set(0, 3.15, 0.7);
+    doorStile.material = framePink;
+    [[-0.82, 'l0'], [0.82, 'l1']].forEach(function (pair) {
+      var bl = add(B.MeshBuilder.CreateBox(zone.id + '-door-bar-' + pair[1],
+        { width: 0.08, height: 2.9, depth: 0.12 }, scene));
+      bl.position.set(pair[0], 3.15, 0.7);
+      bl.material = framePink;
+    });
+    [[4.54, 't', 0.12], [1.7, 'm', 0.14]].forEach(function (row) {
+      var br = add(B.MeshBuilder.CreateBox(zone.id + '-door-bar-' + row[1],
+        { width: 3.4, height: row[2], depth: 0.12 }, scene));
+      br.position.set(0, row[0], 0.7);
+      br.material = framePink;
+    });
+    [2.42, 3.88].forEach(function (y, i) {
+      var bh = add(B.MeshBuilder.CreateBox(zone.id + '-door-bar-h' + i,
+        { width: 3.4, height: 0.08, depth: 0.12 }, scene));
+      bh.position.set(0, y, 0.7);
+      bh.material = framePink;
+    });
 
     // Lantern globes flanking the door.
     [-4.6, 4.6].forEach(function (x, i) {
@@ -6068,12 +6377,12 @@
     // Threshold teleport pad (return ride to the Plaza).
     var padTex = CCW.padTexture(scene, B, zone.id + '-pad-tex', accent);
     var pad = add(B.MeshBuilder.CreateDisc(zone.id + '-pad',
-      { radius: 2.3, tessellation: 28 }, scene));
+      { radius: 2.6, tessellation: 28 }, scene));
     pad.rotation.x = Math.PI / 2;
     pad.position.set(0, 0.04, 4.6);
     pad.material = CCW.texMat(scene, B, zone.id + '-pad-mat', padTex, { alpha: true, emissive: true });
     var padRing = add(B.MeshBuilder.CreateTorus(zone.id + '-pad-ring',
-      { diameter: 4.6, thickness: 0.07, tessellation: 32 }, scene));
+      { diameter: 5.2, thickness: 0.07, tessellation: 32 }, scene));
     padRing.rotation.x = Math.PI / 2;
     padRing.position.set(0, 0.05, 4.6);
     padRing.material = CCW.glowMat(scene, B, zone.id + '-pad-ring-mat', P.gold);
@@ -6145,7 +6454,94 @@
     zonePool.position.set(0, 0.018, 3.4);
     zonePool.material = zonePoolMat;
 
-    var result = { group: group, meshes: meshes, portalMeshes: [], threshold: threshold, returnPad: pad };
+    // DOORS (Presence & Seats pass, 2026-11-06 — Jay: "make door
+    // entrances more appealing and accessible"): one consistent
+    // doorway treatment for all six chapels, extending the Light
+    // Lab's door pool into a full threshold — a floating door
+    // label at door height carrying the room's name alone (sized
+    // to read WHOLE at portrait width, the notice-board lesson),
+    // a lit threshold strip across the step, and fine-line teal
+    // edging up both sides of the frame with a gold header line
+    // (palette law: gold stays a fine line). The six glowing
+    // doorways themselves carry the Plaza's wayfinding from spawn
+    // — the notice board gains no new words.
+    var doorLabel = CCW.makeLabel(scene, B, zone.id + '-door-label',
+      [zone.name], 3.4, 0.8, { fg: P.goldSoft });
+    add(doorLabel);
+    doorLabel.rotation.y = Math.PI; // readable face toward the Plaza
+    doorLabel.position.set(0, 5.9, 0.6);
+    var thresholdStrip = add(B.MeshBuilder.CreateBox(zone.id + '-door-threshold',
+      { width: 3.6, height: 0.05, depth: 0.6 }, scene));
+    thresholdStrip.position.set(0, 0.31, 1.7);
+    thresholdStrip.material = CCW.glowMat(scene, B, zone.id + '-door-threshold-mat', accent);
+    [-2.06, 2.06].forEach(function (ex, ei) {
+      var edge = add(B.MeshBuilder.CreateBox(zone.id + '-door-edge-' + ei,
+        { width: 0.09, height: 5.3, depth: 0.36 }, scene));
+      edge.position.set(ex, 2.65, 0.5);
+      edge.material = CCW.glowMat(scene, B, zone.id + '-door-edge-mat-' + ei, P.teal);
+    });
+    var headerLine = add(B.MeshBuilder.CreateBox(zone.id + '-door-header',
+      { width: 4.2, height: 0.09, depth: 0.36 }, scene));
+    headerLine.position.set(0, 5.32, 0.5);
+    headerLine.material = CCW.glowMat(scene, B, zone.id + '-door-header-mat', P.goldSoft);
+
+    // TRANSPARENCY LAYER — OCCUPANCY PLAQUE (2026-11-06, Jay:
+    // "occupancy counts outside the rooms... Transparency is
+    // important to us"): a small plaque on the door itself naming
+    // how many visitors are inside RIGHT NOW. The text is drawn
+    // big in its texture and the plaque is wide enough to hold it
+    // whole at portrait width. The count is REAL people only —
+    // the presence layer (presence.js) feeds it from the lounge
+    // room's state; an empty room honestly reads "No one inside".
+    // It starts at that truth and updates live.
+    var occTex = new B.DynamicTexture(zone.id + '-occ-tex',
+      { width: 512, height: 144 }, scene, true);
+    occTex.hasAlpha = false;
+    function drawOcc(text) {
+      var ctx = occTex.getContext();
+      ctx.fillStyle = '#2a0a33';
+      ctx.fillRect(0, 0, 512, 144);
+      ctx.strokeStyle = '#ffd873';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(7, 7, 498, 130);
+      ctx.fillStyle = '#fdf3e3';
+      ctx.font = 'bold 54px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 256, 74);
+      occTex.update();
+    }
+    drawOcc('No one inside');
+    var occMat = new B.StandardMaterial(zone.id + '-occ-mat', scene);
+    occMat.diffuseTexture = occTex;
+    occMat.emissiveTexture = occTex;
+    occMat.disableLighting = true;
+    occMat.backFaceCulling = false;
+    var occPlaque = add(B.MeshBuilder.CreatePlane(zone.id + '-occ-plaque',
+      { width: 2.3, height: 0.65 }, scene));
+    occPlaque.rotation.y = Math.PI; // readable face toward the Plaza
+    occPlaque.position.set(0, 3.95, 0.84); // proud of the French-door grid
+    occPlaque.material = occMat;
+    var occupancyPlaque = { set: drawOcc };
+    // Inside test in this zone's local frame (the interiors share
+    // one footprint: floor 13.4 x 14.2 centered at z -7.5, plus a
+    // little porch grace at the door).
+    var occupancy = {
+      id: zone.id,
+      name: zone.name,
+      plaque: occupancyPlaque,
+      contains: function (x, z) {
+        var a = zone.angleDeg * Math.PI / 180 + Math.PI;
+        var ca = Math.cos(a), sa = Math.sin(a);
+        var dx = x - uv[0] * CCW.ZONE_RADIUS;
+        var dz = z - uv[1] * CCW.ZONE_RADIUS;
+        var lx = dx * ca - dz * sa;
+        var lz = dx * sa + dz * ca;
+        return Math.abs(lx) <= 7.4 && lz >= -15.3 && lz <= 1.0;
+      }
+    };
+
+    var result = { group: group, meshes: meshes, portalMeshes: [], threshold: threshold, returnPad: pad, occupancy: occupancy };
 
     if (zone.id === 'arcade') {
       var ring = add(B.MeshBuilder.CreateTorus('arcade-portal-ring',
@@ -6168,6 +6564,8 @@
       result.interiorReturn = { mesh: interior.returnPad, ringMesh: interior.returnRing };
       result.gameTargets = interior.gameTargets;
       result.shopTargets = interior.shopTargets;
+      result.parlorSeats = interior.seats;
+      result.tableSigns = interior.tableSigns;
     }
     if (zone.id === 'theater') {
       // The Theater (M2b): same arrival pattern as the Parlor — the
@@ -6669,6 +7067,10 @@
     var zones = {}, portalMeshes = [], teleports = [], gameTargets = [];
     var theaterWatch = null;
     var penpalSurface = null;
+    var parlorSeats = [];
+    var tableSigns = {};
+    var occupancyZones = [];
+    var occupancyPlaques = {};
     CCW.ZONES.forEach(function (zone) {
       var built = buildZone(scene, B, zone);
       zones[zone.id] = built;
@@ -6677,18 +7079,24 @@
       if (built.shopTargets) shopTargets = shopTargets.concat(built.shopTargets);
       if (built.theaterWatch) theaterWatch = built.theaterWatch;
       if (built.penpal) penpalSurface = built.penpal;
+      if (built.parlorSeats) parlorSeats = parlorSeats.concat(built.parlorSeats);
+      if (built.tableSigns) tableSigns = built.tableSigns;
+      if (built.occupancy) {
+        occupancyZones.push(built.occupancy);
+        occupancyPlaques[built.occupancy.id] = built.occupancy.plaque;
+      }
 
       // Plaza-side pad: ride out to this zone's door.
       var uv = outward(zone);
       var padTex = CCW.padTexture(scene, B, zone.id + '-plaza-pad-tex', accentHex(zone));
       var pad = B.MeshBuilder.CreateDisc(zone.id + '-plaza-pad',
-        { radius: 1.6, tessellation: 28 }, scene);
+        { radius: 2.1, tessellation: 28 }, scene);
       pad.rotation.x = Math.PI / 2;
       pad.position.set(uv[0] * 8.5, 0.04, uv[1] * 8.5);
       pad.material = CCW.texMat(scene, B, zone.id + '-plaza-pad-mat', padTex,
         { alpha: true, emissive: true });
       var padRingM = B.MeshBuilder.CreateTorus(zone.id + '-plaza-pad-ring',
-        { diameter: 3.2, thickness: 0.06, tessellation: 28 }, scene);
+        { diameter: 4.2, thickness: 0.06, tessellation: 28 }, scene);
       padRingM.rotation.x = Math.PI / 2;
       padRingM.position.set(uv[0] * 8.5, 0.05, uv[1] * 8.5);
       padRingM.material = CCW.glowMat(scene, B, zone.id + '-plaza-pad-ring-mat', P.gold);
@@ -6707,7 +7115,7 @@
       // visibility 0 keeps it out of the render; it carries no
       // material and no light rig — it exists only to be tapped.
       var padHit = B.MeshBuilder.CreateCylinder(zone.id + '-plaza-pad-hit',
-        { diameter: 4.6, height: 1.15, tessellation: 20 }, scene);
+        { diameter: 5.8, height: 1.15, tessellation: 20 }, scene);
       padHit.position.set(uv[0] * 8.5, 0.575, uv[1] * 8.5);
       padHit.visibility = 0;
       padHit.isPickable = true;
@@ -6746,8 +7154,21 @@
       // Rooms with an interior (the Game Parlor) register their
       // inside return pad as an additional ride back to the Plaza.
       if (built.interiorReturn) {
+        // DOORS (2026-11-06): the inside return pads get the same
+        // generous invisible tap proxy the Plaza pads carry — a
+        // flat disc at the door foreshortens to a sliver from
+        // inside the room too.
+        var rpMesh = built.interiorReturn.mesh;
+        rpMesh.computeWorldMatrix(true);
+        var rpPos = rpMesh.getAbsolutePosition();
+        var rpHit = B.MeshBuilder.CreateCylinder('return-hit-' + zone.id,
+          { diameter: 5.4, height: 1.15, tessellation: 16 }, scene);
+        rpHit.position.set(rpPos.x, 0.575, rpPos.z);
+        rpHit.visibility = 0;
+        rpHit.isPickable = true;
         teleports.push({
           mesh: built.interiorReturn.mesh, ringMesh: built.interiorReturn.ringMesh,
+          hitMesh: rpHit,
           destPos: CCW.SPAWN.position.slice(), destTarget: CCW.SPAWN.target.slice(),
           label: 'the Plaza',
           landed: 'Welcome to the Plaza. The Game Parlor glows pink ahead of you.'
@@ -6757,6 +7178,7 @@
 
     return { zones: zones, portalMeshes: portalMeshes, teleports: teleports,
       gameTargets: gameTargets, theater: theaterWatch, penpal: penpalSurface,
-      shopTargets: shopTargets };
+      shopTargets: shopTargets, parlorSeats: parlorSeats, tableSigns: tableSigns,
+      occupancyZones: occupancyZones, occupancyPlaques: occupancyPlaques };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

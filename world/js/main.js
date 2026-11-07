@@ -173,6 +173,15 @@
     // The Shop Gallery card (wall-life pass), wired below beside
     // the pen-pal card; a ride puts it away too.
     var shopCard = null;
+    // The presence controller (Presence & Seats pass, 2026-11-06):
+    // characters, seats, and the lounge room — wired below beside
+    // the shop card; stays null if presence.js failed to load, and
+    // the world runs exactly as before without it.
+    var presenceCtl = null;
+    // Set when the next film starts because the ROOM is showing it
+    // (a seated visitor aligning to the server-stamped epoch), so
+    // the start is not re-announced as a fresh showing.
+    var filmFromRoomNext = false;
 
     function ride(tele) {
       if (glider.active()) return;
@@ -306,6 +315,9 @@
     }
     function stopFilm() {
       if (!film) return;
+      // The room's film truth clears with any stop (Presence &
+      // Seats): seated watchers elsewhere see the showing end.
+      if (presenceCtl) presenceCtl.announceFilm(null);
       clearFilmTimer();
       restoreGlass();
       disposeFilmTexture();
@@ -380,6 +392,9 @@
           w.screen.material = mat;
           film.swapped = true;
           film.mode = 'glass';
+          if (film.seekTo > 2) {
+            try { video.currentTime = film.seekTo; } catch (e) {}
+          }
           var pr = video.play();
           if (pr && pr.catch) {
             pr.catch(function () {
@@ -451,13 +466,15 @@
         filmTimer = setTimeout(glassTick, 3000);
       }, 3000);
     }
-    function playFilm(entry) {
+    function playFilm(entry, seekTo) {
       stopFilm();
       if (!fsEl || !fsVideo) return;
       film = {
         entry: entry, mode: 'glass', vt: null, filmMat: null,
-        swapped: false, handedOff: false, directTried: false
+        swapped: false, handedOff: false, directTried: false,
+        fromRoom: filmFromRoomNext, seekTo: seekTo || 0
       };
+      filmFromRoomNext = false;
       try {
         // Arm the viewer with the same rail stream (metadata only)
         // so Full screen — or a glass failure — brings it forward
@@ -475,6 +492,18 @@
           }
         };
         setStatus('🎬 Now showing: ' + entry.t + ' (' + entry.y + '). Sit back and enjoy. 💜');
+        // Presence & Seats: a locally-started film becomes the
+        // room's truth (server-stamped), and a room-started film
+        // seeks to the room's position — best effort: the rail
+        // stream seeks as far as the browser allows.
+        if (presenceCtl && !film.fromRoom) presenceCtl.announceFilm(entry);
+        if (film.seekTo > 2) {
+          var seekOnce = function () {
+            try { fsVideo.currentTime = film.seekTo; } catch (e) {}
+          };
+          if (fsVideo.readyState >= 1) seekOnce();
+          else fsVideo.addEventListener('loadedmetadata', seekOnce, { once: true });
+        }
         startGlass(entry);
       } catch (e) {
         stopFilm();
@@ -560,10 +589,16 @@
         setStatus('🎭 Live art takes the stage — the screen is yours. The films wait for another night.');
       },
       sit: function () {
+        // Presence & Seats: claim a REAL seat when one is free —
+        // the claim seats my character among the watchers and
+        // aligns a late sitter to the room's film. The classic
+        // single-seat ride remains the fallback (all seats held).
+        if (presenceCtl && presenceCtl.theaterSit()) return;
         var v = world.theater && world.theater.views;
         if (v) rideView(v.seat, '🪑 Settled into a bench — the film is yours. Stand up any time.');
       },
       stand: function () {
+        if (presenceCtl) presenceCtl.theaterStand();
         var v = world.theater && world.theater.views;
         if (v) rideView(v.landing, 'Back on your feet in the Theater.');
       },
@@ -653,6 +688,57 @@
       });
     }
 
+    // ---- Presence & Seats (2026-11-06) ----------------------------
+    // Characters (Jay's avatar law), the lounge room, Parlor +
+    // Theater seats, and the room's film truth (presence.js). The
+    // controller degrades in place: no server or no script, the
+    // world runs as before and seats still work for a lone
+    // visitor. Seat proxies are tap targets under the same
+    // pickGuard discipline as every other world tap.
+    if (CCW.createPresence) {
+      try {
+        presenceCtl = CCW.createPresence({
+          scene: scene, B: B, world: world, document: document, root: root,
+          setStatus: setStatus,
+          glideTo: function (pos, target, after) {
+            rideView({ position: pos, target: target }, after);
+          },
+          navigate: function (path) { root.location.href = path; },
+          getCamera: function () { return scene.activeCamera; },
+          onRemoteFilm: function (entry, elapsed) {
+            if (!entry) {
+              if (film && film.fromRoom) {
+                stopFilm();
+                setStatus('The film in the Theater has ended.');
+              }
+              return;
+            }
+            if (film && film.entry && film.entry.file === entry.file) return;
+            filmFromRoomNext = true;
+            playFilm(entry, elapsed);
+          }
+        });
+      } catch (e) { presenceCtl = null; }
+    }
+    if (presenceCtl) {
+      (world.parlorSeats || []).forEach(function (seat) {
+        seat.proxy.actionManager = new B.ActionManager(scene);
+        seat.proxy.actionManager.registerAction(
+          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(function () {
+            presenceCtl.handlePick(seat.proxy);
+          })));
+      });
+      var avatarBtn = document.getElementById('btn-avatar');
+      if (avatarBtn) {
+        avatarBtn.addEventListener('click', function () { presenceCtl.openStudio(); });
+      }
+      // A first visit designs the character once (Jay's law) —
+      // the studio opens on its own, once the Plaza has painted.
+      if (presenceCtl.needsProfile()) {
+        setTimeout(function () { presenceCtl.openStudio(); }, 1600);
+      }
+    }
+
     // Teleport pads: tap/click to ride. Entrance pads also wire
     // their invisible hit proxy (plaza.js) — same ride, a much
     // bigger target than the flat disc alone.
@@ -704,6 +790,7 @@
       });
     });
     document.getElementById('btn-walk').addEventListener('click', function () {
+      if (presenceCtl) presenceCtl.stand();
       glider.cancel();
       walking = true;
       scene.activeCamera = desktopCam;
@@ -755,6 +842,7 @@
 
     document.getElementById('btn-reset').addEventListener('click', function () {
       // Reset view: any camera mode returns to the spawn view.
+      if (presenceCtl) presenceCtl.stand();
       glider.cancel();
       touchWalker.clear();
       scene.activeCamera = desktopCam;
@@ -773,6 +861,7 @@
 
     var last = performance.now();
     var overlayHidden = false;
+    var wasGliding = false;
     engine.runRenderLoop(function () {
       var now = performance.now();
       var dt = now - last;
@@ -780,6 +869,18 @@
       var cam = scene.activeCamera;
       var inViewer = !!(viewerCtl && viewerCtl.active());
       var gliding = !!(cam && glider.update(cam, dt));
+      if (wasGliding && !gliding && cam) {
+        // A glide just completed: re-sync the pad trigger to the
+        // landing position (a landing never counts as an entry —
+        // see createPadTrigger.sync) and hold the pad cooldown a
+        // beat past the landing, so no stale inside-state on a
+        // real device can bounce a visitor straight back out.
+        // (Presence pass, 2026-11-06; answers the Creator Studio
+        // landing bounce — its glide crosses its own return pad.)
+        padTrigger.sync(cam.position);
+        if (glideCooldownUntil < now + 900) glideCooldownUntil = now + 900;
+      }
+      wasGliding = gliding;
       if (cam && !gliding) {
         // Touch buttons drive the walk camera; then the bounds keep
         // every camera inside the Plaza grounds / the parlor room.
@@ -800,6 +901,9 @@
       // view every frame (aspect-aware base + any pinch zoom).
       viewControl.sync();
       if (inViewer) viewerCtl.sync();
+      // Presence: mirror my camera, walk the other characters
+      // toward their truths, watch for a stool to sit on.
+      if (presenceCtl) presenceCtl.update(Math.min(0.05, dt / 1000));
       scene.render();
       if (!overlayHidden) {
         overlayHidden = true;

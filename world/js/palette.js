@@ -4499,6 +4499,59 @@
     return tex;
   };
 
+  // PATCHWORK GLASS (Transparency layer, art direction refs 09 +
+  // 10, 2026-11-06): Jay's window walls are French-door grids of
+  // MIXED panes — translucent palette tints (rose, sky, mint,
+  // amber, lavender, teal, peach) patchworked with CLEAR panes,
+  // dark leading between them, pink frames over the top (the bars
+  // are real geometry in plaza.js). One DynamicTexture per wall:
+  // the tint lives in the RGB, the see-through-ness in the alpha
+  // (clear panes ~0.05, tinted ~0.34), so people inside stay
+  // clearly visible — visibility is the function, tint the beauty.
+  // Deterministic per seed so every visitor sees the same wall.
+  CCW.patchworkGlassTexture = function (scene, B, name, cols, rows, seed) {
+    var W = 1024, H = Math.round(1024 * rows / cols);
+    var tex = new B.DynamicTexture(name, { width: W, height: H }, scene, true);
+    tex.hasAlpha = true;
+    var ctx = tex.getContext();
+    var h = 2166136261 >>> 0;
+    var s = String(seed || name);
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    function rnd() { h ^= h << 13; h >>>= 0; h ^= h >> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; }
+    var tints = ['#f6a8c8', '#a5d8f5', '#a9dfc5', '#f2cd8f', '#cdbcf2', '#9fd8d2', '#f7c39a'];
+    var cw = W / cols, ch = H / rows;
+    ctx.clearRect(0, 0, W, H);
+    for (var y = 0; y < rows; y++) {
+      for (var x = 0; x < cols; x++) {
+        if (rnd() < 0.48) {
+          ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        } else {
+          var t = tints[Math.floor(rnd() * tints.length) % tints.length];
+          var r = parseInt(t.substr(1, 2), 16), g = parseInt(t.substr(3, 2), 16), b = parseInt(t.substr(5, 2), 16);
+          ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',0.34)';
+        }
+        ctx.fillRect(x * cw, y * ch, cw, ch);
+      }
+    }
+    // Dark leading between the panes (ref 09's leaded grid).
+    ctx.fillStyle = 'rgba(64,38,58,0.6)';
+    for (var gx = 0; gx <= cols; gx++) ctx.fillRect(gx * cw - 2, 0, 4, H);
+    for (var gy = 0; gy <= rows; gy++) ctx.fillRect(0, gy * ch - 2, W, 4);
+    tex.update();
+    return tex;
+  };
+
+  // The shared PINK of the window-wall architecture (refs 09 +
+  // 10): bubblegum pink frames and mullions — the pink frame IS
+  // the architecture; it reads from across the Plaza. One material
+  // for every frame bar in the world.
+  CCW.windowFrameMat = function (scene, B) {
+    var m = scene.getMaterialByName('ccw-window-frame-pink');
+    if (!m) m = CCW.mat(scene, B, 'ccw-window-frame-pink', '#fb7bab',
+      { rough: 0.5, env: 0.25 });
+    return m;
+  };
+
   // Real glass for the Light Lab: a tinted, alpha-blended pane
   // that ANSWERS light — a firm specular, the shared palette
   // environment reflected, and a reflection fresnel so the

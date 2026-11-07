@@ -471,6 +471,27 @@
       },
       reset: function () {
         for (var i = 0; i < inside.length; i++) inside[i] = false;
+      },
+      // Re-sync the inside/outside sense to a position WITHOUT
+      // firing (Presence pass, 2026-11-06): main.js calls this the
+      // moment any glide completes, so a landing can never be
+      // misread as a fresh entry — even if polling mistracked the
+      // glide on a real device (camera switch, frame hitch, viewer
+      // transition). This is the invariant the poll comment in
+      // main.js already promises; sync() makes it hold by
+      // construction. (Field report it answers: the Creator Studio
+      // landing bouncing straight back to the Plaza entrance ~1 s
+      // after arrival — the Studio glide path crosses its own zone
+      // return pad dead-center, so any stale inside-state there
+      // arms the return ride the moment the cooldown lapses.)
+      sync: function (pos) {
+        for (var i = 0; i < teleports.length; i++) {
+          var tele = teleports[i];
+          if (!tele.padPos) { inside[i] = false; continue; }
+          var dx = pos.x - tele.padPos.x;
+          var dz = pos.z - tele.padPos.z;
+          inside[i] = dx * dx + dz * dz < 1.7 * 1.7;
+        }
       }
     };
   };
