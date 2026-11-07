@@ -26,6 +26,7 @@ class BackgammonPlayer extends Schema {
 }
 defineTypes(BackgammonPlayer, {
   name: 'string',
+  avatar: 'string', // presence summary (server/presence.js), sanitized on join
   seat: 'number',
   side: 'number',
   ready: 'boolean',

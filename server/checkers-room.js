@@ -43,6 +43,7 @@
 
 const { Room } = require('colyseus');
 const { loungeAuth, memberName } = require('./auth');
+const { sanitizeAvatarSummary } = require('./presence');
 const { CheckersPlayer, CheckersState } = require('./checkers-state');
 const C = require('./checkers');
 
@@ -82,6 +83,7 @@ class ChemistressCheckersRoom extends Room {
     const side = taken.has(C.PINK) ? C.TEAL : C.PINK;
     const player = new CheckersPlayer();
     player.name = memberName(client, options);
+    player.avatar = sanitizeAvatarSummary(options && options.avatar);
     player.seat = side;
     player.side = side;
     player.ready = false;

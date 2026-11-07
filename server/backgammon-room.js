@@ -63,6 +63,7 @@
 
 const { Room } = require('colyseus');
 const { loungeAuth, memberName } = require('./auth');
+const { sanitizeAvatarSummary } = require('./presence');
 const { BackgammonPlayer, BackgammonState } = require('./backgammon-state');
 const B = require('./backgammon');
 
@@ -122,6 +123,7 @@ class ChemistressBackgammonRoom extends Room {
     const side = taken.has(B.PINK) ? B.TEAL : B.PINK;
     const player = new BackgammonPlayer();
     player.name = memberName(client, options);
+    player.avatar = sanitizeAvatarSummary(options && options.avatar);
     player.seat = side;
     player.side = side;
     player.ready = false;

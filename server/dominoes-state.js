@@ -25,6 +25,7 @@ class DominoPlayer extends Schema {
 }
 defineTypes(DominoPlayer, {
   name: 'string',
+  avatar: 'string', // presence summary (server/presence.js), sanitized on join
   seat: 'number',
   ready: 'boolean',
   inRound: 'boolean',

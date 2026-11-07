@@ -54,6 +54,7 @@
 
 const { Room } = require('colyseus');
 const { loungeAuth, memberName } = require('./auth');
+const { sanitizeAvatarSummary } = require('./presence');
 const { DominoPlayer, ChainTile, DominoesState } = require('./dominoes-state');
 const { mulberry32, shuffledOrder, deckHash } = require('./deck');
 const D = require('./dominoes');
@@ -126,6 +127,7 @@ class ChemistressDominoesRoom extends Room {
   onJoin(client, options = {}) {
     const player = new DominoPlayer();
     player.name = memberName(client, options);
+    player.avatar = sanitizeAvatarSummary(options && options.avatar);
     player.seat = this.nextSeat++;
     player.ready = false;
     player.inRound = false;

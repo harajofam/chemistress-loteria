@@ -45,6 +45,7 @@
 
 const { Room } = require('colyseus');
 const { loungeAuth, memberName } = require('./auth');
+const { sanitizeAvatarSummary } = require('./presence');
 const { MancalaPlayer, MancalaState } = require('./mancala-state');
 const M = require('./mancala');
 
@@ -84,6 +85,7 @@ class ChemistressMancalaRoom extends Room {
     const side = taken.has(M.PINK) ? M.TEAL : M.PINK;
     const player = new MancalaPlayer();
     player.name = memberName(client, options);
+    player.avatar = sanitizeAvatarSummary(options && options.avatar);
     player.seat = side;
     player.side = side;
     player.ready = false;

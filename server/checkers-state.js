@@ -25,6 +25,7 @@ class CheckersPlayer extends Schema {
 }
 defineTypes(CheckersPlayer, {
   name: 'string',
+  avatar: 'string', // presence summary (server/presence.js), sanitized on join
   seat: 'number',
   side: 'number',
   ready: 'boolean',
