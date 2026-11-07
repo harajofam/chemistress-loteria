@@ -370,8 +370,9 @@
       wains.material = CCW.mat(scene, B, 'parlor-int-wainscot-side-mat-' + i, P.gold);
     });
 
-    // Warm pendant globes — they hang over the four tables.
-    [[-3.4, -5], [3.4, -5], [-3.4, -11], [3.4, -11]].forEach(function (pos, i) {
+    // Warm pendant globes — they hang over the tables. The fifth
+    // (Care-and-Grow pass, 2026-11-07) crowns the new center table.
+    [[-3.4, -5], [3.4, -5], [-3.4, -11], [3.4, -11], [0, -8]].forEach(function (pos, i) {
       var rod = add(B.MeshBuilder.CreateCylinder('parlor-int-pendant-rod-' + i,
         { diameter: 0.06, height: 1.3, tessellation: 6 }, scene));
       rod.position.set(pos[0], 6.35, pos[1]);
@@ -428,10 +429,16 @@
     // Front pair near the door, back pair under the gallery wall.
     var T_DOM = { x: -3.1, z: -5.4 }, T_CHK = { x: 3.1, z: -5.4 };
     var T_CHS = { x: -3.1, z: -10.6 }, T_MAN = { x: 3.1, z: -10.6 };
+    // The fifth table (Care-and-Grow pass, 2026-11-07): BACKGAMMON
+    // takes the room's center, between the two pairs — the same
+    // plum-and-gold table as its four elders, dressed with its own
+    // board. Its pendant hangs at (0, -8) in the rig above.
+    var T_BGM = { x: 0, z: -8.0 };
     gameTable(scene, B, add, T_DOM.x, T_DOM.z, 'dominoes');
     gameTable(scene, B, add, T_CHK.x, T_CHK.z, 'checkers');
     gameTable(scene, B, add, T_CHS.x, T_CHS.z, 'chess');
     gameTable(scene, B, add, T_MAN.x, T_MAN.z, 'mancala');
+    gameTable(scene, B, add, T_BGM.x, T_BGM.z, 'backgammon');
 
     // Seating: four stools around the dominoes table (2–4 players),
     // two facing stools at each two-player table.
@@ -445,6 +452,9 @@
       parlorStool(scene, B, add, t.x, t.z - 1.75, velvet, tag + '-a');
       parlorStool(scene, B, add, t.x, t.z + 1.75, velvet, tag + '-b');
     });
+    // Backgammon's two facing stools, on the room's long axis.
+    parlorStool(scene, B, add, T_BGM.x, T_BGM.z - 1.75, P.velvetMagenta, 'backgammon-a');
+    parlorStool(scene, B, add, T_BGM.x, T_BGM.z + 1.75, P.velvetTeal, 'backgammon-b');
 
     // ---- Dominoes: tiles laid out mid-game ---------------------------
     // A cross of four, a two-tile branch, and a small stack aside.
@@ -564,6 +574,31 @@
         stone.position.set(T_MAN.x + cfg[0], 1.115, T_MAN.z + cfg[1]);
         stone.material = CCW.mat(scene, B, 'parlor-int-stone-mat-' + i, cfg[2]);
       });
+
+    // ---- Backgammon: the board, dressed for a game -------------------
+    // The fifth table's own board (palette.js paints the twelve
+    // points in coral + teal over plum, gold bar down the middle)
+    // with two checker stacks borne on their home points — coral
+    // against cream, the room's two voices at the table.
+    var bgmBoard = add(B.MeshBuilder.CreateBox('parlor-int-backgammon-board',
+      { width: 1.9, height: 0.05, depth: 1.15 }, scene));
+    bgmBoard.position.set(T_BGM.x, 1.095, T_BGM.z);
+    bgmBoard.material = CCW.texMat(scene, B, 'parlor-int-backgammon-board-mat',
+      CCW.backgammonBoardTexture(scene, B, 'parlor-backgammon-board'), {});
+    var bgmMats = {
+      coral: CCW.mat(scene, B, 'parlor-int-backgammon-disc-coral-mat', P.coral),
+      cream: CCW.mat(scene, B, 'parlor-int-backgammon-disc-cream-mat', P.cream)
+    };
+    var bgmDiscIdx = 0;
+    [[0.74, 0.30, 'coral'], [-0.74, -0.30, 'cream']].forEach(function (stack) {
+      for (var di = 0; di < 5; di++) {
+        var disc = add(B.MeshBuilder.CreateCylinder(
+          'parlor-int-backgammon-disc-' + (bgmDiscIdx++),
+          { diameter: 0.16, height: 0.035, tessellation: 16 }, scene));
+        disc.position.set(T_BGM.x + stack[0], 1.1375 + di * 0.036, T_BGM.z + stack[1]);
+        disc.material = bgmMats[stack[2]];
+      }
+    });
 
     // ---- Wall dressing: framed vintage game motifs ---------------------
     var motifW = 1.9, motifH = 1.9, motifIdx = 0;
@@ -728,7 +763,7 @@
     parlorShadowMat.depthWrite = false;
     parlorShadowMat.zOffset = -2;
     parlorShadowMat.alpha = 0.55;
-    [T_DOM, T_CHK, T_CHS, T_MAN].forEach(function (tp, i) {
+    [T_DOM, T_CHK, T_CHS, T_MAN, T_BGM].forEach(function (tp, i) {
       var tsh = add(B.MeshBuilder.CreatePlane('parlor-int-ll-table-shadow-' + i,
         { width: 2.9, height: 2.9 }, scene));
       tsh.rotation.x = Math.PI / 2;
@@ -809,16 +844,16 @@
     // the Lotería game is not among them (Jay's rule: it keeps its
     // own page, its own door).
     //
-    // The mapping follows the dressing. Four tables are dealt to
-    // Dominoes / Checkers / Chess / Mancala — the fourth table's
-    // closed box, cups and stones are its Mancala dressing — and
-    // BACKGAMMON, the fifth game, has no table of its own: its tap
-    // target is its framed back-wall motif. Each game's framed
-    // motif is wired as a second target for the same game (a tap
-    // on the picture offers the game too); the generic dice motif
-    // stays plain wall dressing. Meshes are collected by name from
-    // the scene, exactly as the light scoping above collects them
-    // — ZERO new meshes, so the census does not move.
+    // The mapping follows the dressing. Five tables are dealt to
+    // Dominoes / Checkers / Chess / Mancala / Backgammon — the
+    // fourth table's closed box, cups and stones are its Mancala
+    // dressing; the center table is Backgammon's (Care-and-Grow
+    // pass, 2026-11-07 — it was a wall motif only until now, and
+    // its motif stays wired as a second target, like every
+    // game's). Each game's framed motif offers the game too; the
+    // generic dice motif stays plain wall dressing. Meshes are
+    // collected by name from the scene, exactly as the light
+    // scoping above collects them.
     function targetMeshes(prefixes, names) {
       return scene.meshes.filter(function (m) {
         if (names.indexOf(m.name) >= 0) return true;
@@ -855,24 +890,26 @@
       { id: 'backgammon', name: 'Backgammon',
         blurb: 'Classic backgammon — two players, face to face.',
         path: '/backgammon/',
-        meshes: targetMeshes([],
+        meshes: targetMeshes(
+          ['parlor-int-table-backgammon-', 'parlor-int-backgammon-', 'parlor-int-stool-backgammon-'],
           ['parlor-int-motif-2', 'parlor-int-motif-2-frame']) }
     ];
 
     // ---- PRESENCE & SEATS (2026-11-06, Jay's directives) ---------
-    // Two seats at each PHYSICAL table (backgammon is a wall motif
-    // — no table, so no seats; Jay's call). A seat is a generous
-    // invisible tap proxy over its stool plus the numbers the
-    // presence layer needs: where the character sits (on the
-    // stool, facing the table) and the GAME VIEW — an over-the-
-    // board camera just behind the sitter. Seat state itself lives
-    // on the server (chemistress_lounge room); these descriptors
-    // are shared geometry, identical for every visitor.
+    // Two seats at each PHYSICAL table — all five tables since the
+    // Care-and-Grow pass (2026-11-07) built Backgammon its own.
+    // A seat is a generous invisible tap proxy over its stool plus
+    // the numbers the presence layer needs: where the character
+    // sits (on the stool, facing the table) and the GAME VIEW — an
+    // over-the-board camera just behind the sitter. Seat state
+    // itself lives on the server (chemistress_lounge room); these
+    // descriptors are shared geometry, identical for every visitor.
     var seatTables = [
       { game: 'dominoes', name: 'Dominoes', t: T_DOM, path: '/dominoes/' },
       { game: 'checkers', name: 'Checkers', t: T_CHK, path: '/checkers/' },
       { game: 'chess', name: 'Chess', t: T_CHS, path: '/chess/' },
-      { game: 'mancala', name: 'Mancala', t: T_MAN, path: '/mancala/' }
+      { game: 'mancala', name: 'Mancala', t: T_MAN, path: '/mancala/' },
+      { game: 'backgammon', name: 'Backgammon', t: T_BGM, path: '/backgammon/' }
     ];
     function arr3(v) { return [v.x, v.y, v.z]; }
     var parlorSeats = [];
@@ -5333,6 +5370,184 @@
       }
     });
 
+    // ============================================================
+    // CARE-AND-GROW (2026-11-07, Jay's decisions — the design in
+    // GARDEN-TAMAGOTCHI-DESIGN.md): the Garden starts keeping
+    // plants. Along the left wall, seven PERSONAL PLANTERS wait
+    // in a row — one companion tomato vine per present member,
+    // rendered by garden.js from the lounge room's synced state.
+    // In the room's open ground, two COMMUNITY BEDS grow for
+    // everyone, tended by whoever visits; a TENDER BOARD by the
+    // door names their recent tenders, FIRST NAMES ONLY — real
+    // people only, no counts, no rankings, ever. Every planter,
+    // bed and tower wears a LIT CHANNEL strip: the plant's state
+    // readout in the room's own language (thirsty burns amber,
+    // content glows teal, thriving shines gold) — LIGHT IS A
+    // BUILDING MATERIAL, and here the light is also the news.
+    // The geometry below is furniture; the plants themselves are
+    // runtime figures (garden.js), never part of the build census.
+    // ============================================================
+    var gardenSurface = (function () {
+      function arr3(v) { return [v.x, v.y, v.z]; }
+      var soilMat = CCW.mat(scene, B, 'garden-int-care-soil-mat', '#3a2415');
+
+      // -- the seven personal planters, along the left wall -----
+      var stations = [];
+      var stationPotMat = CCW.mat(scene, B, 'garden-int-station-pot-mat', P.tealDeep);
+      [-3.7, -5.2, -6.7, -8.2, -9.7, -11.2, -12.6].forEach(function (sz, i) {
+        var pot = add(B.MeshBuilder.CreateCylinder('garden-int-station-' + i + '-pot',
+          { diameterTop: 0.78, diameterBottom: 0.6, height: 0.5, tessellation: 14 }, scene));
+        pot.position.set(-4.55, 0.25, sz);
+        pot.material = stationPotMat;
+        var soil = add(B.MeshBuilder.CreateDisc('garden-int-station-' + i + '-soil',
+          { radius: 0.34, tessellation: 16 }, scene));
+        soil.rotation.x = Math.PI / 2;
+        soil.position.set(-4.55, 0.51, sz);
+        soil.material = soilMat;
+        var channelMat = CCW.glowMat(scene, B,
+          'garden-int-station-' + i + '-channel-mat', P.teal);
+        var channel = add(B.MeshBuilder.CreateBox('garden-int-station-' + i + '-channel',
+          { width: 0.05, height: 0.34, depth: 0.5 }, scene));
+        channel.position.set(-4.13, 0.3, sz);
+        channel.material = channelMat;
+        gardenShadow(-4.55, sz, 1.1, 1.1);
+        stations.push({
+          index: i, x: -4.55, z: sz, soilY: 0.51,
+          worldPos: arr3(roomWorld(-4.55, 0.51, sz)),
+          pot: pot, soil: soil, channel: channel, channelMat: channelMat
+        });
+      });
+
+      // -- the two community beds --------------------------------
+      var bedWoodTex = CCW.wornWoodTexture(scene, B, 'garden-int-bed-wood-tex');
+      var beds = [];
+      [['bed-a', 4.5, -5.1], ['bed-b', 4.35, -11.9]].forEach(function (bc) {
+        var bid = bc[0], bx = bc[1], bz = bc[2];
+        var frame = add(B.MeshBuilder.CreateBox('garden-int-bed-' + bid + '-frame',
+          { width: 1.7, height: 0.56, depth: 2.4 }, scene));
+        frame.position.set(bx, 0.28, bz);
+        frame.material = CCW.texMat(scene, B, 'garden-int-bed-' + bid + '-frame-mat',
+          bedWoodTex, {});
+        var soil = add(B.MeshBuilder.CreatePlane('garden-int-bed-' + bid + '-soil',
+          { width: 1.5, height: 2.2 }, scene));
+        soil.rotation.x = Math.PI / 2;
+        soil.position.set(bx, 0.57, bz);
+        soil.material = soilMat;
+        var channelMat = CCW.glowMat(scene, B,
+          'garden-int-bed-' + bid + '-channel-mat', P.teal);
+        var channel = add(B.MeshBuilder.CreateBox('garden-int-bed-' + bid + '-channel',
+          { width: 0.05, height: 0.3, depth: 1.8 }, scene));
+        channel.position.set(bx - 0.88, 0.3, bz);
+        channel.material = channelMat;
+        gardenShadow(bx, bz, 2.1, 2.8);
+        beds.push({
+          id: bid, x: bx, z: bz, soilY: 0.57,
+          worldPos: arr3(roomWorld(bx, 0.57, bz)),
+          frame: frame, soil: soil, channel: channel, channelMat: channelMat
+        });
+      });
+
+      // -- the towers' lit channels: the room's shared readout --
+      var towerChannels = [];
+      [[-5.8, -3.6], [-5.8, -6.8], [-5.8, -10.0], [5.8, -11.4]].forEach(function (tp, i) {
+        var sgn = tp[0] < 0 ? 1 : -1;
+        var cMat = CCW.glowMat(scene, B, 'garden-int-tower-channel-mat-' + i, P.teal);
+        var ch = add(B.MeshBuilder.CreateBox('garden-int-tower-channel-' + i,
+          { width: 0.07, height: 2.6, depth: 0.07 }, scene));
+        ch.position.set(tp[0] + sgn * 0.33, 1.68, tp[1]);
+        ch.material = cMat;
+        towerChannels.push(cMat);
+      });
+
+      // -- the tender board, by the door --------------------------
+      var tenderFrame = add(B.MeshBuilder.CreateBox('garden-int-tender-board-frame',
+        { width: 1.8, height: 1.05, depth: 0.07 }, scene));
+      tenderFrame.position.set(2.62, 1.45, -0.80);
+      tenderFrame.material = CCW.mat(scene, B, 'garden-int-tender-board-frame-mat', P.tealDeep);
+      var tenderTex = new B.DynamicTexture('garden-int-tender-board-tex',
+        { width: 512, height: 288 }, scene, true);
+      tenderTex.hasAlpha = false;
+      function drawTenderBoard(names) {
+        var ctx = tenderTex.getContext();
+        var W = 512, H = 288;
+        ctx.fillStyle = '#2a0a33';
+        ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = '#ffd873';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(9, 9, W - 18, H - 18);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffd873';
+        ctx.font = 'bold 40px Georgia, serif';
+        ctx.fillText('🌱 TENDED LATELY BY', W / 2, 52);
+        ctx.fillStyle = '#fdf3e3';
+        if (!names || !names.length) {
+          ctx.font = '34px Georgia, serif';
+          ctx.fillText('No one yet —', W / 2, 140);
+          ctx.fillText('the beds welcome every hand', W / 2, 190);
+        } else {
+          var rows = [names.slice(0, 3).join('  ·  '), names.slice(3, 6).join('  ·  ')];
+          rows.forEach(function (line, li) {
+            if (!line) return;
+            var size = 40;
+            ctx.font = 'bold ' + size + 'px Georgia, serif';
+            while (ctx.measureText(line).width > W - 70 && size > 20) {
+              size -= 3;
+              ctx.font = 'bold ' + size + 'px Georgia, serif';
+            }
+            ctx.fillText(line, W / 2, rows[1] ? 138 + li * 62 : 152);
+          });
+          ctx.fillStyle = '#c9a7d8';
+          ctx.font = '26px Georgia, serif';
+          ctx.fillText('thank you, gardeners', W / 2, 240);
+        }
+        tenderTex.update();
+      }
+      drawTenderBoard([]);
+      var tenderFace = add(B.MeshBuilder.CreatePlane('garden-int-tender-board',
+        { width: 1.7, height: 0.95 }, scene));
+      // No half-turn: the front wall's readable face looks into
+      // the room (the house convention).
+      tenderFace.position.set(2.62, 1.45, -0.87);
+      var tenderMat = new B.StandardMaterial('garden-int-tender-board-mat', scene);
+      tenderMat.diffuseTexture = tenderTex;
+      tenderMat.emissiveTexture = tenderTex;
+      tenderMat.disableLighting = true;
+      tenderMat.backFaceCulling = false;
+      tenderFace.material = tenderMat;
+      tenderMat.maxSimultaneousLights = scene.lights.length;
+      tenderFrame.material.maxSimultaneousLights = scene.lights.length;
+
+      // -- the spray bottle, resting on the bench -----------------
+      // The light-tender's tool (the copper can by the bench is
+      // the water's): a small teal bottle with a coral head.
+      var sprayMeshes = [];
+      var sprayBody = add(B.MeshBuilder.CreateCylinder('garden-int-spray-body',
+        { diameter: 0.11, height: 0.24, tessellation: 10 }, scene));
+      sprayBody.position.set(6.14, 0.72, -4.55);
+      sprayBody.material = CCW.mat(scene, B, 'garden-int-spray-body-mat', P.teal);
+      sprayMeshes.push(sprayBody);
+      var sprayHead = add(B.MeshBuilder.CreateBox('garden-int-spray-head',
+        { width: 0.07, height: 0.06, depth: 0.17 }, scene));
+      sprayHead.position.set(6.14, 0.87, -4.55);
+      sprayHead.material = CCW.mat(scene, B, 'garden-int-spray-head-mat', P.coral);
+      sprayMeshes.push(sprayHead);
+      var sprayNozzle = add(B.MeshBuilder.CreateBox('garden-int-spray-nozzle',
+        { width: 0.05, height: 0.04, depth: 0.06 }, scene));
+      sprayNozzle.position.set(6.14, 0.87, -4.42);
+      sprayNozzle.material = CCW.mat(scene, B, 'garden-int-spray-nozzle-mat', P.coral);
+      sprayMeshes.push(sprayNozzle);
+
+      return {
+        stations: stations,
+        beds: beds,
+        towerChannels: towerChannels,
+        tenderBoard: { set: function (names) { drawTenderBoard(names || []); } },
+        canMeshes: [canBody, canSpout, canHandle],
+        sprayMeshes: sprayMeshes
+      };
+    })();
+
     // Scope the rig to the room + lift the light cap (see header).
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('garden-int-') === 0;
@@ -5350,6 +5565,7 @@
       returnPad: returnPad,
       returnRing: returnRing,
       shopTargets: shopTargets,
+      garden: gardenSurface,
       entrance: {
         position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
         target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
@@ -6609,6 +6825,7 @@
       result.threshold = gInterior.entrance;
       result.interiorReturn = { mesh: gInterior.returnPad, ringMesh: gInterior.returnRing };
       result.shopTargets = gInterior.shopTargets;
+      result.garden = gInterior.garden;
     }
     if (zone.id === 'studio') {
       // The Creator Studio (M2b interior 5 of 5): same arrival
@@ -7067,6 +7284,7 @@
     var zones = {}, portalMeshes = [], teleports = [], gameTargets = [];
     var theaterWatch = null;
     var penpalSurface = null;
+    var gardenSurface = null;
     var parlorSeats = [];
     var tableSigns = {};
     var occupancyZones = [];
@@ -7079,6 +7297,7 @@
       if (built.shopTargets) shopTargets = shopTargets.concat(built.shopTargets);
       if (built.theaterWatch) theaterWatch = built.theaterWatch;
       if (built.penpal) penpalSurface = built.penpal;
+      if (built.garden) gardenSurface = built.garden;
       if (built.parlorSeats) parlorSeats = parlorSeats.concat(built.parlorSeats);
       if (built.tableSigns) tableSigns = built.tableSigns;
       if (built.occupancy) {
@@ -7178,6 +7397,7 @@
 
     return { zones: zones, portalMeshes: portalMeshes, teleports: teleports,
       gameTargets: gameTargets, theater: theaterWatch, penpal: penpalSurface,
+      garden: gardenSurface,
       shopTargets: shopTargets, parlorSeats: parlorSeats, tableSigns: tableSigns,
       occupancyZones: occupancyZones, occupancyPlaques: occupancyPlaques };
   };
