@@ -66,9 +66,24 @@
     cam.inputs.clear();
     if (canvas && canvas.addEventListener) {
       var dragging = false, lastX = 0, lastY = 0;
-      function down(e) { dragging = true; lastX = e.clientX; lastY = e.clientY; }
+      // Camera fix pass (2026-11-06): multi-touch guard. A
+      // second finger is the view control's pinch — it must
+      // never steer the drag-look. The drag cancels the moment
+      // a second pointer lands and stays cancelled until every
+      // pointer is up, so the pinch's release can't resume a
+      // drag mid-gesture either. One finger alone behaves
+      // exactly as before.
+      var activePointers = {};
+      function pointerCount() { return Object.keys(activePointers).length; }
+      function down(e) {
+        if (e && e.pointerId !== undefined && e.pointerId !== null) {
+          activePointers[e.pointerId] = true;
+        }
+        if (pointerCount() > 1) { dragging = false; return; }
+        dragging = true; lastX = e.clientX; lastY = e.clientY;
+      }
       function move(e) {
-        if (!dragging) return;
+        if (!dragging || pointerCount() > 1) return;
         var dx = e.clientX - lastX, dy = e.clientY - lastY;
         lastX = e.clientX; lastY = e.clientY;
         cam.rotation.y -= dx * 0.005;
@@ -76,7 +91,12 @@
         if (cam.rotation.x > 1.4) cam.rotation.x = 1.4;
         if (cam.rotation.x < -1.4) cam.rotation.x = -1.4;
       }
-      function up() { dragging = false; }
+      function up(e) {
+        if (e && e.pointerId !== undefined && e.pointerId !== null) {
+          delete activePointers[e.pointerId];
+        }
+        if (pointerCount() === 0) dragging = false;
+      }
       canvas.addEventListener('pointerdown', down);
       canvas.addEventListener('pointermove', move);
       canvas.addEventListener('pointerup', up);
@@ -91,10 +111,228 @@
     return cam;
   };
 
+  // ---------------------------------------------------------------
+  // THE VIEW CONTROL — aspect-aware field of view + pinch zoom
+  // (camera fix pass, 2026-11-06, token ?v=2026-11-04-19).
+  // Jay's iPhone findings: on her portrait phone the view felt
+  // cramped and the Plaza boards clipped left and right. Root
+  // cause: Babylon's default fov (0.8 rad) is a VERTICAL angle —
+  // at portrait aspect the horizontal coverage collapses (at
+  // 390x844: ~22 degrees, against ~74 on a desktop), so anything
+  // wide overflows the frame. The view control owns cam.fov:
+  //
+  //   BASE — landscape (aspect >= 1) keeps 0.8 exactly, so the
+  //   desktop framing is untouched. Portrait widens the vertical
+  //   fov to HOLD the horizontal coverage a square frame gets
+  //   from 0.8 (45.8 degrees): the Plaza notice board then fits
+  //   whole from spawn (portrait render-verified: the notice
+  //   face projects x[62.8..326.4] of 390 px at base, against
+  //   x[-91..479.5] — clipped at both ends — at the old default).
+  //   A full 16:9 match would need ~117 degrees vertical — a
+  //   fisheye; the square anchor is the honest middle.
+  //
+  //   ZOOM — a two-finger pinch scales tan(fov/2) between
+  //   minZoom (pinch in) and maxZoom (pinch out) around the
+  //   aspect-aware base. While a pinch runs, the camera's own
+  //   inputs are detached (Babylon's free-camera touch input
+  //   has no pinch of its own; left attached it would rotate
+  //   and dolly under the gesture) and picks are suppressed —
+  //   shouldSuppressPick() stays true through the gesture and
+  //   for a beat after the last finger lifts — so a pinch can
+  //   never fire a tap, a card or a ride. One finger still
+  //   drag-looks exactly as before (and the drag camera ignores
+  //   a second finger outright; see createDragCamera above).
+  //   Reset view restores zoom 1 (the base).
+  //
+  // House pattern: fovForAspect is a pure function, and
+  // createViewControl takes an injectable env ({ canvas,
+  // window, now }) and touches no globals, so the smoke drives
+  // the whole pinch state machine against a fake DOM.
+  var VIEW_BASE_FOV = 0.8;      // Babylon's default vertical fov
+  var VIEW_MIN_TAN = 0.5;       // pinch fully IN: tan(fov/2) x0.5
+  var VIEW_MAX_TAN = 1.9;       // pinch fully OUT: tan(fov/2) x1.9
+  var VIEW_MIN_FOV = 0.3;       // absolute clamps (radians)
+  var VIEW_MAX_FOV = 2.25;
+  var VIEW_SUPPRESS_MS = 350;   // pick-suppression tail after a pinch
+
+  function viewClamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+
+  function fovForAspect(aspect) {
+    var a = (typeof aspect === 'number' && isFinite(aspect) && aspect > 0)
+      ? aspect : 1;
+    if (a >= 1) return VIEW_BASE_FOV;
+    // Hold the square frame's horizontal coverage:
+    // tan(v/2) = tan(base/2) / aspect.
+    return 2 * Math.atan(Math.tan(VIEW_BASE_FOV / 2) / a);
+  }
+
+  function fovForZoom(baseFov, zoom) {
+    var z = viewClamp(
+      (typeof zoom === 'number' && isFinite(zoom)) ? zoom : 1,
+      VIEW_MIN_TAN, VIEW_MAX_TAN);
+    return viewClamp(2 * Math.atan(Math.tan(baseFov / 2) * z),
+      VIEW_MIN_FOV, VIEW_MAX_FOV);
+  }
+
+  CCW.VIEW = {
+    baseFov: VIEW_BASE_FOV,
+    minZoom: function () { return VIEW_MIN_TAN; },
+    maxZoom: function () { return VIEW_MAX_TAN; },
+    suppressMs: VIEW_SUPPRESS_MS
+  };
+  CCW.fovForAspect = fovForAspect;
+
+  CCW.createViewControl = function (env) {
+    env = env || {};
+    var canvas = env.canvas || null;
+    var win = env.window || null;
+    var nowFn = typeof env.now === 'function'
+      ? env.now : function () { return Date.now(); };
+    var camera = null;
+    var zoom = 1;
+    var pointers = {};   // pointerId -> { x, y }
+    var pinchDist = 0;   // finger distance when the pinch began
+    var pinchZoom = 1;   // zoom when the pinch began
+    var pinching = false;
+    var detached = false;
+    var suppressUntil = 0;
+
+    function aspectNow() {
+      // The engine's render size is the truth (it already folds
+      // in the device's pixel ratio); the canvas/window chain is
+      // the fallback for odd embeddings.
+      var eng = null;
+      try {
+        eng = (camera && camera.getEngine) ? camera.getEngine() : null;
+      } catch (e) { eng = null; }
+      if (eng && eng.getRenderWidth && eng.getRenderHeight) {
+        var rw = eng.getRenderWidth(), rh = eng.getRenderHeight();
+        if (rw > 0 && rh > 0) return rw / rh;
+      }
+      if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+        return canvas.clientWidth / canvas.clientHeight;
+      }
+      if (win && win.innerWidth > 0 && win.innerHeight > 0) {
+        return win.innerWidth / win.innerHeight;
+      }
+      return 1;
+    }
+    function baseFov() { return fovForAspect(aspectNow()); }
+    function expectedFov() { return fovForZoom(baseFov(), zoom); }
+    function applyTo(cam) { if (cam) cam.fov = expectedFov(); }
+    function pointerCount() { return Object.keys(pointers).length; }
+    function fingerDistance() {
+      var ks = Object.keys(pointers);
+      if (ks.length < 2) return 0;
+      var a = pointers[ks[0]], b = pointers[ks[1]];
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+    function detachInputs() {
+      if (!camera || detached) return;
+      try {
+        if (camera.inputs && camera.inputs.attachedToElement) {
+          camera.detachControl();
+          detached = true;
+        }
+      } catch (e) { /* inputs mid-swap; the fov still applies */ }
+    }
+    function attachInputs() {
+      if (!camera || !detached) return;
+      detached = false;
+      try { camera.attachControl(canvas, true); } catch (e) { /* ignore */ }
+    }
+    function beginPinch() {
+      pinching = true;
+      pinchDist = fingerDistance();
+      pinchZoom = zoom;
+      detachInputs();
+      suppressUntil = nowFn() + VIEW_SUPPRESS_MS;
+    }
+    function movePinch() {
+      var d = fingerDistance();
+      if (pinchDist > 0 && d > 0) {
+        // Fingers apart = zoom OUT = wider view = bigger factor.
+        zoom = viewClamp(pinchZoom * (d / pinchDist),
+          VIEW_MIN_TAN, VIEW_MAX_TAN);
+        applyTo(camera);
+      }
+      suppressUntil = nowFn() + VIEW_SUPPRESS_MS;
+    }
+    function endPinch() {
+      pinching = false;
+      pinchDist = 0;
+      attachInputs();
+      suppressUntil = nowFn() + VIEW_SUPPRESS_MS;
+    }
+    function onPointerDown(e) {
+      if (!e || e.pointerId === undefined || e.pointerId === null) return;
+      pointers[e.pointerId] = { x: e.clientX || 0, y: e.clientY || 0 };
+      if (pointerCount() === 2) beginPinch();
+    }
+    function onPointerMove(e) {
+      if (!e || !(e.pointerId in pointers)) return;
+      pointers[e.pointerId] = { x: e.clientX || 0, y: e.clientY || 0 };
+      if (pinching && pointerCount() >= 2) movePinch();
+    }
+    function onPointerUp(e) {
+      if (!e || !(e.pointerId in pointers)) return;
+      delete pointers[e.pointerId];
+      if (pinching && pointerCount() < 2) endPinch();
+    }
+    if (canvas && canvas.addEventListener) {
+      canvas.addEventListener('pointerdown', onPointerDown);
+      canvas.addEventListener('pointermove', onPointerMove);
+      canvas.addEventListener('pointerup', onPointerUp);
+      canvas.addEventListener('pointercancel', onPointerUp);
+    }
+    return {
+      // Adopt the camera the world is actually looking through
+      // (boot, magic-window swaps, mode changes). A camera we
+      // detached for a pinch is re-attached before we let it go.
+      setCamera: function (cam) {
+        attachInputs();
+        camera = cam || null;
+        applyTo(camera);
+      },
+      camera: function () { return camera; },
+      // Per-frame: re-assert the fov, so resizes and mode swaps
+      // can never strand a stale value (Viewer Mode's eyes copy
+      // the source camera's fov every sync — they follow along).
+      sync: function () { applyTo(camera); },
+      applyTo: applyTo,
+      baseFov: baseFov,
+      expectedFov: expectedFov,
+      zoom: function () { return zoom; },
+      setZoom: function (z) {
+        if (typeof z === 'number' && isFinite(z)) {
+          zoom = viewClamp(z, VIEW_MIN_TAN, VIEW_MAX_TAN);
+          applyTo(camera);
+        }
+      },
+      reset: function () { zoom = 1; applyTo(camera); },
+      pinching: function () { return pinching; },
+      shouldSuppressPick: function () {
+        return pinching || nowFn() < suppressUntil;
+      },
+      dispose: function () {
+        attachInputs();
+        if (canvas && canvas.removeEventListener) {
+          canvas.removeEventListener('pointerdown', onPointerDown);
+          canvas.removeEventListener('pointermove', onPointerMove);
+          canvas.removeEventListener('pointerup', onPointerUp);
+          canvas.removeEventListener('pointercancel', onPointerUp);
+        }
+      }
+    };
+  };
+
   /*
-   * The magic-window attempt. env: { B, scene, canvas, onStatus }.
-   * Resolves to 'magic' or 'drag'. Only call from a user gesture
-   * (the permission prompt depends on it on iOS).
+   * The magic-window attempt. env: { B, scene, canvas, onStatus,
+   * viewControl? }. Resolves to 'magic' or 'drag'. Only call from
+   * a user gesture (the permission prompt depends on it on iOS).
+   * The view control, when handed over, adopts whichever camera
+   * the attempt lands on, so the aspect-aware fov + pinch zoom
+   * hold in this mode too.
    */
   CCW.tryMagicWindow = function (env) {
     var B = env.B, scene = env.scene;
@@ -102,11 +340,13 @@
       env.onStatus(why);
       var cam = CCW.createDragCamera(scene, B, env.canvas);
       scene.activeCamera = cam;
+      if (env.viewControl) env.viewControl.setCamera(cam);
       return 'drag';
     }
     function useMagic() {
       var cam = CCW.createMagicCamera(scene, B, env.canvas);
       scene.activeCamera = cam;
+      if (env.viewControl) env.viewControl.setCamera(cam);
       env.onStatus('Look around — move your phone to explore the Plaza.');
       return 'magic';
     }

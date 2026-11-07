@@ -141,6 +141,24 @@
     var desktopCam = CCW.createDesktopCamera(scene, B, canvas);
     scene.activeCamera = desktopCam;
 
+    // Camera fix pass (2026-11-06): the view control owns every
+    // camera's field of view from here on — the aspect-aware
+    // base (portrait phones get a wider view, so boards stop
+    // clipping) plus two-finger pinch zoom (cameras.js). It
+    // tracks whichever camera the visitor is looking through.
+    var viewControl = CCW.createViewControl({ canvas: canvas, window: root });
+    viewControl.setCamera(desktopCam);
+    // A pick that lands while a pinch is running — or in the
+    // beat after it ends — is the pinch's echo, not a tap: the
+    // guard swallows it, so a pinch can never fire a ride, open
+    // a card, or start a glide.
+    function pickGuard(fn) {
+      return function () {
+        if (viewControl.shouldSuppressPick()) return;
+        fn();
+      };
+    }
+
     var glider = CCW.createGlider(B);
     var glideCooldownUntil = 0;
     // The parlor's offer card, wired below once the world exists;
@@ -184,7 +202,7 @@
     world.portalMeshes.forEach(function (mesh) {
       mesh.actionManager = new B.ActionManager(scene);
       mesh.actionManager.registerAction(
-        new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, goToParlor));
+        new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(goToParlor)));
     });
 
     // Game tables: tapping a table (or its framed motif) offers
@@ -199,9 +217,9 @@
         game.meshes.forEach(function (mesh) {
           mesh.actionManager = new B.ActionManager(scene);
           mesh.actionManager.registerAction(
-            new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
+            new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(function () {
               gameCard.show(game);
-            }));
+            })));
         });
       });
     }
@@ -582,9 +600,9 @@
       world.theater.boardMeshes.forEach(function (mesh) {
         mesh.actionManager = new B.ActionManager(scene);
         mesh.actionManager.registerAction(
-          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
+          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(function () {
             theaterCtl.showCatalog();
-          }));
+          })));
       });
     }
 
@@ -604,9 +622,9 @@
       world.penpal.boxMeshes.forEach(function (mesh) {
         mesh.actionManager = new B.ActionManager(scene);
         mesh.actionManager.registerAction(
-          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
+          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(function () {
             penpalCtl.show();
-          }));
+          })));
       });
     }
 
@@ -628,9 +646,9 @@
         target.meshes.forEach(function (mesh) {
           mesh.actionManager = new B.ActionManager(scene);
           mesh.actionManager.registerAction(
-            new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () {
+            new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(function () {
               shopCard.show(target);
-            }));
+            })));
         });
       });
     }
@@ -643,7 +661,8 @@
         if (!m) return;
         m.actionManager = new B.ActionManager(scene);
         m.actionManager.registerAction(
-          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, function () { ride(tele); }));
+          new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger,
+            pickGuard(function () { ride(tele); })));
       });
       // Force the world matrix first: at boot, before the first
       // render, an unparented pad's absolute position can still
@@ -681,7 +700,7 @@
       syncTouchPad();
       CCW.tryMagicWindow({
         B: B, scene: scene, canvas: canvas,
-        onStatus: setStatus
+        onStatus: setStatus, viewControl: viewControl
       });
     });
     document.getElementById('btn-walk').addEventListener('click', function () {
@@ -689,6 +708,7 @@
       walking = true;
       scene.activeCamera = desktopCam;
       desktopCam.attachControl(canvas, true);
+      viewControl.setCamera(desktopCam);
       syncTouchPad();
       setStatus(CCW.isTouchDevice()
         ? 'Walking mode — hold the on-screen arrows to walk and turn. The glowing pads glide you to the doors.'
@@ -724,7 +744,7 @@
           syncTouchPad();
           CCW.tryMagicWindow({
             B: B, scene: scene, canvas: canvas,
-            onStatus: setStatus
+            onStatus: setStatus, viewControl: viewControl
           }).then(function (mode) {
             viewerCtl.enter(scene.activeCamera, mode === 'magic');
             syncTouchPad();
@@ -742,6 +762,11 @@
         CCW.SPAWN.position[0], CCW.SPAWN.position[1], CCW.SPAWN.position[2]);
       desktopCam.setTarget(new B.Vector3(
         CCW.SPAWN.target[0], CCW.SPAWN.target[1], CCW.SPAWN.target[2]));
+      // The view control re-adopts the walk camera and forgets
+      // any pinch zoom: reset view restores the base field of
+      // view along with the spawn framing.
+      viewControl.setCamera(desktopCam);
+      viewControl.reset();
       syncTouchPad();
       setStatus('Back at the Plaza entrance. The Game Parlor glows pink ahead of you.');
     });
@@ -771,6 +796,9 @@
           !gliding && !inViewer && cam === desktopCam && now > glideCooldownUntil);
         if (stepped) ride(stepped);
       }
+      // The view control re-asserts the active camera's field of
+      // view every frame (aspect-aware base + any pinch zoom).
+      viewControl.sync();
       if (inViewer) viewerCtl.sync();
       scene.render();
       if (!overlayHidden) {

@@ -431,7 +431,14 @@
       ctx.fillText('COMMUNITY NOTICES', w / 2, 56);
       ctx.fillStyle = '#3d1247';
       ctx.textAlign = 'left';
-      ctx.font = 'bold 34px Georgia, serif';
+      // Camera fix pass (2026-11-06): the body lines were painted
+      // at 34px, but the longest measures 797px wide in a 768px
+      // canvas — the canvas edge silently cut '…Game Parlor' and
+      // '…Sundays' off the board itself, on every screen, before
+      // any camera saw it (Jay's portrait screenshot showed the
+      // same cut lines). 30px measures 703px — every word lands
+      // on the board with margin to spare. Words unchanged.
+      ctx.font = 'bold 30px Georgia, serif';
       ctx.fillText('🎲 Game night — Fridays at dusk, in the Game Parlor', 36, 152);
       ctx.fillText('🍲 Soup kitchen — free, vegan, all welcome', 36, 226);
       ctx.fillText('📚 Library circle — charts & numerology, Sundays', 36, 300);
