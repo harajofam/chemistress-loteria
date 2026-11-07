@@ -716,3 +716,106 @@ textarea.penpal-input { resize: vertical; }
   border-radius: 999px;
   padding: 0.45rem 1.1rem;
 }
+
+/* Seat bar + character studio (Presence & Seats pass, 2026-11-06):
+   the seat bar rides above the touch pad's home, pill-shaped like
+   the watch bar; the studio reuses the game-card shell. */
+.seat-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 8.6rem;
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: min(34rem, 94vw);
+  background: rgba(26, 5, 31, 0.92);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 0.45rem 0.55rem 0.45rem 1.1rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.seat-bar[hidden] { display: none; }
+
+#seat-bar-text { line-height: 1.35; font-size: 0.95rem; }
+
+.avatar-card-box {
+  max-width: 27rem;
+  text-align: left;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+.avatar-card-box h2 { text-align: center; }
+
+.avatar-lede { line-height: 1.45; margin: 0 0 0.6rem; }
+
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0.55rem 0;
+}
+
+.avatar-row-label {
+  flex: 0 0 6.4rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--gold-soft);
+}
+
+.avatar-swatches,
+.avatar-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
+.avatar-swatch {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  border: 2px solid rgba(253, 243, 227, 0.35);
+  padding: 0;
+  cursor: pointer;
+}
+
+.avatar-swatch.sel {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(255, 216, 115, 0.55);
+}
+
+.avatar-swatch.kept { cursor: default; }
+
+.avatar-chip {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 216, 115, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--cream);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.avatar-chip.sel {
+  background: var(--pink-hot);
+  border-color: var(--gold);
+  color: #fff;
+}
+
+.avatar-row-note { font-size: 0.78rem; color: var(--teal); }
+
+.avatar-name {
+  flex: 1;
+  min-width: 10rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--gold);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--cream);
+  font: inherit;
+}
+
+.avatar-weight { flex: 1; min-width: 8rem; accent-color: var(--pink-hot); }
+
+.avatar-row-kept { opacity: 0.85; }
