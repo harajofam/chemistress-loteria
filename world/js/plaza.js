@@ -4731,7 +4731,9 @@
     var pinkWallTex = CCW.penpalPinkWallTexture(scene, B, 'studio-int-pinkwall-tex');
     var floorTex = CCW.studioFloorTexture(scene, B, 'studio-int-floor-tex');
     var ceilingTex = CCW.starChartTexture(scene, B, 'studio-int-ceiling-tex');
-    var woodTex = CCW.woodTexture(scene, B, 'studio-int-wood-tex');
+    var wornWoodTex = CCW.studioWornWoodTexture(scene, B, 'studio-int-wornwood-tex');
+    var lavPaintTex = CCW.studioWornPaintTexture(scene, B, 'studio-int-cabinet-paint-tex', '#8f7fd4');
+    var lavDeepPaintTex = CCW.studioWornPaintTexture(scene, B, 'studio-int-cabinet-paint-deep-tex', '#7a68bd');
     var leafTex = CCW.leafTexture(scene, B, 'studio-int-leaf-tex');
 
     var intLights = [];
@@ -4808,28 +4810,34 @@
       var stile = add(B.MeshBuilder.CreateBox('studio-int-cabinet-stile-' + si,
         { width: 0.14, height: 4.8, depth: 0.6 }, scene));
       stile.position.set(sx, 2.4, -13.95);
-      stile.material = CCW.mat(scene, B, 'studio-int-cabinet-stile-mat-' + si, lav);
+      stile.material = CCW.texMat(scene, B, 'studio-int-cabinet-stile-mat-' + si, lavPaintTex, {});
     });
     var cabTopRail = add(B.MeshBuilder.CreateBox('studio-int-cabinet-toprail',
       { width: 3.32, height: 0.14, depth: 0.6 }, scene));
     cabTopRail.position.set(0, 4.73, -13.95);
-    cabTopRail.material = CCW.mat(scene, B, 'studio-int-cabinet-toprail-mat', lav);
+    cabTopRail.material = CCW.texMat(scene, B, 'studio-int-cabinet-toprail-mat', lavPaintTex, {});
     var cabBotRail = add(B.MeshBuilder.CreateBox('studio-int-cabinet-bottomrail',
       { width: 3.32, height: 0.14, depth: 0.6 }, scene));
     cabBotRail.position.set(0, 0.29, -13.95);
-    cabBotRail.material = CCW.mat(scene, B, 'studio-int-cabinet-bottomrail-mat', lav);
+    cabBotRail.material = CCW.texMat(scene, B, 'studio-int-cabinet-bottomrail-mat', lavPaintTex, {});
     var plinth = add(B.MeshBuilder.CreateBox('studio-int-cabinet-plinth',
       { width: 3.8, height: 0.22, depth: 0.7 }, scene));
     plinth.position.set(0, 0.11, -13.95);
-    plinth.material = CCW.mat(scene, B, 'studio-int-cabinet-plinth-mat', lavDeep);
+    plinth.material = CCW.texMat(scene, B, 'studio-int-cabinet-plinth-mat', lavDeepPaintTex, {});
     var cabCornice = add(B.MeshBuilder.CreateBox('studio-int-cabinet-cornice',
       { width: 3.8, height: 0.18, depth: 0.7 }, scene));
     cabCornice.position.set(0, 4.89, -13.95);
-    cabCornice.material = CCW.mat(scene, B, 'studio-int-cabinet-cornice-mat', lavDeep);
+    cabCornice.material = CCW.texMat(scene, B, 'studio-int-cabinet-cornice-mat', lavDeepPaintTex, {});
     var cabBack = add(B.MeshBuilder.CreateBox('studio-int-cabinet-back',
       { width: 3.3, height: 4.3, depth: 0.06 }, scene));
     cabBack.position.set(0, 2.45, -14.2);
-    cabBack.material = CCW.mat(scene, B, 'studio-int-cabinet-back-mat', P.plumHouse);
+    // LIGHT LAB (2026-11-06): the cabinet's back is lit from
+    // within — a warm emissive gradient behind the jars (photo
+    // 01's glow), replacing the flat plum panel. The jars read
+    // against light now, not against a wall.
+    cabBack.material = CCW.texMat(scene, B, 'studio-int-cabinet-back-mat',
+      CCW.studioCabinetGlowTexture(scene, B, 'studio-int-cabinet-glow-tex'),
+      { emissive: true });
     var jarTex = [0, 1, 2, 3, 4].map(function (v) {
       return CCW.studioJarTexture(scene, B, 'studio-int-jar-tex-' + v, v);
     });
@@ -4839,7 +4847,7 @@
       var board = add(B.MeshBuilder.CreateBox('studio-int-cabinet-board-' + row,
         { width: 3.3, height: 0.07, depth: 0.48 }, scene));
       board.position.set(0, boardY, -13.98);
-      board.material = CCW.mat(scene, B, 'studio-int-cabinet-board-mat-' + row, lav);
+      board.material = CCW.texMat(scene, B, 'studio-int-cabinet-board-mat-' + row, lavPaintTex, {});
       for (var col = 0; col < 6; col++) {
         var jar = add(B.MeshBuilder.CreateCylinder('studio-int-cabinet-jar-' + cabJarIdx,
           { diameter: 0.34, height: 0.55, tessellation: 12 }, scene));
@@ -4862,12 +4870,16 @@
         var rail = add(B.MeshBuilder.CreateBox('studio-int-cabinet-door-' + di + '-rail-' + ri,
           { width: rc[2], height: rc[3], depth: 0.07 }, scene));
         rail.position.set(rc[0], rc[1], -13.615);
-        rail.material = CCW.mat(scene, B, 'studio-int-cabinet-door-rail-mat-' + di + '-' + ri, lav);
+        rail.material = CCW.texMat(scene, B, 'studio-int-cabinet-door-rail-mat-' + di + '-' + ri, lavPaintTex, {});
       });
       var dGlass = add(B.MeshBuilder.CreatePlane('studio-int-cabinet-door-' + di + '-glass',
         { width: 1.44, height: 4.28 }, scene));
       dGlass.position.set(dx, 2.45, -13.66);
-      dGlass.material = CCW.mat(scene, B, 'studio-int-cabinet-door-glass-mat-' + di, '#bfe8e2',
+      // LIGHT LAB (2026-11-06): real glass — the palette
+      // environment reflected under a fresnel, shy face-on and
+      // bright at grazing angles; the old tint + alpha + emissive
+      // depth carry over, so the jars stay legible through it.
+      dGlass.material = CCW.glassMat(scene, B, 'studio-int-cabinet-door-glass-mat-' + di, '#bfe8e2',
         { alpha: 0.20, emissive: '#1d4a44' });
       var archPath = [];
       for (var aa = 0; aa <= 12; aa++) {
@@ -4877,12 +4889,12 @@
       var dArch = add(B.MeshBuilder.CreateTube('studio-int-cabinet-door-' + di + '-arch',
         { path: archPath, radius: 0.045, radialSegments: 8, cap: B.Mesh.CAP_ALL }, scene));
       dArch.position.set(dx, 3.86, -13.58);
-      dArch.material = CCW.mat(scene, B, 'studio-int-cabinet-door-arch-mat-' + di, lavDeep);
+      dArch.material = CCW.texMat(scene, B, 'studio-int-cabinet-door-arch-mat-' + di, lavDeepPaintTex, {});
       [-0.36, 0.36].forEach(function (mx, mi) {
         var mull = add(B.MeshBuilder.CreateBox('studio-int-cabinet-door-' + di + '-mullion-' + mi,
           { width: 0.055, height: 3.6, depth: 0.03 }, scene));
         mull.position.set(dx + mx, 2.28, -13.655);
-        mull.material = CCW.mat(scene, B, 'studio-int-cabinet-door-mullion-mat-' + di + '-' + mi, lavDeep);
+        mull.material = CCW.texMat(scene, B, 'studio-int-cabinet-door-mullion-mat-' + di + '-' + mi, lavDeepPaintTex, {});
       });
       var knob = add(B.MeshBuilder.CreateSphere('studio-int-cabinet-door-' + di + '-knob',
         { diameter: 0.11, segments: 10 }, scene));
@@ -4947,7 +4959,7 @@
           { width: 2.45, height: 0.08, depth: 0.5 }, scene));
         board.position.set(cx, boardY, -14.02);
         board.material = CCW.texMat(scene, B, 'studio-int-shelf-' + tag + '-board-mat-' + row,
-          woodTex, {});
+          wornWoodTex, {});
         // Per board: jar, creation, jar — the Studio's pattern.
         [-0.78, 0.78].forEach(function (off, ji) {
           var jar = add(B.MeshBuilder.CreateCylinder(
@@ -5003,15 +5015,16 @@
     var tableTop = add(B.MeshBuilder.CreateBox('studio-int-table-top',
       { width: 3.6, height: 0.12, depth: 1.5 }, scene));
     tableTop.position.set(0, 0.95, -7.5);
-    tableTop.material = CCW.texMat(scene, B, 'studio-int-table-top-mat', woodTex, {});
+    tableTop.material = CCW.texMat(scene, B, 'studio-int-table-top-mat', wornWoodTex, {});
     [[-1.65, -8.1], [1.65, -8.1], [-1.65, -6.9], [1.65, -6.9]].forEach(function (cfg, i) {
       var leg = add(B.MeshBuilder.CreateBox('studio-int-table-leg-' + i,
         { width: 0.12, height: 0.9, depth: 0.12 }, scene));
       leg.position.set(cfg[0], 0.45, cfg[1]);
       leg.material = CCW.mat(scene, B, 'studio-int-table-leg-mat-' + i, P.plumHouse);
     });
-    // The making clutter (photo 05's counter, put to work): a
-    // fruit bowl, a honey jar, papers and pencils, a posy vase.
+    // The table's still life (photo 05's counter, curated by
+    // the DEPTH IS HONESTY pass): a fruit bowl, a honey jar, a
+    // posy vase — and breathing room around them.
     var bowl = add(B.MeshBuilder.CreateCylinder('studio-int-table-bowl',
       { diameterTop: 0.55, diameterBottom: 0.3, height: 0.18, tessellation: 14 }, scene));
     bowl.position.set(-1.15, 1.1, -7.5);
@@ -5026,23 +5039,12 @@
       { diameter: 0.2, height: 0.3, tessellation: 10 }, scene));
     honey.position.set(0.15, 1.16, -7.25);
     honey.material = CCW.texMat(scene, B, 'studio-int-table-honey-mat', jarTex[1], {});
-    var paperTex = CCW.paperTexture(scene, B, 'studio-int-paper-tex');
-    [0, 1].forEach(function (i) {
-      var paper = add(B.MeshBuilder.CreateBox('studio-int-table-paper-' + i,
-        { width: 0.42, height: 0.012, depth: 0.3 }, scene));
-      paper.position.set(0.85 + i * 0.1, 1.02 + i * 0.013, -7.65 + i * 0.12);
-      paper.rotation.y = 0.3 - i * 0.45;
-      paper.material = CCW.texMat(scene, B, 'studio-int-table-paper-mat-' + i, paperTex, {});
-    });
-    [0, 1].forEach(function (i) {
-      var pencil = add(B.MeshBuilder.CreateCylinder('studio-int-table-pencil-' + i,
-        { diameter: 0.025, height: 0.3, tessellation: 6 }, scene));
-      pencil.position.set(0.62 + i * 0.07, 1.03, -7.35 + i * 0.05);
-      pencil.rotation.z = Math.PI / 2;
-      pencil.rotation.y = 0.4 * i;
-      pencil.material = CCW.mat(scene, B, 'studio-int-table-pencil-mat-' + i,
-        i ? P.coral : P.teal);
-    });
+    // DEPTH IS HONESTY — the clean half (2026-11-06): the
+    // table's loose papers and pencils are GONE. They were
+    // stray clutter on the room's central surface; the still
+    // life that remains — fruit bowl, honey jar, posy — is
+    // curated, and the worn wood breathes between the pieces.
+    // (The making story is told by the shelves and gallery.)
     var posy = add(B.MeshBuilder.CreateCylinder('studio-int-table-posy',
       { diameterTop: 0.13, diameterBottom: 0.17, height: 0.26, tessellation: 10 }, scene));
     posy.position.set(1.35, 1.14, -7.7);
@@ -5156,7 +5158,7 @@
     var cafeTop = add(B.MeshBuilder.CreateCylinder('studio-int-disco-table-top',
       { diameter: 0.8, height: 0.05, tessellation: 16 }, scene));
     cafeTop.position.set(5.65, 0.78, -3.5);
-    cafeTop.material = CCW.texMat(scene, B, 'studio-int-disco-table-top-mat', woodTex, {});
+    cafeTop.material = CCW.texMat(scene, B, 'studio-int-disco-table-top-mat', wornWoodTex, {});
     var cafeLeg = add(B.MeshBuilder.CreateCylinder('studio-int-disco-table-leg',
       { diameter: 0.07, height: 0.76, tessellation: 8 }, scene));
     cafeLeg.position.set(5.65, 0.38, -3.5);
@@ -5166,7 +5168,7 @@
     var cafe2Top = add(B.MeshBuilder.CreateCylinder('studio-int-cafe-top',
       { diameter: 0.85, height: 0.05, tessellation: 16 }, scene));
     cafe2Top.position.set(-4.3, 0.78, -11.8);
-    cafe2Top.material = CCW.texMat(scene, B, 'studio-int-cafe-top-mat', woodTex, {});
+    cafe2Top.material = CCW.texMat(scene, B, 'studio-int-cafe-top-mat', wornWoodTex, {});
     var cafe2Leg = add(B.MeshBuilder.CreateCylinder('studio-int-cafe-leg',
       { diameter: 0.07, height: 0.76, tessellation: 8 }, scene));
     cafe2Leg.position.set(-4.3, 0.38, -11.8);
@@ -5282,11 +5284,15 @@
       new B.Vector3(0, 1, 0), scene);
     roomHemi.intensity = 0.7;
     roomHemi.diffuse = new B.Color3(1.0, 0.86, 0.66);
-    roomHemi.groundColor = new B.Color3(0.36, 0.24, 0.28);
+    // LIGHT LAB contrast pass (2026-11-06): the shadow side
+    // deepens (ground bounce 0.36/0.24/0.28 -> 0.29/0.18/0.23)
+    // while the key warms UP (center point 0.6 -> 0.68 below) —
+    // definition from the spread, the room stays bright.
+    roomHemi.groundColor = new B.Color3(0.29, 0.18, 0.23);
     intLights.push(roomHemi);
     var roomLight = new B.PointLight('studio-int-light',
       roomWorld(0, 5.4, -7.5), scene);
-    roomLight.intensity = 0.6;
+    roomLight.intensity = 0.68;
     roomLight.diffuse = new B.Color3(1.0, 0.78, 0.54);
     roomLight.range = 18;
     intLights.push(roomLight);
@@ -5331,6 +5337,155 @@
         'shop has her whole collection.',
       url: CCW.SHOP_LINKS.storefront,
       meshes: [cafePanel.art]
+    });
+
+    // ============================================================
+    // LIGHT LAB (2026-11-06, token -20) — the Creator Studio is
+    // the TEST ROOM for Jay's three new principles (see
+    // ARTISTRY-STANDARD.md): CONTRAST IS THE DETAIL, LIGHT
+    // IS A BUILDING MATERIAL, and DEPTH IS HONESTY (clean
+    // surfaces, scars worn with confidence — the worn paint /
+    // worn wood / patina swaps and the table declutter ride
+    // this same pass), worked faithfully to photo 01
+    // (the lavender apothecary). The cabinet back's glow and
+    // the doors' real glass are already swapped in above; this
+    // section adds the rest: a real warm light inside the
+    // cabinet, the photo's string lights over the cornice, a
+    // stained-glass light pool on the rug, contact shadows
+    // grounding the furniture, velvet that sheens at grazing
+    // angles, the shared palette environment on the ceramic
+    // pieces, and relief (bump from each piece's own art) on
+    // the flat work. House-wide rollout waits for Jay's
+    // verdict on this room — the Moon Garden pattern.
+    // ============================================================
+    var envTex = CCW.paletteEnvTexture(scene, B);
+
+    // The cabinet's own warm light, inside the carcass between
+    // the jars and the glass: the lit-from-within is real light
+    // now, not only a painted back — jar fronts warm, labels
+    // stay legible, a little spills onto the floorboards.
+    var cabLight = new B.PointLight('studio-int-cabinet-light',
+      roomWorld(0, 2.7, -13.45), scene);
+    cabLight.intensity = 0.55;
+    cabLight.diffuse = new B.Color3(1.0, 0.74, 0.44);
+    cabLight.range = 3.6;
+    intLights.push(cabLight);
+
+    // String lights over the cabinet (photo 01's warm string
+    // over the whole room): a plum cord in two swags across the
+    // cornice front, seven warm bulbs hanging off it. Glow
+    // materials only — goldSoft and warm amber, never the flat
+    // gold the house guard bans.
+    var stringPath = [];
+    for (var sp2 = 0; sp2 <= 24; sp2++) {
+      var st = sp2 / 24;
+      stringPath.push(new B.Vector3(-2.0 + st * 4.0,
+        5.56 - Math.sin((st * 2 % 1) * Math.PI) * 0.30, -13.32));
+    }
+    var stringCord = add(B.MeshBuilder.CreateTube('studio-int-string-cord',
+      { path: stringPath, radius: 0.014, radialSegments: 6, cap: B.Mesh.CAP_ALL }, scene));
+    stringCord.material = CCW.mat(scene, B, 'studio-int-string-cord-mat', P.plumHouse);
+    for (var sb = 0; sb < 7; sb++) {
+      var sbt = (sb + 1) / 8;
+      var sby = 5.56 - Math.sin((sbt * 2 % 1) * Math.PI) * 0.30;
+      var bulb = add(B.MeshBuilder.CreateSphere('studio-int-string-bulb-' + sb,
+        { diameter: 0.085, segments: 8 }, scene));
+      bulb.position.set(-2.0 + sbt * 4.0, sby - 0.10, -13.32);
+      bulb.material = CCW.glowMat(scene, B, 'studio-int-string-bulb-mat-' + sb,
+        sb % 2 ? '#ffb37a' : P.goldSoft);
+    }
+
+    // The stained-glass light pool: thrown color on the rug in
+    // front of the cabinet, as if a tall floral window stood
+    // behind the visitor. Emissive-carried, alpha from its own
+    // painting, depth-write off so it lies ON the rug.
+    var pool = add(B.MeshBuilder.CreatePlane('studio-int-light-pool',
+      { width: 4.8, height: 3.6 }, scene));
+    pool.rotation.x = Math.PI / 2;
+    pool.position.set(0.3, 0.02, -10.4);
+    var poolTex = CCW.stainedPoolTexture(scene, B, 'studio-int-pool-tex');
+    poolTex.hasAlpha = true; // the dapple's falloff lives in the
+    // canvas alpha; without this flag the texture uploads opaque
+    // and the clear surround renders BLACK (first-render catch).
+    var poolMat = new B.StandardMaterial('studio-int-light-pool-mat', scene);
+    poolMat.diffuseTexture = poolTex;
+    poolMat.emissiveTexture = poolTex;
+    poolMat.emissiveColor = new B.Color3(0.55, 0.55, 0.55);
+    poolMat.useAlphaFromDiffuseTexture = true;
+    poolMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+    poolMat.depthWrite = false;
+    poolMat.zOffset = -1;
+    poolMat.backFaceCulling = false;
+    pool.material = poolMat;
+
+    // Contact shadows: one shared soft-dark decal material,
+    // five footprints — the furniture sits IN the room now.
+    var shadowMat = new B.StandardMaterial('studio-int-shadow-mat', scene);
+    shadowMat.diffuseColor = new B.Color3(0, 0, 0);
+    shadowMat.opacityTexture = CCW.contactShadowTexture(scene, B, 'studio-int-shadow-tex');
+    shadowMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+    shadowMat.disableLighting = true;
+    shadowMat.depthWrite = false;
+    shadowMat.zOffset = -2;
+    shadowMat.backFaceCulling = false;
+    shadowMat.alpha = 0.55;
+    [['cabinet', 0, -13.5, 4.8, 1.6], ['table', 0, -7.5, 4.4, 2.2],
+     ['sofa', 5.8, -9.6, 1.9, 3.4], ['shelf-teal', -4.6, -13.75, 3.4, 1.4],
+     ['shelf-orange', 4.6, -13.75, 3.4, 1.4]].forEach(function (sc2) {
+      var sh = add(B.MeshBuilder.CreatePlane('studio-int-shadow-' + sc2[0],
+        { width: sc2[3], height: sc2[4] }, scene));
+      sh.rotation.x = Math.PI / 2;
+      sh.position.set(sc2[1], 0.015, sc2[2]);
+      sh.material = shadowMat;
+    });
+
+    // Velvet sheen on the room's seating: the teal sofa, the
+    // work-table stools (magenta + teal), the café stools.
+    ['studio-int-sofa-base', 'studio-int-sofa-back',
+     'studio-int-sofa-arm-0', 'studio-int-sofa-arm-1',
+     'studio-int-sofa-cushion-0', 'studio-int-sofa-cushion-1'].forEach(function (nm) {
+      var sm = scene.getMeshByName(nm);
+      if (sm) CCW.velvetSheen(B, sm.material, '#8fe3da', 0.30);
+    });
+    [[0, '#ff9ed2'], [1, '#8fe3da'], [2, '#ff9ed2'], [3, '#8fe3da']].forEach(function (sc3) {
+      var sm2 = scene.getMeshByName('studio-int-stool-' + sc3[0] + '-seat');
+      if (sm2) CCW.velvetSheen(B, sm2.material, sc3[1], 0.30);
+    });
+    [[0, '#8fe3da'], [1, '#ff9ed2']].forEach(function (sc4) {
+      var sm3 = scene.getMeshByName('studio-int-cafe-stool-' + sc4[0] + '-seat');
+      if (sm3) CCW.velvetSheen(B, sm3.material, sc4[1], 0.30);
+    });
+
+    // The palette environment on the ceramic/glass smalls: the
+    // cream knobs and the teal vase answer the room's light.
+    ['studio-int-cabinet-door-0-knob', 'studio-int-cabinet-door-1-knob',
+     'studio-int-cabinet-vase'].forEach(function (nm) {
+      var cm = scene.getMeshByName(nm);
+      if (cm && cm.material) {
+        cm.material.reflectionTexture = envTex;
+        cm.material.specularColor = new B.Color3(0.55, 0.55, 0.55);
+      }
+    });
+
+    // Relief from flat art: each piece's own painting becomes
+    // its bump map — luminance as height — so the Chef
+    // Medallion paper and the emblem pieces catch raking light
+    // like shallow relief instead of lying flat. No new
+    // textures: the depth was in the 2D art all along.
+    [chefPanel, cafePanel].forEach(function (panel) {
+      if (panel && panel.art && panel.art.material) {
+        panel.art.material.bumpTexture = panel.art.material.diffuseTexture;
+      }
+    });
+    for (var gi = 0; gi < 5; gi++) {
+      var gm = scene.getMeshByName('studio-int-gallery-' + gi);
+      if (gm && gm.material) gm.material.bumpTexture = gm.material.diffuseTexture;
+    }
+    ['teal', 'orange'].forEach(function (tag) {
+      for (var ri2 = 0; ri2 < 3; ri2++) {
+        var am = scene.getMeshByName('studio-int-shelf-' + tag + '-art-' + ri2);
+        if (am && am.material) am.material.bumpTexture = am.material.diffuseTexture;
+      }
     });
 
     // Scope the rig to the room + lift the light cap (see header).
