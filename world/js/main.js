@@ -734,15 +734,12 @@
             presenceCtl.handlePick(seat.proxy);
           })));
       });
-      var avatarBtn = document.getElementById('btn-avatar');
-      if (avatarBtn) {
-        avatarBtn.addEventListener('click', function () { presenceCtl.openStudio(); });
-      }
-      // A first visit designs the character once (Jay's law) —
-      // the studio opens on its own, once the Plaza has painted.
-      if (presenceCtl.needsProfile()) {
-        setTimeout(function () { presenceCtl.openStudio(); }, 1600);
-      }
+      // FIELD-TEST PASS (2026-11-08): the My character button is
+      // wired further below, ALWAYS (item 5 — inside this block
+      // it silently died whenever the presence layer failed to
+      // start), and the first-visit studio opening now waits
+      // behind the access & consent card (item 11) — see the
+      // field-test wiring block before the teleport pad pass.
     }
 
     // ---- Care-and-Grow: the Garden's plants (2026-11-07) --------
@@ -779,6 +776,173 @@
           })));
       });
     }
+
+    // ---- FIELD-TEST PASS wiring (2026-11-08) -------------------
+    // Items 1 + 4: the pins, sit spots and interactables the
+    // builders registered (world.pois / world.sitSpots /
+    // world.interactables). Items 5 + 11: the always-live My
+    // character button, and the access & consent card that a
+    // first visit meets before the character studio. Item 6:
+    // the Library's book card + reader.
+    var storageSeam = {
+      get: function (k) {
+        try { return root.localStorage.getItem(k); } catch (e) { return null; }
+      },
+      set: function (k, v) {
+        try { root.localStorage.setItem(k, v); } catch (e) {}
+      }
+    };
+    var consentCtl = CCW.wireConsentCard
+      ? CCW.wireConsentCard({ document: document, storage: storageSeam })
+      : null;
+    var privacyBtn = document.getElementById('btn-privacy');
+    if (privacyBtn && consentCtl) {
+      privacyBtn.addEventListener('click', function () { consentCtl.show(); });
+    }
+    // Item 5a: My character answers every tap — the studio when
+    // the presence layer is up, a plain explanation when it is
+    // not. Never silence.
+    var avatarBtn2 = document.getElementById('btn-avatar');
+    if (avatarBtn2) {
+      avatarBtn2.addEventListener('click', function () {
+        if (presenceCtl) {
+          try { presenceCtl.openStudio(); return; } catch (e) {}
+          setStatus('The character studio could not open just now — try once more, or reload the page.');
+        } else {
+          setStatus('Your character studio is not available in this visit — try reloading the page.');
+        }
+      });
+    }
+    // Item 11's gate + the first-visit studio (Jay's law), in
+    // one place: consent first when this device has not seen it;
+    // the studio follows the consent tap on a true first visit.
+    if (consentCtl && consentCtl.needed()) {
+      setTimeout(function () {
+        if (presenceCtl && presenceCtl.needsProfile()) {
+          consentCtl.show(function () { presenceCtl.openStudio(); });
+        } else {
+          consentCtl.show();
+        }
+      }, 1400);
+    } else if (presenceCtl && presenceCtl.needsProfile()) {
+      setTimeout(function () { presenceCtl.openStudio(); }, 1600);
+    }
+
+    var infoCard = CCW.wireInfoCard
+      ? CCW.wireInfoCard({ document: document }) : null;
+    var speechSeam = (function () {
+      var synth = root.speechSynthesis;
+      if (!synth || typeof root.SpeechSynthesisUtterance !== 'function') {
+        return { supported: false };
+      }
+      return {
+        supported: true,
+        speak: function (text, opts) {
+          var u = new root.SpeechSynthesisUtterance(text);
+          u.rate = (opts && opts.rate) || 1;
+          u.onend = (opts && opts.onend) || null;
+          u.onerror = (opts && opts.onerror) || null;
+          synth.speak(u);
+        },
+        pause: function () { synth.pause(); },
+        resume: function () { synth.resume(); },
+        cancel: function () { synth.cancel(); }
+      };
+    })();
+    var libraryCtl = CCW.wireLibrary ? CCW.wireLibrary({
+      document: document, storage: storageSeam, onStatus: setStatus,
+      fetchText: function (url) {
+        return fetch(url).then(function (r) {
+          if (!r.ok) throw new Error('book fetch ' + r.status);
+          return r.text();
+        });
+      },
+      speech: speechSeam
+    }) : null;
+    function bookById(id) {
+      var list = CCW.CLASSICS_BOOKS || [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === id) return list[i];
+      }
+      return null;
+    }
+    // The jars' soft glow (item 1): a brief warm emissive on the
+    // tapped prop's own materials, then they settle back.
+    function pulseGlow(meshes) {
+      var mats = [];
+      (meshes || []).forEach(function (m) {
+        if (m && m.material && m.material.emissiveColor &&
+            mats.indexOf(m.material) < 0) mats.push(m.material);
+      });
+      var saved = mats.map(function (mat) {
+        return { mat: mat, was: mat.emissiveColor.clone() };
+      });
+      mats.forEach(function (mat) {
+        mat.emissiveColor = new B.Color3(0.50, 0.26, 0.38);
+      });
+      setTimeout(function () {
+        saved.forEach(function (s) { s.mat.emissiveColor = s.was; });
+      }, 1500);
+    }
+    // Sit spots toggle by where the camera already rests: at the
+    // spot's own view, a tap stands you back up at the room's
+    // landing; anywhere else, a tap settles you in.
+    function toggleSit(spot) {
+      var cam = scene.activeCamera;
+      var dx = cam.position.x - spot.camPos[0];
+      var dy = cam.position.y - spot.camPos[1];
+      var dz = cam.position.z - spot.camPos[2];
+      if (dx * dx + dy * dy + dz * dz < 0.3) {
+        rideView({ position: spot.standPos, target: spot.standTarget });
+        setStatus('You stand up.');
+      } else {
+        rideView({ position: spot.camPos, target: spot.camTarget });
+        setStatus(spot.status);
+      }
+    }
+    function wirePick(mesh, fn) {
+      if (!mesh || mesh.actionManager) return;
+      mesh.actionManager = new B.ActionManager(scene);
+      mesh.actionManager.registerAction(
+        new B.ExecuteCodeAction(B.ActionManager.OnPickTrigger, pickGuard(fn)));
+    }
+    (world.pois || []).forEach(function (poi) {
+      (poi.meshes || []).forEach(function (mesh) {
+        wirePick(mesh, function () {
+          if (poi.tele) { ride(poi.tele); return; }
+          rideView({ position: poi.viewPos, target: poi.viewTarget });
+          setStatus('📍 ' + poi.label + ' — you glide in for a closer look.');
+        });
+      });
+    });
+    (world.sitSpots || []).forEach(function (spot) {
+      wirePick(spot.proxy, function () { toggleSit(spot); });
+    });
+    (world.interactables || []).forEach(function (entry) {
+      // game / theater / garden / penpal / shop taps are already
+      // wired by their own controllers above; the registry lists
+      // them so the world's tappables are counted in one place.
+      if (entry.kind !== 'info' && entry.kind !== 'notices' &&
+          entry.kind !== 'book' && entry.kind !== 'jar' &&
+          entry.kind !== 'penpal-board') return;
+      (entry.meshes || []).forEach(function (mesh) {
+        wirePick(mesh, function () {
+          if (entry.kind === 'book') {
+            var book = bookById(entry.bookId);
+            if (book && libraryCtl) libraryCtl.openCard(book);
+            else if (book) setStatus('"' + book.title + '" — the reading desk is unavailable just now.');
+          } else if (entry.kind === 'notices') {
+            rideView({ position: [2.2, 1.7, 13.3], target: [4.6, 2.9, 11.5] });
+            if (infoCard) infoCard.open(entry.label, entry.blurb);
+          } else if (entry.kind === 'penpal-board') {
+            if (penpalCtl) penpalCtl.show();
+          } else {
+            if (entry.kind === 'jar') pulseGlow(entry.meshes);
+            if (infoCard) infoCard.open(entry.label, entry.blurb);
+          }
+        });
+      });
+    });
 
     // Teleport pads: tap/click to ride. Entrance pads also wire
     // their invisible hit proxy (plaza.js) — same ride, a much
@@ -846,13 +1010,11 @@
     // The stereo split-screen look mode for phones without
     // WebXR (cameras.js createViewerMode holds the rig + the
     // CCW.VIEWER_MODE toggle). Shown only on touch devices, and
-    // only when the feature is toggled on. Entry runs the SAME
-    // magic-window attempt as the Look Around button — so the
-    // iOS motion-permission prompt still comes from this tap —
-    // and then lays the stereo pair over whichever camera the
-    // attempt landed on: the gyroscope drives both eyes, or the
-    // mode's own drag look does when there is no sensor to drive
-    // them. While the mode is on, the tap-catcher owns every
+    // only when the feature is toggled on. Entry asks the iOS
+    // motion permission from this tap (tryViewerMagic), and on
+    // 'magic' lays the stereo pair over the current camera with
+    // the gyroscope driving both eyes; the mode's own drag look
+    // remains as the in-viewer fallback. While the mode is on, the tap-catcher owns every
     // tap (any tap steps out), pads cannot fire, and the touch
     // walker stands down — movement stays the normal modes' job.
     var viewerCtl = null;
@@ -870,11 +1032,22 @@
           glider.cancel();
           walking = false;
           syncTouchPad();
-          CCW.tryMagicWindow({
-            B: B, scene: scene, canvas: canvas,
-            onStatus: setStatus, viewControl: viewControl
-          }).then(function (mode) {
-            viewerCtl.enter(scene.activeCamera, mode === 'magic');
+          // FIELD-TEST FIX (2026-11-08, item 5b): the tap must
+          // always ANSWER. The motion permission is probed
+          // honestly first (tryViewerMagic): granted → the
+          // viewer enters on the sensor; denied or unavailable
+          // (an in-app webview swallowing the prompt was Jay's
+          // case — the tap used to die in silence) → a one-line
+          // explanation instead, and the world stays as it was.
+          CCW.tryViewerMagic({ root: root }).then(function (outcome) {
+            if (outcome === 'magic') {
+              var entered = viewerCtl.enter(scene.activeCamera, true);
+              if (!entered) {
+                setStatus('Viewer Mode could not start here — Look around with your phone still works.');
+              }
+            } else {
+              setStatus('Viewer Mode needs motion access, which this browser is blocking — it works in Safari.');
+            }
             syncTouchPad();
           });
         });

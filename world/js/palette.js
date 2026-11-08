@@ -418,34 +418,62 @@
   };
 
   // Community notice board (placeholder copy — Jay edits the words).
+  // FIELD-TEST REBUILD (2026-11-08, Jay's report #8: the board read
+  // "distorted, washed out, lines running off the edge" in her
+  // photos): the board is now a DEEP PLUM panel with CREAM type —
+  // strong contrast at any angle — painted at 1024x672 (the board
+  // face's own aspect), with real padding inside a fine gold frame
+  // line, and EVERY line measureText-fit to the padded width before
+  // it is drawn: a line can never run off this board again, at any
+  // font size the fit chooses. The words are unchanged (they are
+  // Jay's to edit). The board is also tappable in-world now — a tap
+  // glides in close and the same words open as a readable card.
   CCW.noticeTexture = function (scene, B, name) {
     var P = CCW.PALETTE;
-    return CCW.canvasTexture(scene, B, name, 768, 512, function (ctx, w, h) {
-      ctx.fillStyle = P.cream;
+    return CCW.canvasTexture(scene, B, name, 1024, 672, function (ctx, w, h) {
+      ctx.fillStyle = '#2a0a33'; // deep plum panel (house plum)
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = P.plumHouse;
-      ctx.fillRect(0, 0, w, 84);
-      ctx.fillStyle = P.goldSoft;
-      ctx.font = 'bold 44px Georgia, serif';
+      // Fine gold frame line inside the board's edge (gold is a
+      // fine-line accent only — the palette law).
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(18, 18, w - 36, h - 36);
+      ctx.strokeStyle = 'rgba(255,216,115,0.5)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(30, 30, w - 60, h - 60);
+      var PAD = 64; // text padding inside the frame
+      function fit(text, startPx, weight) {
+        var px = startPx;
+        ctx.font = weight + ' ' + px + 'px Georgia, serif';
+        while (px > 18 && ctx.measureText(text).width > w - PAD * 2) {
+          px -= 2;
+          ctx.font = weight + ' ' + px + 'px Georgia, serif';
+        }
+        return px;
+      }
       ctx.textAlign = 'center';
-      ctx.fillText('COMMUNITY NOTICES', w / 2, 56);
-      ctx.fillStyle = '#3d1247';
+      ctx.fillStyle = P.goldSoft;
+      fit('COMMUNITY NOTICES', 58, 'bold');
+      ctx.fillText('COMMUNITY NOTICES', w / 2, 108);
+      ctx.fillStyle = P.gold;
+      ctx.fillRect(PAD + 40, 132, w - (PAD + 40) * 2, 3);
       ctx.textAlign = 'left';
-      // Camera fix pass (2026-11-06): the body lines were painted
-      // at 34px, but the longest measures 797px wide in a 768px
-      // canvas — the canvas edge silently cut '…Game Parlor' and
-      // '…Sundays' off the board itself, on every screen, before
-      // any camera saw it (Jay's portrait screenshot showed the
-      // same cut lines). 30px measures 703px — every word lands
-      // on the board with margin to spare. Words unchanged.
-      ctx.font = 'bold 30px Georgia, serif';
-      ctx.fillText('🎲 Game night — Fridays at dusk, in the Game Parlor', 36, 152);
-      ctx.fillText('🍲 Soup kitchen — free, vegan, all welcome', 36, 226);
-      ctx.fillText('📚 Library circle — charts & numerology, Sundays', 36, 300);
-      ctx.fillText('💌 Pen-Pal Post — open a mailbox at random', 36, 374);
-      ctx.font = '30px Georgia, serif';
-      ctx.fillStyle = '#7a2d5a';
-      ctx.fillText('New here? Say hello at the Hearth. 💜', 36, 448);
+      ctx.fillStyle = P.cream;
+      var lines = [
+        '🎲 Game night — Fridays at dusk, in the Game Parlor',
+        '🍲 Soup kitchen — free, vegan, all welcome',
+        '📚 Library circle — charts & numerology, Sundays',
+        '💌 Pen-Pal Post — open a mailbox at random'
+      ];
+      var y = 236;
+      lines.forEach(function (line) {
+        fit(line, 45, 'bold');
+        ctx.fillText(line, PAD, y);
+        y += 96;
+      });
+      ctx.fillStyle = P.goldSoft;
+      fit('New here? Say hello at the Hearth. 💜', 40, '');
+      ctx.fillText('New here? Say hello at the Hearth. 💜', PAD, y + 6);
     });
   };
 
@@ -1989,6 +2017,90 @@
         var bx = rnd() * w;
         ctx.fillRect(bx, 0, 1.2, h);
       }
+    });
+  };
+
+  // Engraved-look name plate for the modelled mailboxes
+  // (FIELD-TEST FIX, 2026-11-08): a deep plum plate, a fine gold
+  // border line, and a house pen name cut in cream serif caps —
+  // the letters carry a one-pixel dark drop so they read as
+  // etched into the metal, not printed on it. Eight plates are
+  // painted once and shared across the wall.
+  CCW.penpalPlateTexture = function (scene, B, name, text) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 256, 80, function (ctx, w, h) {
+      ctx.fillStyle = '#2a0a33';
+      ctx.fillRect(0, 0, w, h);
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, 'rgba(255,255,255,0.14)');
+      g.addColorStop(1, 'rgba(0,0,0,0.22)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(6, 6, w - 12, h - 12);
+      ctx.textAlign = 'center';
+      var px = 30;
+      ctx.font = 'bold ' + px + 'px Georgia, serif';
+      while (px > 12 && ctx.measureText(text.toUpperCase()).width > w - 44) {
+        px -= 2;
+        ctx.font = 'bold ' + px + 'px Georgia, serif';
+      }
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillText(text.toUpperCase(), w / 2, h / 2 + px * 0.36 + 2);
+      ctx.fillStyle = P.cream;
+      ctx.fillText(text.toUpperCase(), w / 2, h / 2 + px * 0.36);
+    });
+  };
+
+  // Book cover for the Library's Classics reading stand
+  // (FIELD-TEST FIX, 2026-11-08): a drawn house cover — deep
+  // velvet field, fine gold frame, the title set in cream serif
+  // with the author beneath. Drawn, never photographed: these
+  // are the world's own editions of public-domain books.
+  CCW.classicCoverTexture = function (scene, B, name, book) {
+    var P = CCW.PALETTE;
+    return CCW.canvasTexture(scene, B, name, 384, 512, function (ctx, w, h) {
+      ctx.fillStyle = book.color;
+      ctx.fillRect(0, 0, w, h);
+      var g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, 'rgba(255,255,255,0.13)');
+      g.addColorStop(1, 'rgba(0,0,0,0.20)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = P.gold;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(16, 16, w - 32, h - 32);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(28, 28, w - 56, h - 56);
+      star(ctx, w / 2, 92, 17, P.goldSoft);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = P.cream;
+      // Title, word-wrapped and measure-fit, centered block.
+      var words = book.title.split(' '), lines = [], cur = '';
+      ctx.font = 'bold 40px Georgia, serif';
+      words.forEach(function (wd) {
+        var t = cur ? cur + ' ' + wd : wd;
+        if (ctx.measureText(t).width > w - 110 && cur) { lines.push(cur); cur = wd; }
+        else cur = t;
+      });
+      if (cur) lines.push(cur);
+      var px = 40;
+      var widest = 0;
+      lines.forEach(function (l) { widest = Math.max(widest, ctx.measureText(l).width); });
+      while (px > 20 && widest > w - 110) {
+        px -= 2; ctx.font = 'bold ' + px + 'px Georgia, serif'; widest = 0;
+        lines.forEach(function (l) { widest = Math.max(widest, ctx.measureText(l).width); });
+      }
+      var y = 190;
+      lines.forEach(function (l) { ctx.fillText(l, w / 2, y); y += px * 1.25; });
+      ctx.fillStyle = P.goldSoft;
+      ctx.fillRect(w / 2 - 44, y + 6, 88, 3);
+      ctx.font = '26px Georgia, serif';
+      ctx.fillText(book.author, w / 2, y + 52);
+      ctx.font = '22px Georgia, serif';
+      ctx.fillStyle = P.cream;
+      ctx.fillText(String(book.year), w / 2, h - 58);
     });
   };
 

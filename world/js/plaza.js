@@ -1005,6 +1005,28 @@
       };
     });
 
+
+    // FIELD-TEST REGISTRIES (2026-11-08): a pin in front of every
+    // table (item 4) + the game tables registered as interactables
+    // (item 1 — they were already tappable; the registry unifies
+    // them with the rest of the world's tappables).
+    var parlorPois = seatTables.map(function (cfg) {
+      var feature = arr3(roomWorld(cfg.t.x, 0.95, cfg.t.z));
+      return {
+        id: 'parlor-' + cfg.game, room: 'arcade', label: cfg.name,
+        pinPos: arr3(roomWorld(cfg.t.x, 0, cfg.t.z + 2.1)),
+        viewPos: arr3(roomWorld(cfg.t.x, 1.7, cfg.t.z + 3.4)),
+        viewTarget: feature, feature: feature
+      };
+    });
+    var parlorInteract = gameTargets.map(function (gt) {
+      return { id: 'game-' + gt.game, room: 'arcade', kind: 'game',
+        label: gt.name, blurb: '', meshes: gt.meshes };
+    });
+    CCW._registries = CCW._registries || {};
+    CCW._registries[zone.id] = { pois: parlorPois, sitSpots: [],
+      interactables: parlorInteract };
+
     return {
       returnPad: returnPad,
       returnRing: returnRing,
@@ -2484,6 +2506,35 @@
       position: [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)],
       target: [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)]
     };
+
+    // FIELD-TEST REGISTRIES (2026-11-08): pins for the screen
+    // (gliding to the doorway landing view), the benches (the
+    // wide audience view) and the program board (a close stand
+    // in front of it). The board registers as the room's
+    // interactable — its tap already opens the film index.
+    var theaterPois = [
+      { id: 'theater-screen', room: 'theater', label: 'The Great Screen',
+        pinPos: worldArr(roomWorld(0, 0, -11.3)),
+        viewPos: entranceView.position.slice(),
+        viewTarget: entranceView.target.slice(),
+        feature: skinSeats['dream-pop'].target.slice() },
+      { id: 'theater-benches', room: 'theater', label: 'The Benches',
+        pinPos: worldArr(roomWorld(3.1, 0, -5.2)),
+        viewPos: worldArr(roomWorld(-5.65, 5.6, -2.2)),
+        viewTarget: worldArr(roomWorld(0, 0.9, -8.4)),
+        feature: worldArr(roomWorld(0, 0.8, -8.2)) },
+      { id: 'theater-program', room: 'theater', label: 'Program Board',
+        pinPos: worldArr(roomWorld(-4.3, 0, -2.6)),
+        viewPos: worldArr(roomWorld(-4.3, 1.7, -3.6)),
+        viewTarget: worldArr(roomWorld(-4.3, 3.1, -0.9)),
+        feature: worldArr(roomWorld(-4.3, 3.3, -0.87)) }
+    ];
+    CCW._registries = CCW._registries || {};
+    CCW._registries[zone.id] = { pois: theaterPois, sitSpots: [],
+      interactables: [{ id: 'theater-board', room: 'theater',
+        kind: 'theater', label: 'Program Board', blurb: '',
+        meshes: [progFrame, progBoard] }] };
+
     return {
       returnPad: returnPad,
       returnRing: returnRing,
@@ -3039,6 +3090,7 @@
     // ---- The back wall: her works, floor to ceiling ---------------
     // CookBook (left) · CHEAT CODE saga (center, the place of
     // honor) · Your Bible (right), each with its plaque above.
+    var shelfArts = {};
     var backSections = [
       { tag: 'cookbook', x: -4.35, seed: 21, lines: ['Chemist Dates', 'The CookBook'] },
       { tag: 'saga', x: 0, seed: 7, lines: ['CHEAT CODE', 'The Saga'] },
@@ -3047,6 +3099,7 @@
     backSections.forEach(function (sec) {
       var unit = libraryShelfUnit(scene, B, add, sec.tag, sec.seed);
       unit.frame.position.set(sec.x, 2.85, -14.33);
+      shelfArts[sec.tag] = unit.art;
       unit.art.rotation.y = Math.PI; // readable face toward the room
       unit.art.position.set(sec.x, 2.85, -14.26);
       var plaque = libraryPlaque(scene, B, add, sec.tag, sec.lines, 3.4, 0.8);
@@ -3071,6 +3124,7 @@
       var unit = libraryShelfUnit(scene, B, add, sec.tag, sec.seed);
       unit.frame.rotation.y = rot;
       unit.frame.position.set(sec.side * 6.44, 2.85, sec.z);
+      shelfArts[sec.tag] = unit.art;
       unit.art.rotation.y = rot; // readable face toward the room center
       unit.art.position.set(sec.side * 6.37, 2.85, sec.z);
       if (sec.lines) {
@@ -3667,6 +3721,97 @@
     libraryPool.material = libraryPoolMat;
 
     // Scope the rig to the room + lift the light cap (see header).
+
+    // ---- FIELD-TEST PASS (2026-11-08): the Classics reading
+    // stand + this room's registries. Six public-domain books
+    // stand on a ledge in front of the Classics shelf (right
+    // wall), each one tappable: its card offers Read + Listen
+    // (item 6; the controller is cameras.js wireLibrary, the
+    // texts live in assets/books/). The saga shelf's
+    // presentation is untouched, per Jay's standing decision.
+    function ftW3(lx, ly, lz) { var v = roomWorld(lx, ly, lz); return [v.x, v.y, v.z]; }
+    var ledge = add(B.MeshBuilder.CreateBox('library-int-classics-ledge',
+      { width: 0.46, height: 0.07, depth: 4.3 }, scene));
+    ledge.position.set(6.02, 0.94, -9.0);
+    ledge.material = CCW.mat(scene, B, 'library-int-classics-ledge-mat', P.tealDeep);
+    [-1, 1].forEach(function (sgn, bi) {
+      var bracket = add(B.MeshBuilder.CreateBox('library-int-classics-bracket-' + bi,
+        { width: 0.34, height: 0.5, depth: 0.07 }, scene));
+      bracket.position.set(6.14, 0.66, -9.0 + sgn * 1.8);
+      bracket.material = CCW.mat(scene, B, 'library-int-classics-bracket-mat-' + bi, P.plumHouse);
+    });
+    var libInteract = [];
+    CCW.CLASSICS_BOOKS.forEach(function (book, bi) {
+      var bk = add(B.MeshBuilder.CreateBox('library-int-book-' + book.id,
+        { width: 0.09, height: 0.78, depth: 0.56 }, scene));
+      bk.position.set(5.98, 1.36, -10.55 + bi * 0.62);
+      bk.rotation.z = 0.05;
+      bk.material = CCW.texMat(scene, B, 'library-int-book-' + book.id + '-mat',
+        CCW.classicCoverTexture(scene, B, 'library-int-book-' + book.id + '-tex', book), {});
+      libInteract.push({ id: 'book-' + book.id, room: 'library',
+        kind: 'book', bookId: book.id, label: book.title, blurb: '',
+        meshes: [bk] });
+    });
+    var shelfInfo = {
+      classics: ['Public-Domain Classics',
+        'Free to read & hear. The six books on the stand can be checked out, read, and listened to, right here in the room.'],
+      saga: ['CHEAT CODE — The Saga',
+        'Jay’s own work, on the shelf of honor. Its full presentation arrives when the physical book design is finished.'],
+      cookbook: ['Chemist Dates — The CookBook',
+        'The recipes themselves live in the Food Frequency Bible on the site; this shelf keeps the book close.'],
+      bible: ['Your Bible',
+        'Passages & practice — Jay’s own journaling work, shelved with her other books.'],
+      courses: ['The Course Shelf',
+        'Skool lessons live here soon.']
+    };
+    Object.keys(shelfInfo).forEach(function (tag) {
+      if (shelfArts[tag]) {
+        libInteract.push({ id: 'shelf-' + tag, room: 'library',
+          kind: 'info', label: shelfInfo[tag][0], blurb: shelfInfo[tag][1],
+          meshes: [shelfArts[tag]] });
+      }
+    });
+    var libEntrancePos = [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)];
+    var libEntranceTgt = [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)];
+    function libSpot(id, label, lx, lz, camY, tx, ty, tz, status) {
+      return { id: id, room: 'library', label: label,
+        pos: ftW3(lx, 0, lz), camPos: ftW3(lx, camY, lz),
+        camTarget: ftW3(tx, ty, tz),
+        standPos: libEntrancePos, standTarget: libEntranceTgt,
+        status: status };
+    }
+    var libSpots = [
+      libSpot('library-chair-0', 'Reading chair', -0.95, -6.8, 1.12, 0, 0.95, -8,
+        'You settle into a reading chair at the long table.'),
+      libSpot('library-chair-1', 'Reading chair', 0.95, -6.8, 1.12, 0, 0.95, -8,
+        'You settle into a reading chair at the long table.'),
+      libSpot('library-chair-2', 'Reading chair', -0.95, -9.2, 1.12, 0, 0.95, -8,
+        'You settle into a reading chair at the long table.'),
+      libSpot('library-chair-3', 'Reading chair', 0.95, -9.2, 1.12, 0, 0.95, -8,
+        'You settle into a reading chair at the long table.'),
+      libSpot('library-nook-a', 'Reading nook', -4.85, -4.4, 1.15, -4.85, 0.65, -3.3,
+        'You curl into the reading nook. A book is waiting on the side table.'),
+      libSpot('library-nook-b', 'Reading nook', 4.85, -4.4, 1.15, 4.85, 0.65, -3.3,
+        'You curl into the reading nook. A book is waiting on the side table.'),
+      libSpot('library-nook-c', 'Reading nook', -4.85, -11.9, 1.15, -4.85, 0.65, -10.8,
+        'You curl into the reading nook. A book is waiting on the side table.')
+    ];
+    var libPois = [
+      { id: 'library-classics', room: 'library',
+        label: 'Classics — Read & Listen',
+        pinPos: ftW3(4.7, 0, -9.0), viewPos: ftW3(4.1, 1.7, -9.0),
+        viewTarget: ftW3(5.98, 1.35, -9.0), feature: ftW3(5.98, 1.35, -9.0) },
+      { id: 'library-saga', room: 'library', label: 'CHEAT CODE — The Saga',
+        pinPos: ftW3(0, 0, -11.6), viewPos: ftW3(0, 1.7, -11.0),
+        viewTarget: ftW3(0, 3.1, -14.26), feature: ftW3(0, 3.0, -14.26) },
+      { id: 'library-reading', room: 'library', label: 'The Reading Table',
+        pinPos: ftW3(2.7, 0, -8.0), viewPos: ftW3(3.1, 1.7, -8.0),
+        viewTarget: ftW3(0, 0.95, -8.0), feature: ftW3(0, 0.9, -8.0) }
+    ];
+    CCW._registries = CCW._registries || {};
+    CCW._registries[zone.id] = { pois: libPois, sitSpots: libSpots,
+      interactables: libInteract };
+
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('library-int-') === 0;
     });
@@ -3757,17 +3902,14 @@
     var pinkWallTex = CCW.penpalPinkWallTexture(scene, B, 'penpal-int-pinkwall-tex');
     var woodTex = CCW.woodTexture(scene, B, 'penpal-int-wood-tex');
     var leafTex = CCW.leafTexture(scene, B, 'penpal-int-leaf-tex');
-    // The box fronts are PHOTO PLATES: six door faces cropped
-    // from Jay's own photo of her physical mailbox wall
-    // (interior-refs/08-pen-pal-mailboxes.jpg), self-hosted as
-    // WebPs in assets/penpal/ — her actual doors, replicated as
-    // they are, the way the Library's posters carry her actual
-    // movie art (Jay's direction, 2026-11-04). No hotlinks: the
-    // world stays fully self-hosted.
-    var boxTex = [];
-    for (var bv = 0; bv < 6; bv++) {
-      boxTex.push(new B.Texture('assets/penpal/box-' + bv + '.webp', scene));
-    }
+    // The box fronts WERE photo plates (crops of Jay's photo of
+    // her physical mailbox wall) — retired in the FIELD-TEST FIX
+    // (2026-11-08, Jay's report #10: "You used the exact photos of
+    // the mailboxes instead of trying to mimic them" — mismatched
+    // sizes and lighting, pasted on). The wall below now MODELS one
+    // handsome mailbox from geometry and instances it; her photos
+    // remain design reference only (interior-refs/08…), and no
+    // photo texture touches a box.
 
     var intLights = [];
     function roomWorld(lx, ly, lz) {
@@ -3857,17 +3999,40 @@
     emblem.material = CCW.texMat(scene, B, 'penpal-int-sign-emblem-mat',
       CCW.penpalSignTexture(scene, B, 'penpal-int-sign-emblem-tex'), {});
 
-    // The grid itself: 11 columns x 4 rows of ornate pink boxes —
-    // a shallow body in a pink shade plus a photo-plate front
-    // (Jay's actual doors — see the boxTex note above). Every
-    // front is a tap target for the note card.
+    // The grid itself: 11 columns x 4 rows of MODELLED mailboxes
+    // (FIELD-TEST FIX, 2026-11-08 — see the photo-plate note
+    // above). ONE handsome mailbox, built from geometry in the
+    // house style and instanced across the wall: a painted-metal
+    // body in a house shade, a rounded arch top (a full cylinder
+    // whose lower half sleeps inside the body — the arch is real
+    // geometry, catching real light), a proud arched DOOR whose
+    // rim against the body reads as its seam, a gold knob, a
+    // coral flag (raised on some boxes, resting on others), and
+    // an engraved-look name plate carrying a house pen name.
+    // Per-box variation comes from the house palette only — pinks,
+    // coral, teal, plum, cream-rose — so the wall is a family, not
+    // a collage. Every door (slab + arch), body and knob is a tap
+    // target for the note card.
     var boxFronts = [];
-    var boxShades = [P.pinkHot, '#e7549a', '#ff5c9e'];
+    var boxShades = [P.pinkHot, '#e7549a', P.coral, P.teal,
+      '#b565d8', '#f2a7c3'];
     // Painted-metal body materials (artistry standard: no flat
     // fills — grain, brush streaks, baked light in the texture).
     var metalTex = boxShades.map(function (shade, si) {
       return CCW.penpalMetalTexture(scene, B, 'penpal-int-metal-' + si, shade);
     });
+    var plateNames = ['Marigold', 'Tomas', 'Juniper', 'The Chemistress',
+      'Alto', 'Wren', 'Sable', 'A Friend'];
+    var plateTex = plateNames.map(function (nm, pi) {
+      return CCW.penpalPlateTexture(scene, B, 'penpal-int-plate-' + pi, nm);
+    });
+    // Knobs wear BRASS — a painted-metal texture in a gold shade
+    // (the flat-gold rule: #f5c542 itself is a fine-line accent
+    // only in this house, never a surface).
+    var knobMat = CCW.texMat(scene, B, 'penpal-int-knob-mat',
+      CCW.penpalMetalTexture(scene, B, 'penpal-int-metal-brass', '#d9a441'), {});
+    var flagMat = CCW.mat(scene, B, 'penpal-int-flag-mat', P.coral,
+      { emissive: '#7a2413' });
     var boxIdx = 0;
     var jrnd = CCW.prand(90210);
     [1.02, 2.32, 3.62, 4.92].forEach(function (rowY, row) {
@@ -3878,19 +4043,57 @@
         // tilt — the way the real wall's boxes were hung by hand.
         var depthJ = 0.26 + jrnd() * 0.05;
         var yJ = rowY + (jrnd() - 0.5) * 0.02;
+        var frontZ = -14.40 + depthJ;
+        var shadeIx = (col + row) % metalTex.length;
         var body = add(B.MeshBuilder.CreateBox('penpal-int-box-' + boxIdx,
-          { width: 0.94, height: 1.14, depth: depthJ }, scene));
-        body.position.set(bx, yJ, -14.40 + depthJ / 2);
+          { width: 0.94, height: 0.67, depth: depthJ }, scene));
+        body.position.set(bx, yJ - 0.235, -14.40 + depthJ / 2);
         body.material = CCW.texMat(scene, B, 'penpal-int-box-' + boxIdx + '-mat',
-          metalTex[(col + row) % metalTex.length], {});
-        var frontP = add(B.MeshBuilder.CreatePlane('penpal-int-box-' + boxIdx + '-front',
-          { width: 0.94, height: 1.14 }, scene));
-        frontP.rotation.y = Math.PI; // readable face toward the room
-        frontP.rotation.z = (jrnd() - 0.5) * 0.02;
-        frontP.position.set(bx, yJ, -14.40 + depthJ + 0.01);
-        frontP.material = CCW.texMat(scene, B, 'penpal-int-box-' + boxIdx + '-front-mat',
-          boxTex[(col * 3 + row) % boxTex.length], {});
-        boxFronts.push(frontP);
+          metalTex[shadeIx], {});
+        // The arch: a full cylinder laid along the depth, its
+        // center on the body's top edge — the top half crowns the
+        // box (the classic mailbox silhouette, total height 1.14
+        // as the wall has always carried), the bottom half sleeps
+        // inside the body.
+        var arch = add(B.MeshBuilder.CreateCylinder('penpal-int-box-' + boxIdx + '-arch',
+          { diameter: 0.94, height: depthJ - 0.02, tessellation: 20 }, scene));
+        arch.rotation.x = Math.PI / 2;
+        arch.position.set(bx, yJ + 0.10, -14.40 + depthJ / 2);
+        arch.material = body.material;
+        // The door: a slab + its own arch cap, standing proud of
+        // the body so its rim reads as the door seam.
+        var doorMat = CCW.texMat(scene, B, 'penpal-int-box-' + boxIdx + '-front-mat',
+          metalTex[(shadeIx + 2) % metalTex.length], {});
+        var door = add(B.MeshBuilder.CreateBox('penpal-int-box-' + boxIdx + '-front',
+          { width: 0.78, height: 0.49, depth: 0.035 }, scene));
+        door.position.set(bx, yJ - 0.195, frontZ + 0.018);
+        door.material = doorMat;
+        var doorArch = add(B.MeshBuilder.CreateCylinder('penpal-int-box-' + boxIdx + '-doorarch',
+          { diameter: 0.78, height: 0.035, tessellation: 20 }, scene));
+        doorArch.rotation.x = Math.PI / 2;
+        doorArch.position.set(bx, yJ + 0.05, frontZ + 0.018);
+        doorArch.material = doorMat;
+        // The knob: a small gold sphere on the door's right.
+        var knob = add(B.MeshBuilder.CreateSphere('penpal-int-box-' + boxIdx + '-knob',
+          { diameter: 0.075, segments: 10 }, scene));
+        knob.position.set(bx + 0.28, yJ - 0.18, frontZ + 0.05);
+        knob.material = knobMat;
+        // The flag: a slim coral paddle on the body's right side —
+        // raised on roughly every third box, resting on the rest.
+        var flag = add(B.MeshBuilder.CreateBox('penpal-int-box-' + boxIdx + '-flag',
+          { width: 0.045, height: 0.34, depth: 0.11 }, scene));
+        var flagUp = jrnd() > 0.62;
+        flag.position.set(bx + 0.50, yJ + (flagUp ? 0.28 : 0.02), frontZ - 0.05);
+        flag.rotation.z = flagUp ? 0 : -1.15;
+        flag.material = flagMat;
+        // The name plate: engraved-look, on the door's face.
+        var plate = add(B.MeshBuilder.CreatePlane('penpal-int-box-' + boxIdx + '-plate',
+          { width: 0.56, height: 0.17 }, scene));
+        plate.rotation.y = Math.PI; // readable face toward the room
+        plate.position.set(bx, yJ + 0.02, frontZ + 0.045);
+        plate.material = CCW.texMat(scene, B, 'penpal-int-box-' + boxIdx + '-plate-mat',
+          plateTex[boxIdx % plateTex.length], {});
+        boxFronts.push(door, doorArch, body, knob);
         boxIdx++;
       }
     });
@@ -4278,6 +4481,50 @@
     });
 
     // Scope the rig to the room + lift the light cap (see header).
+
+    // ---- FIELD-TEST REGISTRIES (2026-11-08): pins for the
+    // letterbox wall + the community board; sit spots in the
+    // writing nooks; the board + desk registered (the boxes
+    // themselves ride world.penpal as always).
+    function ftW3(lx, ly, lz) { var v = roomWorld(lx, ly, lz); return [v.x, v.y, v.z]; }
+    var penEntrancePos = [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)];
+    var penEntranceTgt = [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)];
+    function penSpot(id, label, lx, lz, tx, ty, tz, status) {
+      return { id: id, room: 'penpal', label: label,
+        pos: ftW3(lx, 0, lz), camPos: ftW3(lx, 1.15, lz),
+        camTarget: ftW3(tx, ty, tz),
+        standPos: penEntrancePos, standTarget: penEntranceTgt,
+        status: status };
+    }
+    var penPois = [
+      { id: 'penpal-boxes', room: 'penpal', label: 'The Letterboxes',
+        pinPos: ftW3(0, 0, -10.4), viewPos: ftW3(0, 1.7, -9.9),
+        viewTarget: ftW3(0, 2.8, -14.35), feature: ftW3(0, 2.9, -14.35) },
+      { id: 'penpal-board', room: 'penpal', label: 'The Community Board',
+        pinPos: ftW3(-4.6, 0, -5.6), viewPos: ftW3(-4.2, 1.7, -5.6),
+        viewTarget: ftW3(-6.39, 3.0, -5.6), feature: ftW3(-6.39, 3.15, -5.6) }
+    ];
+    var penSpots = [
+      penSpot('penpal-nook-a', 'Writing nook', -4.85, -11.6, -4.85, 0.65, -10.5,
+        'You settle into the writing nook. A letter is waiting.'),
+      penSpot('penpal-nook-b', 'Writing nook', 4.85, -4.6, 4.85, 0.65, -3.5,
+        'You settle into the writing nook. A letter is waiting.')
+    ];
+    var penInteract = [
+      { id: 'penpal-boxes', room: 'penpal', kind: 'penpal',
+        label: 'The Letterboxes', blurb: '', meshes: boxFronts },
+      { id: 'penpal-board', room: 'penpal', kind: 'penpal-board',
+        label: 'The Community Board', blurb: '',
+        meshes: [pinFace, pinFrame] },
+      { id: 'penpal-desk', room: 'penpal', kind: 'info',
+        label: 'The Writing Desk',
+        blurb: 'Paper, pens and seals, always laid out. Sit in a nook, or tap any letterbox for a note from the community.',
+        meshes: [deskTop] }
+    ];
+    CCW._registries = CCW._registries || {};
+    CCW._registries[zone.id] = { pois: penPois, sitSpots: penSpots,
+      interactables: penInteract };
+
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('penpal-int-') === 0;
     });
@@ -5549,6 +5796,74 @@
     })();
 
     // Scope the rig to the room + lift the light cap (see header).
+
+    // ---- FIELD-TEST REGISTRIES (2026-11-08): pins for the
+    // planter row, both community beds and the hydroponics
+    // towers; sit spots on the bench and two fountain poufs;
+    // the care surfaces registered as interactables (the
+    // garden controller already owns their taps).
+    function ftW3(lx, ly, lz) { var v = roomWorld(lx, ly, lz); return [v.x, v.y, v.z]; }
+    var garEntrancePos = [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)];
+    var garEntranceTgt = [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)];
+    var garPois = [];
+    var midStation = gardenSurface.stations[3];
+    garPois.push({ id: 'garden-planters', room: 'garden',
+      label: 'The Planters',
+      pinPos: ftW3(-3.1, 0, midStation.z),
+      // A three-quarter stand along the row (the render check
+      // caught the first framing staring down into one pot):
+      // back toward the room, a little along the row, eyes on
+      // the mid planter at plant height so the row reads.
+      viewPos: ftW3(-1.4, 1.65, midStation.z + 2.2),
+      viewTarget: [midStation.worldPos[0], 1.0, midStation.worldPos[2]],
+      feature: [midStation.worldPos[0], 1.0, midStation.worldPos[2]] });
+    gardenSurface.beds.forEach(function (bed) {
+      garPois.push({ id: 'garden-' + bed.id, room: 'garden',
+        label: bed.id === 'bed-a' ? 'Community Bed A' : 'Community Bed B',
+        pinPos: ftW3(bed.x - 1.5, 0, bed.z),
+        viewPos: ftW3(bed.x - 2.1, 1.7, bed.z),
+        viewTarget: bed.worldPos.slice(), feature: bed.worldPos.slice() });
+    });
+    garPois.push({ id: 'garden-towers', room: 'garden',
+      label: 'Hydroponics Towers',
+      pinPos: ftW3(-4.3, 0, -6.8), viewPos: ftW3(-3.8, 1.7, -6.8),
+      viewTarget: ftW3(-5.8, 1.7, -6.8), feature: ftW3(-5.8, 1.7, -6.8) });
+    function garSpot(id, label, lx, lz, camY, status) {
+      return { id: id, room: 'garden', label: label,
+        pos: ftW3(lx, 0, lz), camPos: ftW3(lx, camY, lz),
+        camTarget: ftW3(0, 1.0, -7.2),
+        standPos: garEntrancePos, standTarget: garEntranceTgt,
+        status: status };
+    }
+    var garSpots = [
+      garSpot('garden-bench', 'The bench', 6.14, -5.6, 1.12,
+        'You sit on the bench, facing the fountain.'),
+      garSpot('garden-pouf-0', 'Fountain pouf', 0.91, -4.39, 1.0,
+        'You settle onto a pouf by the fountain.'),
+      garSpot('garden-pouf-5', 'Fountain pouf', -0.91, -9.99, 1.0,
+        'You settle onto a pouf by the fountain.')
+    ];
+    var planterMeshes = [];
+    gardenSurface.stations.forEach(function (s) {
+      planterMeshes.push(s.pot, s.soil);
+    });
+    var bedMeshes = [];
+    gardenSurface.beds.forEach(function (b) {
+      bedMeshes.push(b.frame, b.soil);
+    });
+    var garInteract = [
+      { id: 'garden-planters', room: 'garden', kind: 'garden',
+        label: 'The Planters', blurb: '', meshes: planterMeshes },
+      { id: 'garden-beds', room: 'garden', kind: 'garden',
+        label: 'The Community Beds', blurb: '', meshes: bedMeshes },
+      { id: 'garden-tools', room: 'garden', kind: 'garden',
+        label: 'Watering can & spray',
+        blurb: '', meshes: gardenSurface.canMeshes.concat(gardenSurface.sprayMeshes) }
+    ];
+    CCW._registries = CCW._registries || {};
+    CCW._registries[zone.id] = { pois: garPois, sitSpots: garSpots,
+      interactables: garInteract };
+
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('garden-int-') === 0;
     });
@@ -6392,6 +6707,55 @@
     });
 
     // Scope the rig to the room + lift the light cap (see header).
+
+    // ---- FIELD-TEST REGISTRIES (2026-11-08): pins for the
+    // apothecary cabinet + the work table; sit spots on the
+    // caf\u00e9 stools and the sofa; the cabinet's jars registered
+    // as a glow-and-name interactable.
+    function ftW3(lx, ly, lz) { var v = roomWorld(lx, ly, lz); return [v.x, v.y, v.z]; }
+    var stuEntrancePos = [uv[0] * (CCW.ZONE_RADIUS + 3.0), 1.7, uv[1] * (CCW.ZONE_RADIUS + 3.0)];
+    var stuEntranceTgt = [uv[0] * (CCW.ZONE_RADIUS + 8.0), 1.5, uv[1] * (CCW.ZONE_RADIUS + 8.0)];
+    function stuSpot(id, label, lx, lz, tx, ty, tz, status) {
+      return { id: id, room: 'studio', label: label,
+        pos: ftW3(lx, 0, lz), camPos: ftW3(lx, 1.12, lz),
+        camTarget: ftW3(tx, ty, tz),
+        standPos: stuEntrancePos, standTarget: stuEntranceTgt,
+        status: status };
+    }
+    var stuPois = [
+      { id: 'studio-cabinet', room: 'studio', label: 'The Apothecary Cabinet',
+        pinPos: ftW3(0, 0, -11.4), viewPos: ftW3(0, 1.7, -10.9),
+        viewTarget: ftW3(0, 2.3, -13.9), feature: ftW3(0, 2.4, -13.9) },
+      { id: 'studio-table', room: 'studio', label: 'The Work Table',
+        pinPos: ftW3(2.6, 0, -7.5), viewPos: ftW3(3.0, 1.7, -7.5),
+        viewTarget: ftW3(0, 0.95, -7.5), feature: ftW3(0, 0.95, -7.5) }
+    ];
+    var stuSpots = [
+      stuSpot('studio-cafe-0', 'Caf\u00e9 stool', -5.15, -11.8, -4.3, 0.8, -11.8,
+        'You perch at the little caf\u00e9 table.'),
+      stuSpot('studio-cafe-1', 'Caf\u00e9 stool', -3.45, -11.8, -4.3, 0.8, -11.8,
+        'You perch at the little caf\u00e9 table.'),
+      stuSpot('studio-sofa', 'The velvet sofa', 6.0, -9.6, 0, 1.2, -8.2,
+        'You sink into the teal sofa.')
+    ];
+    var jarMeshes = scene.meshes.filter(function (m) {
+      return m.name.indexOf('studio-int-cabinet-jar-') === 0 ||
+        m.name.indexOf('studio-int-cabinet-door-') === 0;
+    });
+    var stuInteract = [
+      { id: 'studio-cabinet', room: 'studio', kind: 'jar',
+        label: 'The Apothecary Cabinet',
+        blurb: 'Jars and bottles of the work: rose water, dried lavender, beeswax, pigment, honey. Tap again to look closer — the jars glow when they are greeted.',
+        meshes: jarMeshes },
+      { id: 'studio-honey', room: 'studio', kind: 'jar',
+        label: 'The Honey Jar',
+        blurb: 'A jar of honey on the work table — sweetness is a making material here.',
+        meshes: [honey] }
+    ];
+    CCW._registries = CCW._registries || {};
+    CCW._registries[zone.id] = { pois: stuPois, sitSpots: stuSpots,
+      interactables: stuInteract };
+
     var intMeshes = scene.meshes.filter(function (m) {
       return m.name.indexOf('studio-int-') === 0;
     });
@@ -6414,6 +6778,44 @@
       }
     };
   }
+
+
+  // ==================================================================
+  // THE CLASSICS SHELF LIST (FIELD-TEST PASS, 2026-11-08 — item 6):
+  // the six public-domain books that stand on the Library's
+  // Classics reading stand, each one readable + listenable in-world.
+  // Their full texts are the world's OWN local copies, fetched from
+  // Project Gutenberg at build time (public domain; PG's wrapper
+  // trimmed, the books complete) into world/assets/books/. In-
+  // copyright books are NOT here and never will be — they route out
+  // via Bookshop / Libro.fm, per the Library collection policy.
+  // ==================================================================
+  CCW.CLASSICS_BOOKS = [
+    { id: 'alice', title: 'Alice’s Adventures in Wonderland',
+      author: 'Lewis Carroll', year: 1865, color: '#a4136e',
+      file: 'assets/books/alice-in-wonderland.txt',
+      blurb: 'Down the rabbit-hole, into the pool of tears, and home again before tea. The dream-logic classic.' },
+    { id: 'pride', title: 'Pride and Prejudice',
+      author: 'Jane Austen', year: 1813, color: '#0f766e',
+      file: 'assets/books/pride-and-prejudice.txt',
+      blurb: 'Elizabeth Bennet spars with Mr. Darcy — the sharpest wit in English fiction, in full.' },
+    { id: 'frankenstein', title: 'Frankenstein',
+      author: 'Mary Shelley', year: 1818, color: '#5b2a6e',
+      file: 'assets/books/frankenstein.txt',
+      blurb: 'The Modern Prometheus: a maker, a creature, and the letters that frame them both.' },
+    { id: 'sherlock', title: 'The Adventures of Sherlock Holmes',
+      author: 'Arthur Conan Doyle', year: 1892, color: '#7a2d5a',
+      file: 'assets/books/sherlock-holmes.txt',
+      blurb: 'Twelve cases for Holmes and Watson, from A Scandal in Bohemia onward.' },
+    { id: 'dorian', title: 'The Picture of Dorian Gray',
+      author: 'Oscar Wilde', year: 1890, color: '#b45309',
+      file: 'assets/books/dorian-gray.txt',
+      blurb: 'A portrait that ages so its sitter need not — Wilde’s only novel, glittering and dark.' },
+    { id: 'time-machine', title: 'The Time Machine',
+      author: 'H. G. Wells', year: 1895, color: '#0e7490',
+      file: 'assets/books/the-time-machine.txt',
+      blurb: 'The Time Traveller rides to the year 802,701 — the story that invented time travel.' }
+  ];
 
   function buildZone(scene, B, zone) {
     var P = CCW.PALETTE;
@@ -7271,10 +7673,19 @@
         m.reflectionTexture = plazaEnvTex;
         m.specularColor = new B.Color3(0.55, 0.55, 0.55);
       }
-      if ((n === 'notice-face-mat' || n === 'plaza-pinboard-face-mat' ||
+      if ((n === 'plaza-pinboard-face-mat' ||
            n === 'plaza-shop-panel-mat' || n === 'plaza-shop-cafe-mat' ||
            n === 'plaza-shop-chef-mat') && m.diffuseTexture) {
         m.bumpTexture = m.diffuseTexture;
+      }
+      if (n === 'notice-face-mat' && m.diffuseTexture) {
+        // FIELD-TEST (item 8): the notices face takes NO self-bump —
+        // bump-from-itself muddied the cream-on-plum type into brown
+        // relief (the same lesson as the retired photo plates) —
+        // and it carries an emissive lift so the words stay
+        // readable in any light, like the house's other signs.
+        m.emissiveTexture = m.diffuseTexture;
+        m.emissiveColor = new B.Color3(0.55, 0.55, 0.55);
       }
     });
 
@@ -7282,6 +7693,11 @@
 
     // Zones + teleport wiring data.
     var zones = {}, portalMeshes = [], teleports = [], gameTargets = [];
+    // FIELD-TEST PASS (2026-11-08): the world-wide registries —
+    // POI pins (item 4), sit spots + interactables (item 1). The
+    // room builders stash theirs on CCW._registries as they build;
+    // the Plaza's own + the six door pins are added below.
+    var allPois = [], allSitSpots = [], allInteract = [];
     var theaterWatch = null;
     var penpalSurface = null;
     var gardenSurface = null;
@@ -7292,6 +7708,12 @@
     CCW.ZONES.forEach(function (zone) {
       var built = buildZone(scene, B, zone);
       zones[zone.id] = built;
+      var reg = (CCW._registries || {})[zone.id];
+      if (reg) {
+        allPois = allPois.concat(reg.pois || []);
+        allSitSpots = allSitSpots.concat(reg.sitSpots || []);
+        allInteract = allInteract.concat(reg.interactables || []);
+      }
       portalMeshes = portalMeshes.concat(built.portalMeshes);
       if (built.gameTargets) gameTargets = gameTargets.concat(built.gameTargets);
       if (built.shopTargets) shopTargets = shopTargets.concat(built.shopTargets);
@@ -7364,6 +7786,20 @@
                   ? 'You are in the Therapeutics Garden. Breathe easy — the gate is always open.'
                   : 'You are at the ' + zone.name + '.'
       });
+
+      // FIELD-TEST PASS: a pin beside this door's Plaza pad —
+      // tapping it rides the pad's own glide (the machinery is
+      // extended, never duplicated).
+      allPois.push({
+        id: 'door-' + zone.id, room: 'plaza', label: zone.name,
+        pinPos: [uv[0] * 8.5 + uv[1] * 2.9, 0, uv[1] * 8.5 - uv[0] * 2.9],
+        viewPos: teleports[teleports.length - 1].destPos.slice(),
+        viewTarget: teleports[teleports.length - 1].destTarget.slice(),
+        // No featurePos: a door pin's framing IS its pad's landing
+        // (pinned by the pad checks since M2b) — the facade behind
+        // the landing view is not what the glide frames.
+        tele: teleports[teleports.length - 1]
+      });
       teleports.push({
         mesh: built.returnPad, ringMesh: null,
         destPos: CCW.SPAWN.position.slice(), destTarget: CCW.SPAWN.target.slice(),
@@ -7395,10 +7831,103 @@
       }
     });
 
+
+    // ============================================================
+    // FIELD-TEST PASS (2026-11-08): the Plaza's own registries,
+    // then the pins + sit proxies built for the whole world.
+    // A pin is house style: a fine GOLD RING flat on the ground,
+    // a slim stem, a glowing PINK DOT, and a tiny label that
+    // turns to face you. Tapping any part glides you to the
+    // pin's framed standing view (main.js hangs the pick).
+    // ============================================================
+    allPois.push(
+      { id: 'plaza-hearth', room: 'plaza', label: 'The Hearth',
+        pinPos: [4.06, 0, 1.09], viewPos: [6.6, 1.7, 1.75],
+        viewTarget: [0, 1.3, 0], feature: [0, 1.4, 0] },
+      { id: 'plaza-notices', room: 'plaza', label: 'Community Notices',
+        pinPos: [3.4, 0, 13.4], viewPos: [-0.4, 1.9, 15.3],
+        viewTarget: [4.6, 2.9, 11.5], feature: [4.6, 3.0, 11.5] },
+      { id: 'plaza-pinboard', room: 'plaza', label: 'Pinned by the House',
+        pinPos: [-3.4, 0, 13.4], viewPos: [0.4, 1.9, 15.3],
+        viewTarget: [-4.6, 2.95, 11.5], feature: [-4.6, 3.05, 11.5] },
+      { id: 'plaza-shop', room: 'plaza', label: 'The Shop Window',
+        pinPos: [10.6, 0, 0], viewPos: [10.2, 1.7, 0],
+        viewTarget: [12.2, 2.4, 0], feature: [12.19, 2.45, 0] }
+    );
+    [30, 120, 210, 300].forEach(function (deg, i) {
+      var t = deg * Math.PI / 180;
+      var bx = Math.sin(t) * 5.6, bz = Math.cos(t) * 5.6;
+      allSitSpots.push({
+        id: 'plaza-bench-' + i, room: 'plaza', label: 'Hearth bench',
+        pos: [bx, 0, bz], camPos: [bx, 1.12, bz], camTarget: [0, 1.35, 0],
+        standPos: CCW.SPAWN.position.slice(),
+        standTarget: CCW.SPAWN.target.slice(),
+        status: 'You sit on a velvet bench by the Hearth.'
+      });
+    });
+    allInteract.push(
+      { id: 'plaza-hearth', room: 'plaza', kind: 'info',
+        label: 'The Hearth',
+        blurb: 'The Plaza\u2019s heart-fire. Say hello here — new arrivals are greeted at the Hearth.',
+        meshes: [hearthBase, flame] },
+      { id: 'plaza-notices', room: 'plaza', kind: 'notices',
+        label: 'Community Notices',
+        blurb: 'Game night — Fridays at dusk, in the Game Parlor. Soup kitchen — free, vegan, all welcome. Library circle — charts & numerology, Sundays. Pen-Pal Post — open a mailbox at random. New here? Say hello at the Hearth.',
+        meshes: [board, boardFace] },
+      { id: 'plaza-pinboard', room: 'plaza', kind: 'info',
+        label: 'Pinned by the House',
+        blurb: 'House pins: welcome notes, game night, classic cinema, the garden, and the Shop Window. Member pins join when the members\u2019 door opens.',
+        meshes: [pinBoard, pinFace] }
+    );
+    shopTargets.forEach(function (st) {
+      allInteract.push({ id: 'shop-' + st.id, room: 'plaza',
+        kind: 'shop', label: st.name, blurb: '', meshes: st.meshes });
+    });
+
+    var pinGoldMat = CCW.glowMat(scene, B, 'poi-pin-gold-mat', P.gold);
+    var pinDotMat = CCW.glowMat(scene, B, 'poi-pin-dot-mat', P.pinkHot);
+    allPois.forEach(function (poi) {
+      // One name for the framed feature, whatever the registry
+      // called it: featurePos is the manifest's word.
+      poi.featurePos = poi.feature || null;
+      var ring = B.MeshBuilder.CreateTorus('poi-pin-' + poi.id + '-ring',
+        { diameter: 1.0, thickness: 0.045, tessellation: 24 }, scene);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(poi.pinPos[0], 0.06, poi.pinPos[2]);
+      ring.material = pinGoldMat;
+      var stem = B.MeshBuilder.CreateCylinder('poi-pin-' + poi.id + '-stem',
+        { diameter: 0.035, height: 1.02, tessellation: 8 }, scene);
+      stem.position.set(poi.pinPos[0], 0.55, poi.pinPos[2]);
+      stem.material = pinGoldMat;
+      var dot = B.MeshBuilder.CreateSphere('poi-pin-' + poi.id + '-dot',
+        { diameter: 0.17, segments: 10 }, scene);
+      dot.position.set(poi.pinPos[0], 1.12, poi.pinPos[2]);
+      dot.material = pinDotMat;
+      var label = CCW.makeLabel(scene, B, 'poi-pin-' + poi.id + '-label',
+        [poi.label], 1.7, 0.32, { fg: P.goldSoft, bg: '#2a0a33' });
+      label.position.set(poi.pinPos[0], 1.5, poi.pinPos[2]);
+      label.billboardMode = 7; // BILLBOARDMODE_ALL: the label faces you
+      // The label is a CAPTION, not a button: it never intercepts a
+      // tap (a floating label can cross the sightline to a pad
+      // behind it — the spawn -> Theater ray proved it in smoke).
+      // The ring, stem and glow dot stay tappable.
+      label.isPickable = false;
+      poi.meshes = [ring, stem, dot, label];
+    });
+    allSitSpots.forEach(function (spot) {
+      var proxy = B.MeshBuilder.CreateCylinder('sit-proxy-' + spot.id,
+        { diameter: 1.1, height: 1.15, tessellation: 12 }, scene);
+      proxy.position.set(spot.pos[0], 0.58, spot.pos[2]);
+      proxy.visibility = 0;
+      proxy.isPickable = true;
+      spot.proxy = proxy;
+    });
+
     return { zones: zones, portalMeshes: portalMeshes, teleports: teleports,
       gameTargets: gameTargets, theater: theaterWatch, penpal: penpalSurface,
       garden: gardenSurface,
       shopTargets: shopTargets, parlorSeats: parlorSeats, tableSigns: tableSigns,
-      occupancyZones: occupancyZones, occupancyPlaques: occupancyPlaques };
+      occupancyZones: occupancyZones, occupancyPlaques: occupancyPlaques,
+      pois: allPois, sitSpots: allSitSpots, interactables: allInteract };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

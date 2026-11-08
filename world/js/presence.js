@@ -53,9 +53,15 @@
     '#6b4a8a', '#232323'];
   var HAIR_COLORS = ['#191410', '#3a2418', '#6e4526', '#a9743f',
     '#d9b06c', '#b8b0a4', '#c4502e', '#7a4a8a'];
+  // Hair names describe what the geometry actually looks like
+  // (FIELD-TEST PASS, 2026-11-08 — Jay: "what does 'classic' hair
+  // mean?"): the cap cut sweeps over the crown, 'long' falls
+  // straight down the back, 'curls' is a cluster of round curls.
+  // Ids are unchanged (the server validates ids, not labels, and
+  // saved profiles keep working); only the words grew honest.
   var HAIR_STYLES = [
-    { id: 'cap', label: 'Classic' }, { id: 'bun', label: 'Bun' },
-    { id: 'long', label: 'Long' }, { id: 'curls', label: 'Curls' },
+    { id: 'cap', label: 'Classic Sweep' }, { id: 'bun', label: 'Bun' },
+    { id: 'long', label: 'Long & Straight' }, { id: 'curls', label: 'Bouncy Curls' },
     { id: 'shaved', label: 'Close crop' }
   ];
   var BUILDS = [
@@ -517,6 +523,85 @@
       return row;
     }
 
+    // ---- LIVE PREVIEW (FIELD-TEST PASS, item 3 — Jay: "it
+    // doesn't show currently"): a small stage of its own Babylon
+    // scene beside (wide) / above (phones) the panel, rendering
+    // the ACTUAL avatar builder figure from the current draft —
+    // every option tap re-renders the form AND the figure, so
+    // what you tap is what you see. The preview respects the
+    // avatar law by construction: it renders exactly the summary
+    // a save would publish — base from the kept design, style
+    // from the draft. Any failure (no WebGL, an odd webview)
+    // leaves the studio exactly as it was: the stage simply
+    // stays hidden and the form works alone.
+    var preview = null;
+    function draftSummary() {
+      var profile = env.getProfile();
+      var base = profile ? profile.base : draft.base;
+      return {
+        skin: base.skin, eye: base.eye, build: base.build,
+        hair: draft.style.hair, hairCol: draft.style.hairCol,
+        top: draft.style.top, bot: draft.style.bot,
+        acc: draft.style.acc, weight: draft.style.weight
+      };
+    }
+    function ensurePreview() {
+      if (preview) return preview;
+      var B = env.B;
+      var host = doc.getElementById('avatar-preview');
+      if (!B || !host || typeof doc.createElement !== 'function') return null;
+      try {
+        var canvas = doc.createElement('canvas');
+        host.appendChild(canvas);
+        host.appendChild(el('p', 'avatar-preview-cap',
+          '✦ This is you — every tap updates the preview live'));
+        var engine = env.makeEngine
+          ? env.makeEngine(canvas)
+          : new B.Engine(canvas, true);
+        var pscene = new B.Scene(engine);
+        pscene.clearColor = new B.Color4(0.16, 0.04, 0.20, 1);
+        var pcam = new B.FreeCamera('avatar-preview-cam',
+          new B.Vector3(0, 1.3, 3.0), pscene);
+        pcam.setTarget(new B.Vector3(0, 1.05, 0));
+        pscene.activeCamera = pcam;
+        var hemi = new B.HemisphericLight('avatar-preview-hemi',
+          new B.Vector3(0, 1, 0), pscene);
+        hemi.intensity = 1.05;
+        var warm = new B.PointLight('avatar-preview-warm',
+          new B.Vector3(1.6, 2.6, 3.2), pscene);
+        warm.intensity = 0.7;
+        warm.diffuse = new B.Color3(1, 0.72, 0.5);
+        var floor = B.MeshBuilder.CreateDisc('avatar-preview-floor',
+          { radius: 1.5, tessellation: 24 }, pscene);
+        floor.rotation.x = Math.PI / 2;
+        floor.position.y = 0.02;
+        floor.material = CCW.mat(pscene, B, 'avatar-preview-floor-mat',
+          CCW.PALETTE.plumHouse);
+        var fig = CCW.buildAvatarFigure(pscene, B, draftSummary(),
+          { name: draft.name || 'You' });
+        host.hidden = false;
+        engine.runRenderLoop(function () { pscene.render(); });
+        preview = { engine: engine, scene: pscene, fig: fig, host: host };
+        return preview;
+      } catch (e) {
+        return null;
+      }
+    }
+    function updatePreview() {
+      var pv = ensurePreview();
+      if (!pv) return;
+      try {
+        pv.fig.applySummary(draftSummary());
+        pv.fig.setName(draft.name || 'You');
+        if (pv.engine.resize) pv.engine.resize();
+      } catch (e) { /* the studio works without its stage */ }
+    }
+    CCW._studioPreviewState = function () {
+      return preview
+        ? { live: true, figure: !!preview.fig }
+        : { live: false };
+    };
+
     function render() {
       body.innerHTML = '';
       var profile = env.getProfile();
@@ -541,7 +626,7 @@
       nameInput.maxLength = 24;
       nameInput.value = draft.name || '';
       nameInput.placeholder = 'Your name in the Lounge';
-      nameInput.addEventListener('input', function () { draft.name = nameInput.value; });
+      nameInput.addEventListener('input', function () { draft.name = nameInput.value; updatePreview(); });
       nameRow.appendChild(nameInput);
       body.appendChild(nameRow);
 
@@ -589,13 +674,14 @@
         function (v) { draft.style.acc = v; }));
       body.appendChild(weightRow(
         function () { return draft.style.weight; },
-        function (v) { draft.style.weight = v; }));
+        function (v) { draft.style.weight = v; updatePreview(); }));
+      updatePreview();
     }
 
     function open() {
       draft = null;
-      render();
-      card.hidden = false;
+      card.hidden = false; // visible first, so the preview stage
+      render();            // measures a real canvas when it wakes
     }
     function close() { card.hidden = true; }
     function save() {
@@ -642,13 +728,24 @@
 
   // ---------------- 4. The presence controller ---------------------
   function resolveWsUrl(root) {
+    // FIELD-TEST FIX (2026-11-08): the old rule demanded a non-empty
+    // loc.port before it would connect same-origin — but a production
+    // page served on the default https port has port '' — so on the
+    // LIVE site this fell through to a developer-machine address, and
+    // the browser's attempt to reach it is what raised Chrome's
+    // "Access other apps and services on this device" (Local Network
+    // Access) warning in Jay's field test — and quietly cost the
+    // world its multiplayer presence besides. Same-origin now holds
+    // for ANY http(s) page, port or no port; off http(s) there is no
+    // socket to make (presence simply stays local), never a fallback
+    // address.
     try {
       var loc = root.location;
-      if (loc && (loc.protocol === 'http:' || loc.protocol === 'https:') && loc.port) {
+      if (loc && (loc.protocol === 'http:' || loc.protocol === 'https:') && loc.host) {
         return (loc.protocol === 'https:' ? 'wss://' : 'ws://') + loc.host;
       }
     } catch (e) {}
-    return 'ws://localhost:2567';
+    return null;
   }
 
   CCW.createPresence = function (env) {
@@ -688,6 +785,8 @@
     try {
       studio = CCW.wireAvatarStudio({
         document: doc,
+        B: env.B,
+        root: env.root,
         getProfile: function () { return profile; },
         onSave: function (next) {
           profile = next;
@@ -880,7 +979,9 @@
       var C = env.root.Colyseus;
       if (!C || !C.Client) return;
       try {
-        var client = new C.Client(resolveWsUrl(env.root));
+        var wsUrl = resolveWsUrl(env.root);
+        if (!wsUrl) return; // off http(s): presence stays local-only
+        var client = new C.Client(wsUrl);
         var joinOpts = { name: myName, avatar: JSON.stringify(mySummary) };
         if (myPlantId) joinOpts.plantId = myPlantId;
         var doorP = (env.root.LoungeDoor && env.root.LoungeDoor.ready)

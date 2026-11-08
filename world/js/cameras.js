@@ -701,12 +701,22 @@
         if (!this.anyDown()) return false;
         var dt = Math.min(Math.max(dtMs || 0, 0), 100) / 1000;
         if (flags.left || flags.right) {
-          // Positive angle turns left (forward swings toward -X when
-          // facing the Game Parlor from spawn). Re-aim via setTarget,
-          // which this camera family stores as rotation.
+          // FIELD-TEST FIX (2026-11-08, Jay's report #2: "the left
+          // turn and right turn buttons aren't aligned what they
+          // mean"): the old sign turned the view the WRONG way —
+          // holding LEFT swung the view toward the Garden (screen
+          // right from spawn). Proven empirically against the real
+          // camera math before this flip: at spawn the Theater
+          // projects to screen LEFT (view x -26.8) and the Garden to
+          // screen RIGHT (+26.8); the old sign moved the Theater's
+          // view-x AWAY from center under LEFT. In this rotation
+          // convention a NEGATIVE angle turns the view left. The
+          // drag-look camera already follows the same sense (drag
+          // right = world follows the finger), so the pad now agrees
+          // with it. Regression-pinned in world-smoke27.
           var dir0 = lookDir(cam);
           if (dir0) {
-            var ang = CCW.TOUCH_WALK.turn * dt * (flags.left ? 1 : -1);
+            var ang = CCW.TOUCH_WALK.turn * dt * (flags.left ? -1 : 1);
             var c = Math.cos(ang), s = Math.sin(ang);
             cam.setTarget(cam.position.add(new B.Vector3(
               dir0.x * c + dir0.z * s, dir0.y, -dir0.x * s + dir0.z * c)));
@@ -887,6 +897,340 @@
       hide: hide,
       visible: function () { return !card.hidden; },
       current: function () { return current; }
+    };
+  };
+
+  /*
+   * FIELD-TEST PASS controllers (2026-11-08).
+   *
+   * wireInfoCard — the generic label card (item 1): every
+   * registered interactable of kind info / notices / jar opens
+   * it with its name + one plain line. The markup is #info-card.
+   *
+   * wireConsentCard — the upfront access & consent card
+   * (item 11): shown on FIRST visit before the character studio
+   * may open; a localStorage flag (ccw-consent-v1) remembers the
+   * tap; the HUD's privacy button reopens it any time. Storage
+   * is injected ({ get, set }) so a storage-blocked browser
+   * fails open (the card never traps anyone out of the world).
+   *
+   * tryViewerMagic — item 5's honest permission probe for
+   * Viewer Mode: resolves 'magic' only when the motion sensor
+   * is actually available (permission granted where the browser
+   * gates it), else 'denied' / 'unavailable', so the tap always
+   * produces either the viewer or a plain explanation.
+   */
+  CCW.wireInfoCard = function (env) {
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var card = doc.getElementById('info-card');
+    var body = doc.getElementById('info-card-body');
+    var closeBtn = doc.getElementById('info-card-close');
+    if (!card || !body) return null;
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function open(title, text) {
+      body.innerHTML = '<h3>' + esc(title) + '</h3>' +
+        '<p class="game-note">' + esc(text) + '</p>';
+      card.hidden = false;
+    }
+    function hide() { card.hidden = true; }
+    if (closeBtn) closeBtn.addEventListener('click', hide);
+    return { element: card, open: open, hide: hide,
+      visible: function () { return !card.hidden; } };
+  };
+
+  CCW.wireConsentCard = function (env) {
+    var doc = env && env.document;
+    var storage = env && env.storage;
+    if (!doc || !doc.getElementById || !storage) return null;
+    var card = doc.getElementById('consent-card');
+    var acceptBtn = doc.getElementById('consent-accept');
+    if (!card || !acceptBtn) return null;
+    var onAccept = null;
+    function needed() {
+      try { return !storage.get('ccw-consent-v1'); } catch (e) { return false; }
+    }
+    function show(cb) { onAccept = cb || null; card.hidden = false; }
+    function hide() { card.hidden = true; }
+    acceptBtn.addEventListener('click', function () {
+      try { storage.set('ccw-consent-v1', 'yes'); } catch (e) {}
+      hide();
+      if (onAccept) { var cb = onAccept; onAccept = null; cb(); }
+    });
+    return { needed: needed, show: show, hide: hide,
+      visible: function () { return !card.hidden; } };
+  };
+
+  CCW.tryViewerMagic = function (env) {
+    var host = (env && env.root) || root;
+    var DOE = host && host.DeviceOrientationEvent;
+    if (!DOE) return Promise.resolve('unavailable');
+    if (typeof DOE.requestPermission !== 'function') {
+      return Promise.resolve('magic'); // no gate on this browser
+    }
+    try {
+      return DOE.requestPermission().then(
+        function (res) { return res === 'granted' ? 'magic' : 'denied'; },
+        function () { return 'denied'; });
+    } catch (e) {
+      return Promise.resolve('denied');
+    }
+  };
+
+  /*
+   * The Library's book card + reader + audiobook (FIELD-TEST
+   * PASS item 6, 2026-11-08). Tapping one of the six Classics
+   * stand books opens #book-card: title, author, a line about
+   * the book, the checkout line ("Checked out to you" — the
+   * checkout is this device's own shelf, kept in localStorage;
+   * no accounts), and the two doors in: Read and Listen.
+   *
+   * Read = #reader: a calm full-screen reader over the book's
+   * OWN local text (assets/books/, public domain), text size
+   * adjustable. Listen = the same text read aloud by speech
+   * synthesis, chunk by sentence, with a visible now-reading
+   * line, pause/resume, stop, and a rate step. Only public-
+   * domain books and Jay's own works may ever live here — the
+   * collection policy: in-copyright titles route out via
+   * Bookshop / Libro.fm and are never hosted.
+   *
+   * env: { document, fetchText, speech, storage, onStatus } —
+   * fetchText(url) -> Promise<string>; speech is an injected
+   * seam { supported, speak(text, {rate, onend, onerror}),
+   * pause, resume, cancel } (main.js wraps speechSynthesis);
+   * storage is the { get, set } string seam.
+   */
+  CCW.wireLibrary = function (env) {
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var card = doc.getElementById('book-card');
+    var cardBody = doc.getElementById('book-card-body');
+    var cardClose = doc.getElementById('book-card-close');
+    var reader = doc.getElementById('reader');
+    var readerTitle = doc.getElementById('reader-title');
+    var readerText = doc.getElementById('reader-text');
+    var readerNow = doc.getElementById('reader-now');
+    var readerClose = doc.getElementById('reader-close');
+    var sizeDown = doc.getElementById('reader-smaller');
+    var sizeUp = doc.getElementById('reader-bigger');
+    var listenBtn = doc.getElementById('reader-listen');
+    var stopBtn = doc.getElementById('reader-stop');
+    var rateBtn = doc.getElementById('reader-rate');
+    if (!card || !cardBody || !reader || !readerText) return null;
+    var fetchText = env.fetchText;
+    var speech = env.speech || { supported: false };
+    var storage = env.storage;
+    var onStatus = env.onStatus || function () {};
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    // ---- the device's own shelf (client-side only) ----
+    var shelf = { checkedOut: [] };
+    try {
+      var saved = storage && storage.get('ccw-library-v1');
+      if (saved) {
+        var parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.checkedOut)) shelf = parsed;
+      }
+    } catch (e) {}
+    function saveShelf() {
+      try { if (storage) storage.set('ccw-library-v1', JSON.stringify(shelf)); } catch (e) {}
+    }
+    function checkOut(book) {
+      if (shelf.checkedOut.indexOf(book.id) < 0) {
+        shelf.checkedOut.push(book.id);
+        saveShelf();
+      }
+    }
+    function shelfLine() {
+      if (!shelf.checkedOut.length) return '';
+      var titles = shelf.checkedOut.map(function (id) {
+        var b = (CCW.CLASSICS_BOOKS || []).filter(function (x) { return x.id === id; })[0];
+        return b ? b.title : id;
+      });
+      return '<p class="game-note">📚 On your shelf: ' + esc(titles.join(' · ')) + '</p>';
+    }
+    // ---- the book card ----
+    var currentBook = null;
+    function openCard(book) {
+      currentBook = book;
+      checkOut(book);
+      var listenNote = speech.supported
+        ? '' : '<p class="game-note">Listening needs a browser with speech built in — reading always works.</p>';
+      cardBody.innerHTML =
+        '<h3>' + esc(book.title) + '</h3>' +
+        '<p class="game-note">' + esc(book.author) + ' · ' + esc(book.year) +
+        ' · Public domain — free to read &amp; hear</p>' +
+        '<p class="game-note">' + esc(book.blurb) + '</p>' +
+        '<p class="game-note">✓ Checked out to you — it is on your shelf.</p>' +
+        shelfLine() + listenNote +
+        '<p class="game-actions">' +
+        '<button type="button" id="book-read">📖 Read</button> ' +
+        '<button type="button" id="book-listen">🎧 Listen</button></p>' +
+        '<p class="game-note">The full text lives in the world itself (from Project Gutenberg). No account, no charge — it is a library.</p>';
+      card.hidden = false;
+      var readBtn = doc.getElementById('book-read');
+      var lisBtn = doc.getElementById('book-listen');
+      if (readBtn) readBtn.addEventListener('click', function () { openReader(book, false); });
+      if (lisBtn) lisBtn.addEventListener('click', function () { openReader(book, true); });
+    }
+    function hideCard() { card.hidden = true; }
+    if (cardClose) cardClose.addEventListener('click', hideCard);
+    // ---- the reader ----
+    var parasCache = {};
+    var fontPx = 19;
+    var listen = { active: false, paused: false, idx: 0, chunks: [], rateIx: 1 };
+    var RATES = [0.9, 1, 1.1, 1.25];
+    function setFont() { readerText.style.fontSize = fontPx + 'px'; }
+    function nowLine(text) { if (readerNow) readerNow.textContent = text; }
+    function splitParas(text) {
+      return String(text).replace(/\r\n/g, '\n').split(/\n\s*\n/)
+        .map(function (s) { return s.replace(/\s+/g, ' ').trim(); })
+        .filter(function (s) { return s.length > 0; });
+    }
+    function splitChunks(paras) {
+      var chunks = [];
+      paras.forEach(function (para) {
+        var parts = para.split(/(?<=[.!?…])\s+/);
+        parts.forEach(function (part) {
+          var s = part.trim();
+          while (s.length > 180) {
+            var cut = s.lastIndexOf(' ', 180);
+            if (cut < 60) cut = 180;
+            chunks.push(s.slice(0, cut).trim());
+            s = s.slice(cut).trim();
+          }
+          if (s) chunks.push(s);
+        });
+      });
+      return chunks;
+    }
+    function renderParas(paras) {
+      readerText.innerHTML = '';
+      paras.forEach(function (para) {
+        var el = doc.createElement('p');
+        el.textContent = para;
+        readerText.appendChild(el);
+      });
+      readerText.scrollTop = 0;
+    }
+    function loadBook(book) {
+      if (parasCache[book.id]) return Promise.resolve(parasCache[book.id]);
+      return fetchText(book.file).then(function (text) {
+        parasCache[book.id] = splitParas(text);
+        return parasCache[book.id];
+      });
+    }
+    function stopListen() {
+      if (listen.active && speech.cancel) { try { speech.cancel(); } catch (e) {} }
+      listen.active = false;
+      listen.paused = false;
+      if (listenBtn) listenBtn.textContent = '🎧 Listen';
+    }
+    function speakNext() {
+      if (!listen.active) return;
+      if (listen.idx >= listen.chunks.length) {
+        var title = currentBook ? currentBook.title : '';
+        stopListen();
+        nowLine('🎧 Finished reading ' + title + '.');
+        return;
+      }
+      nowLine('🎧 Now reading: ' + (currentBook ? currentBook.title : '') +
+        ' — part ' + (listen.idx + 1) + ' of ' + listen.chunks.length);
+      speech.speak(listen.chunks[listen.idx], {
+        rate: RATES[listen.rateIx],
+        onend: function () { listen.idx++; speakNext(); },
+        onerror: function () {
+          if (listen.active) { stopListen(); nowLine('🎧 Listening stopped — the reading voice hit a snag.'); }
+        }
+      });
+    }
+    function startListen() {
+      if (!currentBook) return;
+      if (!speech.supported) {
+        onStatus('Listening needs a browser with speech built in — try Safari or Chrome. Reading always works.');
+        return;
+      }
+      loadBook(currentBook).then(function (paras) {
+        listen.chunks = splitChunks(paras);
+        listen.idx = 0;
+        listen.active = true;
+        listen.paused = false;
+        if (listenBtn) listenBtn.textContent = '⏸ Pause';
+        speakNext();
+      }).catch(function () {
+        onStatus('That book could not be loaded just now — check your connection and try again.');
+      });
+    }
+    function toggleListen() {
+      if (!listen.active) { startListen(); return; }
+      if (listen.paused) {
+        listen.paused = false;
+        if (speech.resume) speech.resume();
+        if (listenBtn) listenBtn.textContent = '⏸ Pause';
+      } else {
+        listen.paused = true;
+        if (speech.pause) speech.pause();
+        if (listenBtn) listenBtn.textContent = '▶ Resume';
+        nowLine('🎧 Paused: ' + (currentBook ? currentBook.title : ''));
+      }
+    }
+    function openReader(book, autoListen) {
+      currentBook = book;
+      checkOut(book);
+      hideCard();
+      stopListen();
+      if (readerTitle) readerTitle.textContent = book.title;
+      nowLine('Loading the book…');
+      reader.hidden = false;
+      setFont();
+      loadBook(book).then(function (paras) {
+        renderParas(paras);
+        nowLine(book.title + ' — ' + book.author + '. Source: Project Gutenberg (public domain).');
+        if (autoListen) startListen();
+      }).catch(function () {
+        nowLine('That book could not be loaded just now — check your connection and try again.');
+      });
+    }
+    function closeReader() {
+      stopListen();
+      reader.hidden = true;
+    }
+    if (readerClose) readerClose.addEventListener('click', closeReader);
+    if (sizeUp) sizeUp.addEventListener('click', function () {
+      fontPx = Math.min(27, fontPx + 1.5); setFont();
+    });
+    if (sizeDown) sizeDown.addEventListener('click', function () {
+      fontPx = Math.max(15, fontPx - 1.5); setFont();
+    });
+    if (listenBtn) listenBtn.addEventListener('click', toggleListen);
+    if (stopBtn) stopBtn.addEventListener('click', function () {
+      stopListen();
+      nowLine(currentBook ? currentBook.title + ' — listening stopped.' : '');
+    });
+    if (rateBtn) rateBtn.addEventListener('click', function () {
+      listen.rateIx = (listen.rateIx + 1) % RATES.length;
+      rateBtn.textContent = 'Speed ' + RATES[listen.rateIx] + '×';
+      if (listen.active) {
+        // Restart the current chunk at the new rate.
+        var at = listen.idx;
+        if (speech.cancel) { try { speech.cancel(); } catch (e) {} }
+        listen.idx = at;
+        speakNext();
+      }
+    });
+    return {
+      element: card, readerElement: reader,
+      openCard: openCard, hideCard: hideCard,
+      openReader: openReader, closeReader: closeReader,
+      cardVisible: function () { return !card.hidden; },
+      readerVisible: function () { return !reader.hidden; },
+      shelf: function () { return shelf.checkedOut.slice(); },
+      listening: function () { return listen.active; }
     };
   };
 
