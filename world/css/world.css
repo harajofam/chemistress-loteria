@@ -62,10 +62,31 @@ html, body {
   opacity: 0.85;
 }
 
-.hud-status {
+/* The bottom HUD stack (FIELD-TEST FIX, 2026-11-08 — item 2):
+   status, help line and controls share ONE fixed column, so the
+   status line can never render behind/through the button rows
+   again. The stack is the only fixed element at the bottom of
+   the screen; its children are static inside it. */
+.hud-bottom {
+  position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 5.4rem;
+  bottom: 0.8rem;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  width: max-content;
+  max-width: 97vw;
+  pointer-events: none;
+}
+
+.hud-bottom .hud {
+  position: static;
+}
+
+.hud-status {
   width: max-content;
   max-width: 92vw;
   background: rgba(26, 5, 31, 0.72);
@@ -80,9 +101,6 @@ html, body {
 }
 
 .hud-controls {
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -90,6 +108,27 @@ html, body {
   width: max-content;
   max-width: 96vw;
   pointer-events: auto;
+}
+
+.hud-help {
+  margin: 0;
+  max-width: 92vw;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--gold-soft, #ffd873);
+  background: rgba(26, 5, 31, 0.55);
+  border-radius: 0.6rem;
+  padding: 0.25rem 0.7rem;
+}
+
+/* On narrow (portrait phone) screens the stack grows tall —
+   the contextual bars that used to park just above the old
+   two-piece HUD move up with it, so nothing stacks on anything. */
+@media (max-width: 560px) {
+  .touch-walk { bottom: 13.2rem; }
+  .seat-bar { bottom: 14.2rem; }
+  .theater-bar { bottom: 13.2rem; }
 }
 
 .btn {
@@ -365,7 +404,7 @@ html, body {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 4.6rem;
+  bottom: 7.4rem;
   z-index: 21;
   max-width: min(34rem, 94vw);
   text-align: center;
@@ -747,6 +786,134 @@ textarea.penpal-input { resize: vertical; }
   max-height: 86vh;
   overflow-y: auto;
 }
+
+/* Character studio LIVE PREVIEW (FIELD-TEST PASS, item 3): the
+   stage sits at the TOP of the panel on phones and BESIDE it on
+   wide screens, and re-renders on every option tap — what you
+   tap is what you see. */
+.avatar-preview {
+  margin: 0 0 0.8rem;
+  border: 2px solid var(--gold);
+  border-radius: 0.8rem;
+  overflow: hidden;
+  background: linear-gradient(180deg, #47265c 0%, #2a0a33 78%);
+  min-height: 240px;
+}
+
+.avatar-preview canvas {
+  display: block;
+  width: 100%;
+  height: 260px;
+}
+
+.avatar-preview .avatar-preview-cap {
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--gold-soft, #ffd873);
+  background: rgba(26, 5, 31, 0.65);
+}
+
+@media (min-width: 760px) {
+  .avatar-card-box {
+    max-width: 46rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .avatar-preview {
+    flex: 0 0 240px;
+    margin: 0;
+  }
+  .avatar-preview canvas { height: 300px; }
+  #avatar-card-body { flex: 1 1 auto; min-width: 0; }
+}
+
+/* Access & consent card (FIELD-TEST PASS, item 11): above the
+   other cards (it gates the studio), below the reader/overlay. */
+.consent-card { z-index: 26; }
+
+.consent-card .game-card-box {
+  max-width: 32rem;
+  text-align: left;
+  /* The card must never outgrow a short phone screen: the
+     accept button has to stay reachable (portrait check). */
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.consent-list {
+  margin: 0.4rem 0 0.8rem;
+  padding-left: 1.25rem;
+  line-height: 1.55;
+}
+
+.consent-list li { margin: 0.45rem 0; }
+
+/* The Library reader (FIELD-TEST PASS, item 6): a calm full-
+   screen reading surface — deep plum, cream serif, generous
+   measure; comfortable at 390px wide. */
+.reader {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: #1a051f;
+  color: var(--cream, #fdf3e3);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1rem 0.6rem;
+}
+
+.reader[hidden] { display: none; }
+
+.reader-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  max-width: 44rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.reader-head h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--gold-soft, #ffd873);
+}
+
+.reader-now {
+  max-width: 44rem;
+  width: 100%;
+  margin: 0.5rem auto 0;
+  font-size: 0.88rem;
+  color: var(--gold-soft, #ffd873);
+  min-height: 1.2em;
+}
+
+.reader-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 44rem;
+  width: 100%;
+  margin: 0.85rem auto 0.7rem;
+}
+
+.reader-text {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-width: 44rem;
+  width: 100%;
+  margin: 0 auto;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 19px;
+  line-height: 1.7;
+  padding: 0 0.2rem 3rem;
+}
+
+.reader-text p { margin: 0 0 1em; }
 
 .avatar-card-box h2 { text-align: center; }
 
