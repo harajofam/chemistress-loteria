@@ -11,17 +11,18 @@
 // only highlights those. The server re-validates every `move` from
 // scratch regardless — the highlights are a courtesy, never the law.
 
-// --- Server endpoint resolution (same rule as the other tables) ----------
-const GAME_PORT = 2567;
+// --- Server endpoint resolution (same rule as the Loteria client) --------
+// Same-origin over http(s), always -- no developer-machine fallback
+// address ships in this client (field-test fix, 2026-11-08: a local
+// address in shipped code is what trips Chrome's "Access other apps
+// and services on this device" warning on the public site).
 function resolveWsUrl() {
   const loc = window.location;
   const overHttp = loc.protocol === 'http:' || loc.protocol === 'https:';
-  const localHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(loc.hostname);
-  const devPort = localHost && loc.port !== '' && Number(loc.port) !== GAME_PORT;
-  if (overHttp && !devPort) {
+  if (overHttp) {
     return (loc.protocol === 'https:' ? 'wss://' : 'ws://') + loc.host;
   }
-  return 'ws://localhost:' + GAME_PORT;
+  return '';
 }
 
 // --- Board model (rendering the FEN placement only — no rule logic) ------
