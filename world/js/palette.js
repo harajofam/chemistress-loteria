@@ -1466,7 +1466,7 @@
   // small plant, a small globe) is worked into the rows. `seed`
   // varies the deal so no two units read as copies. Drawn, never
   // photographed.
-  CCW.libraryShelvesTexture = function (scene, B, name, seed) {
+  CCW.libraryShelvesTexture = function (scene, B, name, seed, dense) {
     var P = CCW.PALETTE;
     var tones = [P.velvetMagenta, P.velvetLavender, P.velvetTeal, P.velvetOrange,
       P.pinkHot, P.tealDeep, P.coral, '#7a2d5a', '#274b8f', '#8f2727', '#2d6a4f', '#d6336c'];
@@ -1496,14 +1496,19 @@
       ctx.ellipse(w / 2, 118, w / 2 - 44, 84, 0, Math.PI, 0);
       ctx.stroke();
       star(ctx, w / 2, 62, 13, P.goldSoft);
-      var rows = 5, top = 200, rowH = (h - top - 26) / rows;
+      // DENSE (LIBRARY EXPANSION, token -25): the working
+      // collection shelves (Classics + the two stacks) pack
+      // seven tighter rows of thinner spines — a library that
+      // now holds 100+ real books should LOOK full. Jay's own
+      // works shelves keep the original five-row dressing.
+      var rows = dense ? 7 : 5, top = 200, rowH = (h - top - 26) / rows;
       for (var r = 0; r < rows; r++) {
         var y0 = top + r * rowH;
         // The shelf's back panel: teal, a shade up from the case.
         ctx.fillStyle = '#12574e';
         ctx.fillRect(26, y0, w - 52, rowH - 14);
         var x = 40;
-        var dressAt = 1 + Math.floor(rnd() * 4); // which slot dresses up
+        var dressAt = dense ? -1 : 1 + Math.floor(rnd() * 4); // dense shelves: books only, no ornaments
         var slot = 0;
         while (x < w - 70) {
           slot++;
@@ -1536,7 +1541,7 @@
             x += 62;
             continue;
           }
-          var sw = 24 + rnd() * 26;
+          var sw = dense ? 15 + rnd() * 17 : 24 + rnd() * 26;
           var lean = rnd() > 0.93;
           ctx.save();
           if (lean) { ctx.translate(x + sw / 2, y0 + rowH - 16); ctx.rotate(0.10); ctx.translate(-(x + sw / 2), -(y0 + rowH - 16)); }
@@ -1550,7 +1555,7 @@
           ctx.fillRect(x, y0 + rowH - 16 - bh, 3.5, bh);
           ctx.fillStyle = 'rgba(255,255,255,0.10)';
           ctx.fillRect(x + sw - 3, y0 + rowH - 16 - bh, 2, bh);
-          if (rnd() > 0.4 && sw > 27) {
+          if (rnd() > 0.4 && sw > 27 && bh > 46) {
             ctx.fillStyle = 'rgba(253,243,227,0.8)';
             var tw = sw * 0.52;
             ctx.fillRect(x + (sw - tw) / 2, y0 + rowH - 16 - bh + 27, tw, 3.4);
@@ -1563,7 +1568,7 @@
           ctx.globalAlpha = 1;
           if (rnd() > 0.62) { ctx.beginPath(); ctx.arc(x + sw / 2, y0 + rowH - 16 - bh / 2, 6, 0, Math.PI * 2); ctx.fill(); }
           ctx.restore();
-          x += sw + 5 + rnd() * 9;
+          x += dense ? sw + 2 + rnd() * 4 : sw + 5 + rnd() * 9;
         }
         // The shelf board: dark wood with a gold front edge,
         // and a soft shadow line above it (realism pass).
@@ -2098,9 +2103,29 @@
       ctx.fillRect(w / 2 - 44, y + 6, 88, 3);
       ctx.font = '26px Georgia, serif';
       ctx.fillText(book.author, w / 2, y + 52);
-      ctx.font = '22px Georgia, serif';
+      // The shelf band (LIBRARY EXPANSION, token -25): every
+      // catalog book wears its shelf's band color along the
+      // cover's foot, with the shelf's icon + name set in
+      // cream — the spine-and-cover language of a real
+      // classified library. Falls back to the plain year when
+      // the book carries no shelf.
+      var shelfMeta = null;
+      (CCW.LIBRARY_SHELVES || []).forEach(function (s) {
+        if (s.id === book.shelf) shelfMeta = s;
+      });
       ctx.fillStyle = P.cream;
-      ctx.fillText(String(book.year), w / 2, h - 58);
+      if (shelfMeta) {
+        ctx.fillStyle = shelfMeta.band;
+        ctx.fillRect(28, h - 48, w - 56, 32);
+        ctx.fillStyle = P.cream;
+        ctx.font = 'bold 19px Georgia, serif';
+        ctx.fillText(shelfMeta.icon + '  ' + shelfMeta.name, w / 2, h - 25);
+        ctx.font = '22px Georgia, serif';
+        ctx.fillText(String(book.year), w / 2, h - 64);
+      } else {
+        ctx.font = '22px Georgia, serif';
+        ctx.fillText(String(book.year), w / 2, h - 58);
+      }
     });
   };
 

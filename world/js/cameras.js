@@ -982,11 +982,20 @@
 
   /*
    * The Library's book card + reader + audiobook (FIELD-TEST
-   * PASS item 6, 2026-11-08). Tapping one of the six Classics
-   * stand books opens #book-card: title, author, a line about
-   * the book, the checkout line ("Checked out to you" — the
-   * checkout is this device's own shelf, kept in localStorage;
-   * no accounts), and the two doors in: Read and Listen.
+   * PASS item 6, 2026-11-08; LIBRARY EXPANSION, 2026-11-08 —
+   * token -25). Tapping one of the Classics stand books — or
+   * any title in the Catalog — opens #book-card: title,
+   * author, a line about the book, its shelf, the checkout
+   * line ("Checked out to you" — the checkout is this
+   * device's own shelf, kept in localStorage; no accounts),
+   * and the two doors in: Read and Listen.
+   *
+   * The Catalog (#library-catalog) is the browsable form of
+   * the whole collection: eight shelves (CCW.LIBRARY_SHELVES),
+   * 100+ public-domain books (CCW.CLASSICS_BOOKS), opened
+   * from the reading stand's lectern (or the stand's ledge).
+   * Every book is at most three taps from the stand:
+   * stand -> shelf tab -> title -> this card.
    *
    * Read = #reader: a calm full-screen reader over the book's
    * OWN local text (assets/books/, public domain), text size
@@ -1019,6 +1028,14 @@
     var listenBtn = doc.getElementById('reader-listen');
     var stopBtn = doc.getElementById('reader-stop');
     var rateBtn = doc.getElementById('reader-rate');
+    // The Catalog chrome is optional: wireLibrary still runs
+    // (and the stand books still open) where the markup is
+    // absent — the headless smoke drives both shapes.
+    var catalog = doc.getElementById('library-catalog');
+    var catalogTabs = doc.getElementById('library-shelf-tabs');
+    var catalogList = doc.getElementById('library-book-list');
+    var catalogClose = doc.getElementById('library-catalog-close');
+    var catalogTitle = doc.getElementById('library-catalog-title');
     if (!card || !cardBody || !reader || !readerText) return null;
     var fetchText = env.fetchText;
     var speech = env.speech || { supported: false };
@@ -1056,27 +1073,46 @@
     }
     // ---- the book card ----
     var currentBook = null;
+    function shelfMeta(book) {
+      var shelves = CCW.LIBRARY_SHELVES || [];
+      for (var i = 0; i < shelves.length; i++) {
+        if (shelves[i].id === book.shelf) return shelves[i];
+      }
+      return null;
+    }
     function openCard(book) {
       currentBook = book;
       checkOut(book);
+      hideCatalog();
+      var meta = shelfMeta(book);
+      var shelfLineHtml = meta
+        ? '<p class="game-note">' + esc(meta.icon) + ' ' + esc(meta.name) +
+          ' shelf · Source: ' + esc(book.source || 'Project Gutenberg') + '</p>'
+        : '';
       var listenNote = speech.supported
         ? '' : '<p class="game-note">Listening needs a browser with speech built in — reading always works.</p>';
       cardBody.innerHTML =
         '<h3>' + esc(book.title) + '</h3>' +
         '<p class="game-note">' + esc(book.author) + ' · ' + esc(book.year) +
         ' · Public domain — free to read &amp; hear</p>' +
+        shelfLineHtml +
         '<p class="game-note">' + esc(book.blurb) + '</p>' +
         '<p class="game-note">✓ Checked out to you — it is on your shelf.</p>' +
         shelfLine() + listenNote +
         '<p class="game-actions">' +
         '<button type="button" id="book-read">📖 Read</button> ' +
-        '<button type="button" id="book-listen">🎧 Listen</button></p>' +
-        '<p class="game-note">The full text lives in the world itself (from Project Gutenberg). No account, no charge — it is a library.</p>';
+        '<button type="button" id="book-listen">🎧 Listen</button>' +
+        (catalog ? ' <button type="button" id="book-catalog">📚 Browse the catalog</button>' : '') +
+        '</p>' +
+        '<p class="game-note">The full text lives in the world itself (from ' +
+        esc(book.source || 'Project Gutenberg') + '). No account, no charge — it is a library.</p>';
       card.hidden = false;
       var readBtn = doc.getElementById('book-read');
       var lisBtn = doc.getElementById('book-listen');
+      var catBtn = doc.getElementById('book-catalog');
       if (readBtn) readBtn.addEventListener('click', function () { openReader(book, false); });
       if (lisBtn) lisBtn.addEventListener('click', function () { openReader(book, true); });
+      if (catBtn) catBtn.addEventListener('click', function () { hideCard(); openCatalog(book.shelf); });
     }
     function hideCard() { card.hidden = true; }
     if (cardClose) cardClose.addEventListener('click', hideCard);
@@ -1190,7 +1226,8 @@
       setFont();
       loadBook(book).then(function (paras) {
         renderParas(paras);
-        nowLine(book.title + ' — ' + book.author + '. Source: Project Gutenberg (public domain).');
+        nowLine(book.title + ' — ' + book.author + '. Source: ' +
+          (book.source || 'Project Gutenberg') + ' (public domain).');
         if (autoListen) startListen();
       }).catch(function () {
         nowLine('That book could not be loaded just now — check your connection and try again.');
@@ -1223,10 +1260,84 @@
         speakNext();
       }
     });
+    // ---- the Catalog (LIBRARY EXPANSION, token -25) ---------
+    // Eight shelf tabs over the whole collection. State is
+    // just the open shelf id; rendering rebuilds the tab row
+    // (with live per-shelf counts) and the open shelf's title
+    // list. A title tap walks straight into the book card —
+    // stand -> shelf -> title -> card: three taps, as specced.
+    var catalogShelf = null;
+    function allBooks() { return CCW.CLASSICS_BOOKS || []; }
+    function shelvesList() {
+      if (Array.isArray(CCW.LIBRARY_SHELVES) && CCW.LIBRARY_SHELVES.length) {
+        return CCW.LIBRARY_SHELVES;
+      }
+      var seen = [];
+      allBooks().forEach(function (b) {
+        if (b.shelf && seen.indexOf(b.shelf) < 0) seen.push(b.shelf);
+      });
+      return seen.map(function (id) { return { id: id, icon: '📚', name: id, band: '#f5c542' }; });
+    }
+    function booksOn(shelfId) {
+      return allBooks().filter(function (b) { return b.shelf === shelfId; });
+    }
+    function renderCatalog() {
+      if (!catalog || !catalogTabs || !catalogList) return;
+      var shelves = shelvesList();
+      if (!catalogShelf || !shelves.some(function (s) { return s.id === catalogShelf; })) {
+        catalogShelf = shelves.length ? shelves[0].id : null;
+      }
+      if (catalogTitle) {
+        catalogTitle.textContent = allBooks().length + ' free books on eight shelves';
+      }
+      catalogTabs.innerHTML = '';
+      shelves.forEach(function (s) {
+        var btn = doc.createElement('button');
+        btn.type = 'button';
+        btn.className = 'shelf-tab';
+        btn.textContent = s.icon + ' ' + s.name + ' (' + booksOn(s.id).length + ')';
+        btn.setAttribute('aria-pressed', s.id === catalogShelf ? 'true' : 'false');
+        if (s.id === catalogShelf) btn.style.background = s.band || '#f5c542';
+        btn.addEventListener('click', function () {
+          catalogShelf = s.id;
+          renderCatalog();
+        });
+        catalogTabs.appendChild(btn);
+      });
+      catalogList.innerHTML = '';
+      booksOn(catalogShelf).forEach(function (book) {
+        var btn = doc.createElement('button');
+        btn.type = 'button';
+        btn.className = 'library-book-btn';
+        var meta = shelfMeta(book);
+        if (meta && meta.band) btn.style.borderLeftColor = meta.band;
+        btn.innerHTML = esc(book.title) + ' <small>— ' + esc(book.author) +
+          ' · ' + esc(book.year) +
+          (shelf.checkedOut.indexOf(book.id) >= 0 ? ' · ✓ on your shelf' : '') + '</small>';
+        btn.addEventListener('click', function () { openCard(book); });
+        catalogList.appendChild(btn);
+      });
+      if (catalogList.scrollTop !== undefined) catalogList.scrollTop = 0;
+    }
+    function openCatalog(shelfId) {
+      if (!catalog) {
+        onStatus('The catalog is shelved just now — the books on the stand still open.');
+        return;
+      }
+      hideCard();
+      if (shelfId) catalogShelf = shelfId;
+      renderCatalog();
+      catalog.hidden = false;
+    }
+    function hideCatalog() { if (catalog) catalog.hidden = true; }
+    if (catalogClose) catalogClose.addEventListener('click', hideCatalog);
     return {
       element: card, readerElement: reader,
       openCard: openCard, hideCard: hideCard,
       openReader: openReader, closeReader: closeReader,
+      openCatalog: openCatalog, closeCatalog: hideCatalog,
+      catalogVisible: function () { return !!(catalog && !catalog.hidden); },
+      catalogShelf: function () { return catalogShelf; },
       cardVisible: function () { return !card.hidden; },
       readerVisible: function () { return !reader.hidden; },
       shelf: function () { return shelf.checkedOut.slice(); },

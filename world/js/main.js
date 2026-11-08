@@ -924,6 +924,7 @@
       // them so the world's tappables are counted in one place.
       if (entry.kind !== 'info' && entry.kind !== 'notices' &&
           entry.kind !== 'book' && entry.kind !== 'jar' &&
+          entry.kind !== 'catalog' &&
           entry.kind !== 'penpal-board') return;
       (entry.meshes || []).forEach(function (mesh) {
         wirePick(mesh, function () {
@@ -931,6 +932,13 @@
             var book = bookById(entry.bookId);
             if (book && libraryCtl) libraryCtl.openCard(book);
             else if (book) setStatus('"' + book.title + '" — the reading desk is unavailable just now.');
+          } else if (entry.kind === 'catalog') {
+            if (libraryCtl && libraryCtl.openCatalog) {
+              libraryCtl.openCatalog();
+              setStatus('📚 The Library Catalog — eight shelves, every book free to read & hear.');
+            } else {
+              setStatus('The catalog is shelved just now — the books on the stand still open.');
+            }
           } else if (entry.kind === 'notices') {
             rideView({ position: [2.2, 1.7, 13.3], target: [4.6, 2.9, 11.5] });
             if (infoCard) infoCard.open(entry.label, entry.blurb);
