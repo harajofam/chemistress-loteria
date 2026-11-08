@@ -10,28 +10,22 @@ const cardById = new Map();
 
 // --- Server endpoint resolution --------------------------------------------
 // The hosted Node service (server/index.js) serves this page AND the game
-// on one origin, so the rule is:
-//   * Page served over http(s) by that service — any production host, or
-//     the service's own local port 2567 — connect SAME-ORIGIN:
-//     wss:// on an https page, ws:// on an http page.
-//   * Page opened in local dev from a DIFFERENT origin — a static dev
-//     server on another localhost port (e.g. python http.server on 8901)
-//     or straight from file:// — fall back to the dev game server at
-//     ws://localhost:2567, as before.
-// (Known residue: the Node service run locally on a non-default PORT and
-// serving this page looks like the dev case to this rule — type that
-// ws://localhost:<PORT> into the Server WS URL field; it stays editable
-// and whatever it holds at Join time is what gets used.)
-const GAME_PORT = 2567;
+// on one origin, so over http(s) the socket is SAME-ORIGIN: wss:// on an
+// https page, ws:// on an http page — no matter which port the page was
+// served from. (FIELD-TEST FIX, 2026-11-08: this client used to carry a
+// developer-machine fallback address as its default. A local-network
+// address in shipped code is exactly what makes Chrome show its "Access
+// other apps and services on this device" warning on the public site —
+// Jay hit it in her field test. Shipped code now contains no such
+// address at all: off http(s) the field simply starts empty and stays
+// editable for anyone running the page their own way.)
 function resolveWsUrl() {
   const loc = window.location;
   const overHttp = loc.protocol === 'http:' || loc.protocol === 'https:';
-  const localHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(loc.hostname);
-  const devPort = localHost && loc.port !== '' && Number(loc.port) !== GAME_PORT;
-  if (overHttp && !devPort) {
+  if (overHttp) {
     return (loc.protocol === 'https:' ? 'wss://' : 'ws://') + loc.host;
   }
-  return 'ws://localhost:' + GAME_PORT;
+  return '';
 }
 
 async function loadDeck() {
@@ -145,16 +139,53 @@ function renderBoard(boardTiles) {
 }
 
 async function main() {
-  await loadDeck();
+  // The endpoint field is filled FIRST (before the deck loads), so it
+  // always shows the computed same-origin address (field-test fix).
   const wsInput = document.getElementById('wsUrl');
   wsInput.value = resolveWsUrl();
-  const wsUrl = wsInput.value;
-  client = new Colyseus.Client(wsUrl);
+  await loadDeck();
 
-  document.getElementById('btnJoin').onclick = async () => {
+  // JOIN GUARD (field-test fix, 2026-11-08 — Jay's report #7): the old
+  // handler ran joinOrCreate on EVERY click and never left the room it
+  // already held, so her repeated taps stacked ghost players (her own
+  // screenshots showed "Players: 3" from her clicks alone). One join
+  // per held room now: the first click locks the button, further
+  // clicks are ignored while a join is in flight or a room is held,
+  // any prior room is left before a rejoin, and the button resets when
+  // the room is left or the join fails.
+  const btnJoin = document.getElementById('btnJoin');
+  let joinState = 'idle'; // 'idle' | 'joining' | 'joined'
+  let pollTimer = null;
+  let clientUrl = null;
+  function resetJoin() {
+    joinState = 'idle';
+    btnJoin.disabled = false;
+    btnJoin.textContent = 'Join';
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  btnJoin.onclick = async () => {
+    if (joinState !== 'idle') return;
+    const wsUrl = (wsInput.value || '').trim();
+    if (!wsUrl) {
+      setStatus('No server address — the game server address should appear in the Server WS URL field; try reloading the page.');
+      return;
+    }
+    joinState = 'joining';
+    btnJoin.disabled = true;
+    btnJoin.textContent = 'Joining…';
     const roomName = document.getElementById('roomName').value;
     setStatus('Connecting...');
     try {
+      if (room) {
+        const prior = room;
+        room = null;
+        try { await prior.leave(); } catch (e) { /* already gone */ }
+      }
+      if (!client || clientUrl !== wsUrl) {
+        client = new Colyseus.Client(wsUrl);
+        clientUrl = wsUrl;
+      }
       const joinOpts = {};
       const typedName = document.getElementById('playerName').value.trim();
       if (typedName) joinOpts.name = typedName;
@@ -180,6 +211,11 @@ async function main() {
         }
       } catch (e) { /* no character yet — the server default applies */ }
       room = await client.joinOrCreate(roomName, joinOpts);
+      joinState = 'joined';
+      btnJoin.textContent = 'Joined ✓'; // stays disabled while held
+      try {
+        room.onLeave(() => { room = null; resetJoin(); });
+      } catch (e) { /* older client builds: the guard still holds */ }
       setStatus('Connected. Players: ' + room.state.players.size);
       document.getElementById('btnReady').disabled = false;
       document.getElementById('btnNextCard').disabled = false;
@@ -213,7 +249,11 @@ async function main() {
       };
 
       // naive polling to render your own board (room state schema mirrors)
-      setInterval(() => {
+      // (The timer is kept in a variable now: the old handler stacked a
+      // fresh 500 ms poll on every Join click, on top of the ghosts.)
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      pollTimer = setInterval(() => {
+        if (!room) return;
         setStatus('Connected. Players: ' + room.state.players.size);
         const me = room.state.players.get(room.sessionId);
         if (me && me.board && me.board.tiles) {
@@ -222,6 +262,8 @@ async function main() {
       }, 500);
 
     } catch (e) {
+      room = null;
+      resetJoin();
       setStatus('Connect failed: ' + e);
     }
   };
