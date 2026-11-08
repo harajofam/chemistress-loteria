@@ -915,6 +915,74 @@ textarea.penpal-input { resize: vertical; }
 
 .reader-text p { margin: 0 0 1em; }
 
+/* The Library Catalog (LIBRARY EXPANSION, 2026-11-08): the
+   eight-shelf browser the reading stand's lectern opens. Same
+   plum card family as the book card, wider and taller, with a
+   wrapping row of shelf tabs (each tinted with its shelf band)
+   over a scrolling list of book buttons. Bound by cameras.js
+   wireLibrary (openCatalog). */
+.library-catalog-box {
+  max-width: 32rem;
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.library-catalog-box .game-card-kicker,
+.library-catalog-box h2 { text-align: center; }
+
+.shelf-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  margin: 0.6rem 0 0.7rem;
+}
+
+.shelf-tab {
+  border: 1px solid rgba(253, 243, 227, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cream, #fdf3e3);
+  border-radius: 999px;
+  padding: 0.32rem 0.7rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.shelf-tab[aria-pressed='true'] {
+  color: #1a051f;
+  font-weight: 700;
+  border-color: transparent;
+}
+
+.library-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-right: 0.2rem;
+}
+
+.library-book-btn {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(253, 243, 227, 0.18);
+  border-left: 4px solid var(--gold);
+  border-radius: 10px;
+  color: var(--cream, #fdf3e3);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  cursor: pointer;
+  width: 100%;
+}
+
+.library-book-btn small { opacity: 0.75; }
+
+.library-catalog-box .game-card-actions { margin-top: 0.8rem; }
+
 .avatar-card-box h2 { text-align: center; }
 
 .avatar-lede { line-height: 1.45; margin: 0 0 0.6rem; }
