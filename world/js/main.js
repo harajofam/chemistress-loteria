@@ -670,14 +670,18 @@
     }
 
     // ---- The Shop Gallery card (wall-life pass, 2026-11-04) -----
-    // Tapping a framed piece or a wallpaper accent wall (plaza.js
-    // shop targets: the Library's Celestial Cards feature wall,
-    // the Studio's two papers, the Garden's two panels, the Plaza
-    // Shop Window) offers this card — the Parlor seam, reused:
-    // the pick only SHOWS the card; its "See it in the shop"
-    // button is the one navigation, through the same injected
-    // navigate as the game card's Play, out to the piece's shop
-    // URL. Every URL lives in plaza.js CCW.SHOP_LINKS (one place).
+    // Tapping a shop target (plaza.js shop targets) offers this
+    // card — the Parlor seam, reused: the pick only SHOWS the
+    // card; its "See it in the shop" button is the one
+    // navigation, through the same injected navigate as the game
+    // card's Play, out to the piece's shop URL. Every URL lives
+    // in plaza.js CCW.SHOP_LINKS (one place).
+    // ACCESS PASS (2026-11-09, token -28): at Jay's direction the
+    // world's sales spots are exactly TWO — the Library's
+    // Celestial Cards feature wall (the wallpaper spot) and the
+    // Plaza Shop Window's Emblem Medallion panel. The Studio's
+    // two papers, the Garden's two panels and the Shop Window's
+    // framed prints hang as plain art; their pop-ups are gone.
     shopCard = CCW.wireShopCard({
       document: document,
       navigate: function (path) { root.location.href = path; }
