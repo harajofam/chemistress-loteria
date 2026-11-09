@@ -1,5 +1,5 @@
 {
-  "pass": "SAGA EXHIBIT PASS (smoke29, token 2026-11-04-26)",
+  "pass": "ACCESS PASS (smoke31, token 2026-11-04-28)",
   "generated": "from the built world (CCW.buildWorld in NullEngine)",
   "pois": [
     {
@@ -137,7 +137,7 @@
       "room": "plaza",
       "label": "The Game Parlor",
       "pin": [
-        -2.9,
+        -3.9,
         0,
         -8.5
       ],
@@ -237,9 +237,9 @@
       "room": "plaza",
       "label": "Theater",
       "pin": [
-        5.91,
+        5.41,
         0,
-        -6.76
+        -7.63
       ],
       "viewPos": [
         23.38,
@@ -264,18 +264,18 @@
         -13.42
       ],
       "viewPos": [
-        -29.09,
-        1.7,
-        -14.02
+        -26.68,
+        1.65,
+        -13.79
       ],
       "viewTarget": [
         -30.16,
-        0.51,
+        1,
         -12.16
       ],
       "feature": [
         -30.16,
-        0.51,
+        1,
         -12.16
       ],
       "via": "framed view"
@@ -363,9 +363,9 @@
       "room": "plaza",
       "label": "Therapeutics Garden",
       "pin": [
-        -8.81,
+        -9.31,
         0,
-        -1.74
+        -0.87
       ],
       "viewPos": [
         -23.38,
@@ -463,9 +463,9 @@
       "room": "plaza",
       "label": "Library",
       "pin": [
-        8.81,
+        9.31,
         0,
-        1.74
+        0.87
       ],
       "viewPos": [
         23.38,
@@ -537,9 +537,9 @@
       "room": "plaza",
       "label": "Pen-Pal Post",
       "pin": [
-        -5.91,
+        -5.41,
         0,
-        6.76
+        7.63
       ],
       "viewPos": [
         -23.38,
@@ -611,7 +611,7 @@
       "room": "plaza",
       "label": "Creator Studio",
       "pin": [
-        2.9,
+        3.9,
         0,
         8.5
       ],
@@ -664,9 +664,9 @@
         13.4
       ],
       "viewPos": [
-        2.2,
-        1.7,
-        13.3
+        -0.4,
+        1.9,
+        15.3
       ],
       "viewTarget": [
         4.6,
@@ -690,9 +690,9 @@
         13.4
       ],
       "viewPos": [
-        -2.2,
-        1.7,
-        13.3
+        0.4,
+        1.9,
+        15.3
       ],
       "viewTarget": [
         -4.6,
@@ -711,9 +711,9 @@
       "room": "plaza",
       "label": "The Shop Window",
       "pin": [
-        10.6,
+        10.9,
         0,
-        0
+        -2.9
       ],
       "viewPos": [
         10.2,
@@ -979,14 +979,14 @@
       "room": "plaza",
       "label": "Hearth bench",
       "at": [
-        4.85,
+        2.8,
         0,
-        -2.8
+        -4.85
       ],
       "seatCamera": [
-        4.85,
+        2.8,
         1.12,
-        -2.8
+        -4.85
       ]
     },
     {
@@ -1009,14 +1009,14 @@
       "room": "plaza",
       "label": "Hearth bench",
       "at": [
-        -4.85,
+        -2.8,
         0,
-        2.8
+        4.85
       ],
       "seatCamera": [
-        -4.85,
+        -2.8,
         1.12,
-        2.8
+        4.85
       ]
     }
   ],
@@ -1208,46 +1208,10 @@
       "label": "Emblem Medallion — Wallpaper"
     },
     {
-      "id": "shop-art-cafe",
-      "room": "plaza",
-      "kind": "shop",
-      "label": "Café Girl — The Heartbreaker Café Print"
-    },
-    {
-      "id": "shop-art-chef",
-      "room": "plaza",
-      "kind": "shop",
-      "label": "The Chemistress Chef — Vintage Dates Art"
-    },
-    {
-      "id": "shop-wallpaper-celestial-muses",
-      "room": "plaza",
-      "kind": "shop",
-      "label": "Celestial Muses — Wallpaper"
-    },
-    {
-      "id": "shop-wallpaper-dinner-party-blocks",
-      "room": "plaza",
-      "kind": "shop",
-      "label": "Dinner Party Blocks — Wallpaper"
-    },
-    {
       "id": "shop-wallpaper-celestial-cards",
       "room": "plaza",
       "kind": "shop",
       "label": "Celestial Cards — Wallpaper"
-    },
-    {
-      "id": "shop-wallpaper-chef-medallion",
-      "room": "plaza",
-      "kind": "shop",
-      "label": "Chef Medallion Scatter — Wallpaper"
-    },
-    {
-      "id": "shop-wallpaper-cafe-girl",
-      "room": "plaza",
-      "kind": "shop",
-      "label": "Café Girl — Wallpaper & Art"
     }
   ]
 }
