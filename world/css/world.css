@@ -1054,3 +1054,79 @@ textarea.penpal-input { resize: vertical; }
 .avatar-weight { flex: 1; min-width: 8rem; accent-color: var(--pink-hot); }
 
 .avatar-row-kept { opacity: 0.85; }
+
+/* ------------------------------------------------------------------
+   The SAGA Exhibit card (2026-11-08 — token -26). The SAGA page's
+   own design language (Jay's cheat-code-saga build) carried into
+   the Library's card chassis: Georgia serif, the page's pink/
+   coral/teal/plum/gold, sunlit paper panels. Every class here is
+   saga- prefixed so nothing else in the world is touched.
+------------------------------------------------------------------- */
+.saga-box {
+  width: min(34rem, 94vw);
+  max-height: 88vh; overflow-y: auto; text-align: left;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.saga-title { margin: 0 0 2px; font-size: 1.45rem; letter-spacing: .8px; color: #ffd873; text-shadow: 0 1px 0 #2a0a33, 0 0 18px rgba(255, 79, 154, .45); }
+.saga-sub { margin: 2px 0 10px; color: #f3e2ff; font-style: italic; font-size: .92rem; }
+.saga-pathway { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: .68rem; letter-spacing: .6px; margin: 6px 0 10px; color: #ffd873; }
+.saga-pathway span { background: rgba(11, 122, 112, .35); border: 1px solid rgba(255, 216, 115, .5); border-radius: 999px; padding: 3px 8px; }
+.saga-pathway b { color: #f3e2ff; font-weight: normal; letter-spacing: 0; }
+.saga-today { border: 1px solid rgba(255, 216, 115, .65); border-radius: 10px; padding: 6px 10px; margin: 0 0 10px; font-size: .85rem; color: #fdf3e3; background: rgba(16, 23, 54, .55); }
+.saga-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.saga-tab { border: 2px solid rgba(255, 216, 115, .55); background: rgba(42, 10, 51, .85); color: #fdf3e3; border-radius: 999px; padding: 6px 12px; font-family: inherit; font-size: .85rem; cursor: pointer; }
+.saga-tab.saga-on { background: #ff2e88; border-color: #ffd873; color: #fff; }
+.saga-view { min-height: 4rem; }
+.saga-card { background: #fff7fb; color: #2b1030; border-radius: 14px; padding: 16px; margin: 0 0 12px; border: 2px solid #c9a227; box-shadow: 0 4px 18px rgba(0, 0, 0, .35); }
+.saga-card h3 { margin: 2px 0 10px; font-size: 1.3rem; color: #4a154b; }
+.saga-chead { font-size: .78rem; letter-spacing: 1.2px; text-transform: uppercase; color: #0b7a70; margin-bottom: 6px; }
+.saga-k { display: block; font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; color: #0b7a70; margin-bottom: 4px; }
+.saga-scene { font-size: 1.05rem; line-height: 1.55; font-weight: 600; }
+.saga-why { color: #5b2a5e; line-height: 1.5; }
+.saga-take { background: #fff0f6; border-left: 5px solid #ff4f9a; border-radius: 8px; padding: 10px 12px; margin: 10px 0; line-height: 1.55; }
+.saga-bec { background: #e6f7f5; border: 1.5px dashed #0e7c86; border-radius: 10px; padding: 10px 12px; margin: 8px 0; font-size: .93rem; line-height: 1.5; }
+.saga-contrast { background: #fdf3e3; border-left: 5px solid #c9a227; border-radius: 8px; padding: 10px 12px; margin: 10px 0; line-height: 1.5; }
+.saga-lensbox { background: #2a0a33; border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+.saga-lensbox .saga-k { color: #ff8fb5; }
+.saga-hid { color: #ffd1e3; filter: blur(5px) contrast(2); letter-spacing: 1px; display: block; line-height: 1.5; }
+.saga-lensbox.saga-rev .saga-hid { filter: none; letter-spacing: 0; }
+.saga-sit { background: #efeaff; border: 1.5px solid #8f7fd4; border-radius: 10px; padding: 10px 12px; margin: 10px 0; line-height: 1.55; }
+.saga-onepage { background: #fff0f6; border-radius: 10px; padding: 10px 12px; margin: 8px 0; line-height: 1.55; }
+.saga-onepage p { margin: 0; }
+.saga-emblem { height: 150px; border-radius: 10px; margin: 8px 0; display: flex; align-items: center; justify-content: center; color: #ffd873; font-size: 1.6rem; letter-spacing: 6px; background: radial-gradient(circle at 50% 38%, #23306e, #101736 72%); border: 2px solid #c9a227; }
+.saga-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 2px; }
+.saga-btn { border: 2px solid #0e7c86; background: #fff; color: #0b5a63; border-radius: 999px; padding: 6px 14px; font-family: inherit; font-size: .88rem; cursor: pointer; }
+.saga-btn.saga-main { background: #ff4f9a; border-color: #ff4f9a; color: #fff; }
+.saga-btn.saga-tealb { background: #0e7c86; border-color: #0e7c86; color: #fff; }
+.saga-btn.saga-dim { opacity: .85; border-color: #b9a7c9; color: #5b2a5e; }
+.saga-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.saga-chip { border: 2px solid #ff4f9a; background: #fff0f6; color: #7a1245; border-radius: 999px; padding: 8px 14px; font-family: inherit; font-size: .92rem; cursor: pointer; }
+.saga-chip.saga-clarity { border-color: #0e7c86; background: #e6f7f5; color: #0b5a63; }
+.saga-portal { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.saga-portal td { padding: 5px 6px; border-bottom: 1px solid #f3d9ec; vertical-align: middle; }
+.saga-idxrow { display: flex; justify-content: space-between; gap: 10px; padding: 5px 6px; border-bottom: 1px solid #f3d9ec; cursor: pointer; font-size: .93rem; }
+.saga-idxrow:hover { background: #fff0f6; }
+.saga-mk { color: #c2185b; font-size: .82rem; white-space: nowrap; }
+h4.saga-vol { margin: 14px 0 4px; color: #0b7a70; font-size: 1rem; }
+.saga-hintline { color: #8a4b8f; font-size: .9rem; }
+.saga-pat { background: #efeaff; border: 1.5px solid #8f7fd4; border-radius: 12px; padding: 12px; margin: 0 0 12px; line-height: 1.55; color: #2b1030; }
+.saga-sci { line-height: 1.55; border-bottom: 1px solid #f3d9ec; padding-bottom: 8px; }
+.saga-lab { background: #0e7c86; color: #fff; border-radius: 6px; padding: 1px 7px; font-size: .75rem; letter-spacing: .5px; }
+.saga-src { color: #8a4b8f; font-size: .82rem; }
+.saga-anch { color: #0b7a70; font-size: .9rem; }
+details.saga-deep { background: #faf2ff; border-radius: 10px; padding: 8px 12px; margin: 8px 0; }
+details.saga-deep summary { cursor: pointer; color: #4a154b; font-weight: 600; }
+.saga-stat { display: inline-block; background: #fff0f6; border: 1px solid #ff4f9a; border-radius: 8px; padding: 4px 9px; margin: 2px 4px 2px 0; font-size: .88rem; }
+.saga-select { font-family: inherit; font-size: .92rem; padding: 5px 8px; border-radius: 8px; border: 2px solid #0e7c86; color: #2b1030; background: #fff; }
+.saga-clue { font-size: .9rem; line-height: 1.5; margin: 6px 0; }
+table.saga-cw { border-collapse: collapse; margin: 10px auto; }
+table.saga-cw td { padding: 1px; }
+table.saga-cw input { width: 27px; height: 27px; text-align: center; font-family: inherit; font-size: .95rem; text-transform: uppercase; border: 1.5px solid #4a154b; border-radius: 4px; background: #fff; color: #2b1030; padding: 0; }
+table.saga-cw input.saga-ok { background: #e6f7f5; border-color: #0e7c86; color: #0b5a63; font-weight: 700; }
+.saga-blk { width: 27px; height: 27px; background: #2a0a33; border-radius: 4px; }
+.saga-foot { font-size: .78rem; color: #d9c7f5; margin: 4px 0 10px; line-height: 1.5; }
+@media (max-width: 560px) {
+  table.saga-cw input, .saga-blk { width: 19px; height: 19px; font-size: .75rem; }
+  .saga-title { font-size: 1.2rem; }
+  .saga-card { padding: 12px; }
+}
