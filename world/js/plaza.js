@@ -3786,6 +3786,75 @@
     libInteract.push({ id: 'catalog', room: 'library', kind: 'catalog',
       label: 'The Library Catalog', blurb: '',
       meshes: [ledge, lecternPost, lecternTop, catalogBook] });
+
+    /* ---- THE SAGA EXHIBIT (2026-11-08, token -26) ----------
+       Jay's direction: the CHEAT CODE SAGA page's experience —
+       its six rooms over all 222 chapter cards — comes into the
+       Library, in front of Jay's own shelf of honor. The exhibit
+       is a great open book on a pedestal over a plum plinth with
+       a fine gold ring: the left page carries the saga's cover
+       (the classic-cover treatment in a deep berry), the right
+       page the star chart — the book open between Jay's story
+       and the sky it runs on. A teal sign above names it, on two
+       posts. It stands centered at local z -12.2, between the
+       reading table and the back wall, clear of the ladder's run
+       and the nook; the existing library-saga POI pin (dead ahead
+       of the shelf) frames it without a new pin. Tapping the book
+       opens the exhibit card (cameras.js CCW.wireSaga); the shelf
+       behind it keeps its own presentation, untouched. */
+    var sagaPlinth = add(B.MeshBuilder.CreateCylinder('library-int-saga-plinth',
+      { diameter: 2.3, height: 0.14, tessellation: 36 }, scene));
+    sagaPlinth.position.set(0, 0.07, -12.2);
+    sagaPlinth.material = CCW.mat(scene, B, 'library-int-saga-plinth-mat', P.plumHouse);
+    var sagaRing = add(B.MeshBuilder.CreateTorus('library-int-saga-ring',
+      { diameter: 1.9, thickness: 0.018, tessellation: 48 }, scene));
+    sagaRing.rotation.x = Math.PI / 2;
+    sagaRing.position.set(0, 0.15, -12.2);
+    sagaRing.material = CCW.mat(scene, B, 'library-int-saga-ring-mat', P.gold,
+      { emissive: '#8a6a14' });
+    var sagaPedestal = add(B.MeshBuilder.CreateCylinder('library-int-saga-pedestal',
+      { diameterTop: 0.62, diameterBottom: 0.9, height: 0.92, tessellation: 24 }, scene));
+    sagaPedestal.position.set(0, 0.6, -12.2);
+    sagaPedestal.material = CCW.texMat(scene, B, 'library-int-saga-pedestal-mat', woodTex, {});
+    var sagaSpine = add(B.MeshBuilder.CreateCylinder('library-int-saga-spine',
+      { diameter: 0.09, height: 0.92, tessellation: 12 }, scene));
+    sagaSpine.rotation.x = Math.PI / 2;
+    sagaSpine.position.set(0, 1.1, -12.25);
+    sagaSpine.material = CCW.mat(scene, B, 'library-int-saga-spine-mat', '#6d1b4d');
+    var sagaBookL = add(B.MeshBuilder.CreateBox('library-int-saga-book-l',
+      { width: 0.62, height: 0.035, depth: 0.84 }, scene));
+    sagaBookL.position.set(-0.3, 1.13, -12.2);
+    sagaBookL.rotation.z = 0.16;
+    sagaBookL.material = CCW.texMat(scene, B, 'library-int-saga-book-l-mat',
+      CCW.classicCoverTexture(scene, B, 'library-int-saga-book-l-tex',
+        { title: 'THE CHEAT CODE SAGA', author: 'Jay · Chemistress Cause',
+          year: 2026, color: '#6d1b4d', shelf: null }), {});
+    var sagaBookR = add(B.MeshBuilder.CreateBox('library-int-saga-book-r',
+      { width: 0.62, height: 0.035, depth: 0.84 }, scene));
+    sagaBookR.position.set(0.3, 1.13, -12.2);
+    sagaBookR.rotation.z = -0.16;
+    sagaBookR.material = CCW.texMat(scene, B, 'library-int-saga-book-r-mat',
+      CCW.starChartTexture(scene, B, 'library-int-saga-book-r-tex'), {});
+    var sagaPostL = add(B.MeshBuilder.CreateCylinder('library-int-saga-post-l',
+      { diameter: 0.05, height: 2.2, tessellation: 10 }, scene));
+    sagaPostL.position.set(-1.05, 1.1, -12.75);
+    sagaPostL.material = CCW.texMat(scene, B, 'library-int-saga-post-mat', woodTex, {});
+    var sagaPostR = add(B.MeshBuilder.CreateCylinder('library-int-saga-post-r',
+      { diameter: 0.05, height: 2.2, tessellation: 10 }, scene));
+    sagaPostR.position.set(1.05, 1.1, -12.75);
+    sagaPostR.material = CCW.texMat(scene, B, 'library-int-saga-post-mat', woodTex, {});
+    var sagaTrim = add(B.MeshBuilder.CreateBox('library-int-saga-trim',
+      { width: 2.5, height: 0.72, depth: 0.07 }, scene));
+    sagaTrim.position.set(0, 2.35, -12.75);
+    sagaTrim.material = CCW.mat(scene, B, 'library-int-saga-trim-mat', P.tealDeep);
+    var sagaSign = add(CCW.makeLabel(scene, B, 'library-int-saga-sign',
+      ['✦ THE CHEAT CODE SAGA ✦', 'Choose your own path'], 2.44, 0.66,
+      { fg: '#ffd873', bg: 'rgba(11,58,54,0)' }));
+    sagaSign.position.set(0, 2.35, -12.7);
+    sagaSign.rotation.y = Math.PI;
+    libInteract.push({ id: 'saga-exhibit', room: 'library', kind: 'saga',
+      label: 'CHEAT CODE — The Saga Exhibit', blurb: '',
+      meshes: [sagaBookL, sagaBookR, sagaPedestal, sagaPlinth] });
     var shelfInfo = {
       classics: ['Public-Domain Classics',
         'Free to read & hear — over a hundred books on eight shelves now. The six on the stand open at a tap; tap the lectern for the whole catalog.'],

@@ -859,6 +859,21 @@
       },
       speech: speechSeam
     }) : null;
+    // The SAGA Exhibit (2026-11-08): the great open book before
+    // the Library's shelf of honor opens Jay's choose-your-own-
+    // path saga experience (cameras.js wireSaga). Its 222 chapter
+    // cards ride the same fetch seam as the Library's books —
+    // lazy, on first open; its reader state lives only in this
+    // browser's storage, under the saga page's own keys.
+    var sagaCtl = CCW.wireSaga ? CCW.wireSaga({
+      document: document, storage: storageSeam, onStatus: setStatus,
+      fetchText: function (url) {
+        return fetch(url).then(function (r) {
+          if (!r.ok) throw new Error('saga data ' + r.status);
+          return r.text();
+        });
+      }
+    }) : null;
     function bookById(id) {
       var list = CCW.CLASSICS_BOOKS || [];
       for (var i = 0; i < list.length; i++) {
@@ -924,7 +939,7 @@
       // them so the world's tappables are counted in one place.
       if (entry.kind !== 'info' && entry.kind !== 'notices' &&
           entry.kind !== 'book' && entry.kind !== 'jar' &&
-          entry.kind !== 'catalog' &&
+          entry.kind !== 'catalog' && entry.kind !== 'saga' &&
           entry.kind !== 'penpal-board') return;
       (entry.meshes || []).forEach(function (mesh) {
         wirePick(mesh, function () {
@@ -938,6 +953,15 @@
               setStatus('📚 The Library Catalog — eight shelves, every book free to read & hear.');
             } else {
               setStatus('The catalog is shelved just now — the books on the stand still open.');
+            }
+          } else if (entry.kind === 'saga') {
+            // The SAGA exhibit (2026-11-08): the six rooms of
+            // Jay's saga page, over all 222 chapter cards.
+            if (sagaCtl) {
+              sagaCtl.openExhibit();
+              setStatus('✦ The Cheat Code Saga — choose your own path.');
+            } else {
+              setStatus('THE CHEAT CODE SAGA — the exhibit is still being set.');
             }
           } else if (entry.kind === 'notices') {
             rideView({ position: [2.2, 1.7, 13.3], target: [4.6, 2.9, 11.5] });

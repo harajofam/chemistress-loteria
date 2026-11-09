@@ -1346,6 +1346,620 @@
   };
 
   /*
+   * The SAGA Exhibit (2026-11-08, token -26) — Jay's direction:
+   * the choose-your-own-path CHEAT CODE SAGA page experience
+   * comes into the Library, "so people can see cheat code saga
+   * design on the VR too." Tapping the great open book on the
+   * exhibit stand before the shelf of honor opens #saga-exhibit:
+   * the SAGA page's own six rooms — 🌅 Today, 🧭 Path, 🚪 Index
+   * (the Decision Portal + the written-order index), 🔬 Facts,
+   * 🧩 Puzzle, 🧪 My Lab — over all 222 chapter cards of the
+   * CORRECTED book (Skool-aligned numbering: Self Love is
+   * Ch. 15, Material Wealth Ch. 19, Materials Ch. 20).
+   *
+   * This controller is a faithful port of the SAGA page's app
+   * (website/cheat-code-saga/app-section.html): the Astro Sums
+   * math (Meeus moon, Trial, House lessons), the explained
+   * routing (a state routes by Jay's own tags first, then
+   * today's Lesson number, then freshness — and always says
+   * why), the chapter card's full field set, the crossword
+   * whose answers are chapter titles, and the Lab (history,
+   * marks, parked pages) — all of it living ONLY in this
+   * browser's local storage, exactly as the page promises:
+   * nothing is transmitted. The one staging difference: the
+   * page's ART_BASE is empty in this pass, so every chapter
+   * wears the emblem frame (✦ n ✦), the page's own treatment
+   * wherever art is not hosted; the saga art-hosting decision
+   * rides with this pass's report.
+   *
+   * Data: assets/saga/saga-chapters.json (built by
+   * tools/build-saga-data.js from Jay's canonical
+   * chapter-metadata.json — the single source of truth; no
+   * chapter text is invented or reworded here), fetched lazily
+   * on first open through the same seam as the Library's books.
+   *
+   * env: { document, fetchText, storage, onStatus } — as
+   * wireLibrary. Storage keys are the page's own (ccs_hist,
+   * ccs_marked, ccs_parked, ccs_last, ccs_asc, ccs_cw).
+   */
+  CCW.wireSaga = function (env) {
+    var doc = env && env.document;
+    if (!doc || !doc.getElementById) return null;
+    var root = doc.getElementById('saga-exhibit');
+    var viewEl = doc.getElementById('saga-view');
+    var todayEl = doc.getElementById('saga-today');
+    var loadEl = doc.getElementById('saga-loadstat');
+    var tabsEl = doc.getElementById('saga-tabs');
+    var closeBtn = doc.getElementById('saga-close');
+    if (!root || !viewEl) return null;
+    var fetchText = env.fetchText;
+    var storage = env.storage;
+    var onStatus = env.onStatus || function () {};
+    var DATA_URL = 'assets/saga/saga-chapters.json';
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function ls(k, d) {
+      try { var v = storage && storage.get(k); return v ? JSON.parse(v) : d; }
+      catch (e) { return d; }
+    }
+    function ss(k, v) {
+      try { if (storage) storage.set(k, JSON.stringify(v)); } catch (e) {}
+    }
+
+    /* ---- the page's constants, verbatim ---- */
+    var ZOD = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+      'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+    var HOUSE = ['Appearance/Outlook', 'Money/Values', 'Dwelling/Learning',
+      'Ego/Empathy', 'Drama/Love', 'Discipline/Patience',
+      'Contracts/Connections', 'Rebirth/Intimacy', 'Paranoia/Reflection',
+      '(Insecure) Control / Secure', 'Wishes / The Future (Manifestations)',
+      'Endings / Healing'];
+    var STATES = [['stuck', 'Stuck'], ['overthinking', 'Overthinking'],
+      ['avoiding', 'Avoiding it'], ['numb', 'Numb'], ['grieving', 'Grieving'],
+      ['angry', 'Angry'], ['guilty', 'Carrying guilt'], ['ashamed', 'Ashamed'],
+      ['lonely', 'Lonely'], ['controlling', 'Holding on tight'],
+      ['restless', 'Restless'], ['hopeful', 'Hopeful']];
+    var FEEL = { stuck: 'stuck', overthinking: 'like your mind won\'t stop',
+      avoiding: 'like you\'ve been avoiding something', numb: 'numb',
+      grieving: 'heavy with grief', angry: 'angry', guilty: 'guilty',
+      ashamed: 'ashamed', lonely: 'lonely, even around people',
+      controlling: 'like you have to control all of it', restless: 'restless',
+      hopeful: 'hopeful' };
+    var VR = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8 };
+
+    /* ---- Jay's Astro Sums math, ported 1:1 from her app ---- */
+    function moonSignForUTC(ms) {
+      var d = (ms - Date.UTC(2000, 0, 1, 12)) / 864e5, r = Math.PI / 180;
+      var L0 = 218.316 + 13.176396 * d, M = 134.963 + 13.064993 * d,
+        D = 297.850 + 12.190749 * d, F = 93.272 + 13.22935 * d,
+        Ms = 356.047 + 0.9856002585 * d;
+      var lon = L0 + 6.289 * Math.sin(M * r) + 1.274 * Math.sin((2 * D - M) * r) +
+        0.658 * Math.sin(2 * D * r) + 0.214 * Math.sin(2 * M * r) -
+        0.186 * Math.sin(Ms * r) - 0.114 * Math.sin(2 * F * r);
+      return ZOD[Math.floor((((lon % 360) + 360) % 360) / 30)];
+    }
+    function dsum(n) { n = '' + n; var s = 0; for (var i = 0; i < n.length; i++) s += +n[i]; return s; }
+    function red12(n) { n = +n; while (n > 12) n = dsum(n); return n; }
+    function droot(n) { while (n > 9) n = dsum(n); return n; }
+    function todayNums() {
+      var now = new Date(), mm = ('0' + (now.getMonth() + 1)).slice(-2),
+        dd = ('0' + now.getDate()).slice(-2);
+      var t = dsum(mm + dd + now.getFullYear()); while (t > 12) t = dsum(t);
+      var moon = moonSignForUTC(now.getTime()), ch = ZOD.indexOf(moon) + 1,
+        L = red12(t + ch);
+      var asc = ls('ccs_asc', null), P = null, Q = null;
+      if (asc !== null && asc !== '' && asc != null) {
+        P = ((ch - 1 - (+asc)) % 12 + 12) % 12 + 1; Q = red12(P + t);
+      }
+      return { t: t, moon: moon, ch: ch, L: L, P: P, Q: Q, date: now };
+    }
+
+    /* ---- the exhibit's data (the page's META, loaded lazy) -- */
+    var META = {}, metaN = 0, CW = null, loadPromise = null;
+    function loadData() {
+      if (metaN) return Promise.resolve(true);
+      if (loadPromise) return loadPromise;
+      loadPromise = fetchText(DATA_URL).then(function (text) {
+        var data = JSON.parse(text);
+        (data.chapters || []).forEach(function (c) { META[c.n] = c; });
+        metaN = Object.keys(META).length;
+        CW = data.crossword || null;
+        if (loadEl) {
+          loadEl.textContent = metaN >= 222
+            ? 'All 222 chapter cards loaded. ✦'
+            : metaN + ' of 222 chapter cards loaded.';
+        }
+        return true;
+      }).catch(function () {
+        loadPromise = null;
+        return false;
+      });
+      return loadPromise;
+    }
+
+    /* ---- routing: open, in the reader's favor, explained ---- */
+    function visitedSet() {
+      var h = ls('ccs_hist', []), s = {};
+      for (var i = 0; i < h.length; i++) s[h[i].n] = 1;
+      return s;
+    }
+    var whyNow = '';
+    function route(state, exclude) {
+      var tn = todayNums(), park = ls('ccs_parked', []), vis = visitedSet(),
+        best = null, bs = -1, bre = [];
+      for (var n in META) {
+        var c = META[n];
+        if (!c.tg || (exclude && exclude[n]) || park.indexOf(+n) >= 0) continue;
+        var sc = 0, rs = [];
+        var ix = c.tg.indexOf(state);
+        if (ix === 0) { sc += 6; rs.push('Jay wrote this chapter straight into the “' + FEEL[state] + '” weather — it is tagged first for exactly that state.'); }
+        else if (ix > 0) { sc += 3; rs.push('This chapter carries the “' + FEEL[state] + '” pattern in Jay\'s own words.'); }
+        if (droot(c.n) === tn.L) { sc += 2; rs.push('Its chapter number reduces to ' + tn.L + ' — today\'s Lesson number (Trial ' + tn.t + ' + Moon in ' + tn.moon + ').'); }
+        if (!vis[n]) sc += 1;
+        if (sc > bs) { bs = sc; best = c; bre = rs; }
+      }
+      if (best) whyNow = 'You said you\'re feeling ' + FEEL[state] + '. ' + bre.join(' ');
+      return best;
+    }
+    function routeShared(from, mode) {
+      var c0 = META[from]; if (!c0) return null;
+      var park = ls('ccs_parked', []), vis = visitedSet(), best = null, bs = -1;
+      for (var n in META) {
+        var c = META[n];
+        if (+n === from || !c.tg || park.indexOf(+n) >= 0) continue;
+        var sc = 0;
+        for (var i = 0; i < c0.tg.length; i++) if (c.tg.indexOf(c0.tg[i]) >= 0) sc += 3 - i;
+        if (mode === 'confront' && VR[c.vr] > VR[c0.vr]) sc += 2;
+        if (mode === 'hope' && c.tg.indexOf('hopeful') >= 0) sc += 6;
+        if (!vis[n]) sc += 1;
+        if (sc > bs) { bs = sc; best = c; }
+      }
+      return best;
+    }
+    function record(n, resp) {
+      var h = ls('ccs_hist', []);
+      h.push({ n: n, resp: resp || 'open', d: new Date().toDateString() });
+      ss('ccs_hist', h); ss('ccs_last', n);
+    }
+    function leaning() {
+      var h = ls('ccs_hist', []), cnt = {}, tot = 0;
+      for (var i = 0; i < h.length; i++) {
+        var c = META[h[i].n];
+        if (c && c.tg && c.tg[0]) { cnt[c.tg[0]] = (cnt[c.tg[0]] || 0) + 1; tot++; }
+      }
+      var top = null, tc = 0;
+      for (var k in cnt) if (cnt[k] > tc) { tc = cnt[k]; top = k; }
+      return { top: top, count: tc, tot: tot };
+    }
+    function patternCheck() {
+      var L = leaning();
+      if (L.top && L.count >= 3) {
+        var best = null;
+        for (var n in META) {
+          var c = META[n];
+          if (c.tg && c.tg.indexOf('hopeful') >= 0 && !visitedSet()[n]) { best = c; break; }
+        }
+        return '<div class="saga-pat">✦ <b>Notice anything?</b> Your path leaned toward “' +
+          FEEL[L.top] + '” weather ' + L.count + ' times. That is not a label — it is a pattern you can watch, in your own choices. ' +
+          (best ? 'When you are ready, the other side of it lives in <button type="button" class="saga-btn saga-dim" data-open="' + best.n + '">Chapter ' + best.n + ': ' + esc(best.t) + '</button>.' : '') + '</div>';
+      }
+      return '';
+    }
+
+    /* ---- the chapter card (the page's fields, in full) ------ */
+    var cur = 'today', curCh = null;
+    function artHTML(c) {
+      // ART_BASE is empty in this pass (see the header note):
+      // every chapter wears the page's emblem frame.
+      return '<div class="saga-emblem">✦ ' + c.n + ' ✦</div>';
+    }
+    function cardHTML(c, showWhy) {
+      var mk = ls('ccs_marked', []), pk = ls('ccs_parked', []);
+      var s = '<div class="saga-card"><div class="saga-chead">Chapter ' + c.n +
+        ' · Vol. ' + c.vr + ' — ' + esc(c.v) + ' · ' + esc(c.st) + '</div><h3>' +
+        esc(c.t) + '</h3>';
+      s += artHTML(c);
+      if (showWhy && whyNow) s += '<div class="saga-bec"><b>You found this because:</b> ' + esc(whyNow) + '</div>';
+      if (c.sc) s += '<p class="saga-scene">' + esc(c.sc) + '</p>';
+      if (c.tk) s += '<div class="saga-take"><span class="saga-k">The point, in Jay\'s words</span>' + esc(c.tk) + '</div>';
+      if (c.why && c.why !== c.sc) s += '<p class="saga-why">' + esc(c.why) + '</p>';
+      if (c.co) s += '<div class="saga-contrast"><b>The contrast:</b> ' + esc(c.co) + '</div>';
+      if (c.hi) s += '<div class="saga-lensbox" id="saga-lens"><span class="saga-k">🔴 Red lens — press &amp; hold to decode</span><span class="saga-hid">' + esc(c.hi) + '</span></div>';
+      if (c.le) s += '<details class="saga-deep"><summary>Go deeper — the Chemistress Lens (optional)</summary><p class="saga-sci">' + esc(c.le) + '</p></details>';
+      if (c.sci && c.sci.length) {
+        s += '<details class="saga-deep"><summary>Go deeper — science &amp; sources (optional)</summary>';
+        for (var i = 0; i < c.sci.length; i++) {
+          var x = c.sci[i];
+          s += '<p class="saga-sci"><span class="saga-lab">' + esc(x.l) + '</span> ' + esc(x.f) +
+            (x.p ? ' <i>' + esc(x.p) + '</i>' : '') +
+            (x.s && x.s.length ? '<br><span class="saga-src">Sources: ' + esc(x.s.join(' · ')) + '</span>' : '') + '</p>';
+        }
+        s += '</details>';
+      }
+      if (c.an && c.an.length) s += '<p class="saga-anch">⚓ Anchors: ' + esc(c.an.join(' · ')) + '</p>';
+      var sit = c.mi || c.tk;
+      if (sit) s += '<div class="saga-sit"><span class="saga-k">🌙 Sit with it — your micro-commitment</span>' + esc(sit) + '</div>';
+      s += '<div class="saga-row"><button type="button" class="saga-btn saga-main" data-act="hit" data-n="' + c.n + '">' + (mk.indexOf(c.n) >= 0 ? '♥ It hit you' : '♥ This hit me') + '</button>' +
+        '<button type="button" class="saga-btn saga-dim" data-act="park" data-n="' + c.n + '">' + (pk.indexOf(c.n) >= 0 ? '🌙 Parked — come back later' : '🌙 Not yet — park it') + '</button></div>';
+      s += '<div class="saga-row"><button type="button" class="saga-btn saga-tealb" data-act="confront" data-n="' + c.n + '">Confront it → next page</button>' +
+        '<button type="button" class="saga-btn saga-tealb" data-act="sit" data-n="' + c.n + '">Sit with it → a deeper page</button></div>';
+      s += '<div class="saga-row"><button type="button" class="saga-btn saga-dim" data-act="prev" data-n="' + c.n + '">← Ch. ' + (c.n - 1) + ' in order</button>' +
+        '<button type="button" class="saga-btn saga-dim" data-act="next" data-n="' + c.n + '">Ch. ' + (c.n + 1) + ' in order →</button>' +
+        '<button type="button" class="saga-btn saga-dim" data-act="portal">🚪 Decision portal</button></div>';
+      s += '</div>';
+      return s;
+    }
+    function wireCard() {
+      var l = doc.getElementById('saga-lens');
+      if (l) {
+        var on = function () { l.className = 'saga-lensbox saga-rev'; };
+        var off = function () { l.className = 'saga-lensbox'; };
+        l.addEventListener('pointerdown', on);
+        l.addEventListener('pointerup', off);
+        l.addEventListener('pointerleave', off);
+        l.addEventListener('mouseenter', on);
+        l.addEventListener('mouseleave', off);
+      }
+    }
+    function setTabs() {
+      if (!tabsEl || !tabsEl.children) return;
+      for (var i = 0; i < tabsEl.children.length; i++) {
+        var b = tabsEl.children[i];
+        if (b && b.getAttribute) {
+          b.className = b.getAttribute('data-v') === cur ? 'saga-tab saga-on' : 'saga-tab';
+        }
+      }
+    }
+    function openChapter(n, why) {
+      var c = META[n];
+      curCh = n;
+      record(n, 'open');
+      if (!c) {
+        viewEl.innerHTML = '<div class="saga-card"><h3>Chapter ' + n + '</h3><p>The chapter cards are still loading — give the exhibit a breath and try again. The written-order index below always works.</p></div>';
+        go('index');
+        return;
+      }
+      cur = 'card';
+      setTabs();
+      viewEl.innerHTML = patternCheck() + cardHTML(c, why);
+      wireCard();
+    }
+
+    /* ---- the six rooms ---- */
+    function vToday() {
+      var tn = todayNums(), seed = tn.date.getFullYear() * 10000 + (tn.date.getMonth() + 1) * 100 + tn.date.getDate();
+      var pool = [];
+      for (var n in META) if (META[n].sc) pool.push(META[n]);
+      pool.sort(function (a, b) { return a.n - b.n; });
+      var s = '<div class="saga-card"><div class="saga-chead">Message of the Day · one page each — open the book anywhere</div>';
+      if (!pool.length) {
+        s += '<p>Today\'s page is loading with the chapter cards…</p></div>';
+        viewEl.innerHTML = s;
+        return;
+      }
+      var c = pool[(tn.t * 31 + tn.ch * 7 + droot(seed)) % pool.length];
+      whyNow = 'Today\'s Trial is ' + tn.t + ' and the Moon is in ' + tn.moon + ' — the ' + tn.ch + 'th house (' + HOUSE[tn.ch - 1] + '). This page answers to that weather.';
+      s += '<h3>Chapter ' + c.n + ': ' + esc(c.t) + '</h3>' + artHTML(c);
+      s += '<div class="saga-bec"><b>You found this because:</b> ' + esc(whyNow) + '</div>';
+      if (c.tg && c.tg.length) {
+        s += '<p class="saga-hintline">This applies if you\'ve been feeling ' +
+          c.tg.slice(0, 2).map(function (x) { return FEEL[x]; }).join(', or ') + '.</p>';
+      }
+      s += '<div class="saga-onepage"><span class="saga-k">Page 1 · Outlook</span><p>' + esc(c.sc) + '</p></div>';
+      if (c.why) s += '<div class="saga-onepage"><span class="saga-k">Page 2 · Values</span><p>' + esc(c.why) + '</p></div>';
+      if (c.tk) s += '<div class="saga-onepage"><span class="saga-k">Page 3 · Conclusion</span><p>' + esc(c.tk) + '</p></div>';
+      s += '<div class="saga-row"><button type="button" class="saga-btn saga-main" data-open="' + c.n + '">Open the full chapter →</button>' +
+        '<button type="button" class="saga-btn" data-act="random">🎲 Open the book at random</button></div></div>';
+      viewEl.innerHTML = s;
+      wireCard();
+    }
+    function vPath() {
+      var last = ls('ccs_last', null);
+      var s = '<div class="saga-card"><div class="saga-chead">Choose your own path</div><h3>How are you arriving?</h3>' +
+        '<p class="saga-why">No wrong answers, and nothing here labels you. Pick the weather you are actually in — the path routes you to the chapter Jay wrote for it, and tells you why.</p><div class="saga-chips">';
+      for (var i = 0; i < STATES.length; i++) {
+        s += '<button type="button" class="saga-chip' + (i % 3 === 1 ? ' saga-clarity' : '') + '" data-state="' + STATES[i][0] + '">' + STATES[i][1] + '</button>';
+      }
+      s += '</div>';
+      if (last && META[last]) {
+        s += '<p class="saga-hintline">Last page you read: Chapter ' + last + ' — ' + esc(META[last].t) +
+          ' <button type="button" class="saga-btn saga-dim" data-open="' + last + '">Pick it back up</button></p>';
+      }
+      s += '</div><div id="saga-pathout"></div>';
+      viewEl.innerHTML = s;
+    }
+    function vIndex() {
+      var s = '<div class="saga-card"><div class="saga-chead">The Decision Portal · emotion is the entry point</div><h3>If you feel it — start here</h3><table class="saga-portal">';
+      for (var i = 0; i < STATES.length; i++) {
+        var st = STATES[i][0], b = null, n;
+        for (n in META) { var c = META[n]; if (c.tg && c.tg[0] === st) { b = c; break; } }
+        if (!b) for (n in META) { var c2 = META[n]; if (c2.tg && c2.tg.indexOf(st) >= 0) { b = c2; break; } }
+        s += '<tr><td>If you feel <b>' + FEEL[st] + '</b> →</td><td>' +
+          (b ? '<button type="button" class="saga-btn" data-open="' + b.n + '">Chapter ' + b.n + ': ' + esc(b.t) + '</button>' : '<i>cards loading…</i>') + '</td></tr>';
+      }
+      s += '</table></div><div class="saga-card"><div class="saga-chead">Or read it the way it was written</div>';
+      var mk = ls('ccs_marked', []), pk = ls('ccs_parked', []), cv = '';
+      var rows = [];
+      for (var k in META) rows.push(META[k]);
+      rows.sort(function (a, b2) { return a.n - b2.n; });
+      for (var j = 0; j < rows.length; j++) {
+        var e = rows[j];
+        if (e.v !== cv) { cv = e.v; s += '<h4 class="saga-vol">Vol. ' + e.vr + ' — ' + esc(cv) + '</h4>'; }
+        s += '<div class="saga-idxrow" data-open="' + e.n + '"><span>Chapter ' + e.n + ': ' + esc(e.t) + '</span><span class="saga-mk">' +
+          (mk.indexOf(e.n) >= 0 ? '♥ hit' : '') + (pk.indexOf(e.n) >= 0 ? ' 🌙 parked' : '') + '</span></div>';
+      }
+      s += '</div>';
+      viewEl.innerHTML = s;
+    }
+    function vFacts() {
+      var s = '<div class="saga-card"><div class="saga-chead">Indexed · sourced fun facts, science &amp; the Lens</div><h3>From Jay\'s own science pages</h3>';
+      var any = false;
+      var rows = [];
+      for (var k in META) rows.push(META[k]);
+      rows.sort(function (a, b) { return a.n - b.n; });
+      rows.forEach(function (c) {
+        (c.sci || []).forEach(function (x) {
+          any = true;
+          s += '<p class="saga-sci"><span class="saga-lab">' + esc(x.l) + '</span> ' + esc(x.f) +
+            (x.p ? ' <i>' + esc(x.p) + '</i>' : '') +
+            (x.s && x.s.length ? '<br><span class="saga-src">Sources: ' + esc(x.s.join(' · ')) + '</span>' : '') +
+            '<br><button type="button" class="saga-btn saga-dim" data-open="' + c.n + '">Chapter ' + c.n + ': ' + esc(c.t) + '</button></p>';
+        });
+      });
+      if (!any) s += '<p>The science index loads with the chapter cards.</p>';
+      s += '</div>';
+      viewEl.innerHTML = s;
+    }
+    function cwCells() {
+      var cells = {};
+      if (!CW) return cells;
+      CW.words.forEach(function (w, wi) {
+        for (var i = 0; i < w.w.length; i++) {
+          var r = w.r + (w.d === 'D' ? i : 0), cc = w.c + (w.d === 'A' ? i : 0), k = r + ',' + cc;
+          cells[k] = cells[k] || { ch: w.w[i], ws: [] };
+          cells[k].ws.push(wi);
+        }
+      });
+      return cells;
+    }
+    function cwWordSolved(w, solved) {
+      return w.w.split('').every(function (ch, i) {
+        var r = w.r + (w.d === 'D' ? i : 0), cc = w.c + (w.d === 'A' ? i : 0);
+        return solved[r + ',' + cc] === ch;
+      });
+    }
+    function vPuzzle() {
+      if (!CW) {
+        viewEl.innerHTML = '<div class="saga-card"><p>The puzzle loads with the chapter cards.</p></div>';
+        return;
+      }
+      var solved = ls('ccs_cw', {}), cells = cwCells();
+      var s = '<div class="saga-card"><div class="saga-chead">Crossword · the answers point the way</div>' +
+        '<h3>Every word is a chapter title</h3><p class="saga-why">Fill a word and its chapter unlocks as your next direction.</p>' +
+        '<div id="saga-cw-mount"></div><div id="saga-cw-out">';
+      CW.words.forEach(function (w) {
+        var done = cwWordSolved(w, solved);
+        s += '<p class="saga-clue"><b>' + (w.d === 'A' ? 'Across' : 'Down') + '</b> · ' + esc(w.clue) +
+          (done ? ' <span class="saga-hintline">✔ solved → the path points to <button type="button" class="saga-btn saga-dim" data-open="' + w.n + '">Chapter ' + w.n + ': ' + esc(w.t) + '</button></span>' : '') + '</p>';
+      });
+      var all = CW.words.every(function (w) { return cwWordSolved(w, solved); });
+      if (all) {
+        s += '<div class="saga-pat">✦ <b>The puzzle spells a path:</b> ' +
+          CW.words.map(function (w) { return 'Chapter ' + w.n; }).join(' → ') +
+          '. Walk it in that order, or open any one now.</div>';
+      }
+      s += '</div></div>';
+      viewEl.innerHTML = s;
+      var mount = doc.getElementById('saga-cw-mount');
+      if (!mount || !doc.createElement) return;
+      var table = doc.createElement('table');
+      table.className = 'saga-cw';
+      for (var r = 0; r < CW.rows; r++) {
+        var tr = doc.createElement('tr');
+        for (var c = 0; c < CW.cols; c++) {
+          var td = doc.createElement('td');
+          var k = r + ',' + c;
+          if (cells[k]) {
+            var inp = doc.createElement('input');
+            inp.setAttribute('maxlength', '1');
+            inp.setAttribute('data-k', k);
+            inp.value = solved[k] || '';
+            inp.className = solved[k] ? 'saga-ok' : '';
+            (function (el) {
+              el.addEventListener('input', function () { onCwInput(el); });
+            })(inp);
+            td.appendChild(inp);
+          } else {
+            var blk = doc.createElement('div');
+            blk.className = 'saga-blk';
+            td.appendChild(blk);
+          }
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+      mount.appendChild(table);
+    }
+    function onCwInput(inp) {
+      var k = inp.getAttribute('data-k'), sol = ls('ccs_cw', {});
+      var want = null;
+      for (var j = 0; j < CW.words.length; j++) {
+        var w = CW.words[j];
+        for (var q = 0; q < w.w.length; q++) {
+          var r = w.r + (w.d === 'D' ? q : 0), cc = w.c + (w.d === 'A' ? q : 0);
+          if (r + ',' + cc === k) want = w.w[q];
+        }
+      }
+      var before = CW.words.map(function (w) { return cwWordSolved(w, sol); }).join();
+      if (String(inp.value || '').toUpperCase() === want) { sol[k] = want; inp.className = 'saga-ok'; }
+      else { delete sol[k]; inp.className = ''; }
+      ss('ccs_cw', sol);
+      var after = CW.words.map(function (w) { return cwWordSolved(w, sol); }).join();
+      if (before !== after) vPuzzle();
+    }
+    function vLab() {
+      var tn = todayNums(), h = ls('ccs_hist', []), mk = ls('ccs_marked', []),
+        pk = ls('ccs_parked', []), L = leaning();
+      var s = '<div class="saga-card"><div class="saga-chead">Your lab result · stored only in this browser — nothing is sent anywhere</div><h3>Reader Profile</h3>';
+      s += '<p><span class="saga-stat">🌅 Trial today: <b>' + tn.t + '</b></span>' +
+        '<span class="saga-stat">🌙 Moon in ' + tn.moon + ' · House ' + tn.ch + ' (' + HOUSE[tn.ch - 1] + ')</span>' +
+        '<span class="saga-stat">✦ Collective Lesson: House ' + tn.L + ' (' + HOUSE[tn.L - 1] + ')</span></p>';
+      s += '<p>Your personal lesson uses your rising sign, the way Jay\'s Astro Sums does: <select id="saga-asc" class="saga-select"><option value="">— choose your rising sign —</option>';
+      for (var i = 0; i < 12; i++) {
+        s += '<option value="' + i + '"' + (ls('ccs_asc', null) === i || ls('ccs_asc', null) === String(i) ? ' selected' : '') + '>' + ZOD[i] + ' rising</option>';
+      }
+      s += '</select> ' + (tn.P ? '<span class="saga-stat">Personal Moon House ' + tn.P + ' (' + HOUSE[tn.P - 1] + ') · Personal Lesson: House ' + tn.Q + ' (' + HOUSE[tn.Q - 1] + ')</span>' : '') + '</p>';
+      s += '<p><span class="saga-stat">📖 Pages visited: ' + h.length + '</span>' +
+        '<span class="saga-stat">♥ Marked "this hit me": ' + mk.length + '</span>' +
+        '<span class="saga-stat">🌙 Parked for later: ' + pk.length + '</span></p>';
+      if (L.top) {
+        s += '<div class="saga-pat">Your path <b>leaned toward</b> “' + FEEL[L.top] + '” weather — ' + L.count + ' of ' + L.tot + ' pages. You recognized it; nobody assigned it. Watch it, and it starts to lose its steering wheel.</div>';
+      }
+      if (pk.length) {
+        s += '<h4 class="saga-vol">🌙 Parked — return when ready</h4>';
+        for (var p = 0; p < pk.length; p++) {
+          var cp = META[pk[p]];
+          if (cp) s += '<div class="saga-idxrow" data-open="' + cp.n + '"><span>Chapter ' + cp.n + ': ' + esc(cp.t) + '</span><span class="saga-mk">return →</span></div>';
+        }
+      }
+      if (h.length) {
+        s += '<h4 class="saga-vol">Your path so far</h4>';
+        for (var q = h.length - 1; q >= 0; q--) {
+          var cq = META[h[q].n];
+          if (cq) s += '<div class="saga-idxrow" data-open="' + cq.n + '"><span>Chapter ' + cq.n + ': ' + esc(cq.t) + '</span><span class="saga-mk">' + esc(h[q].resp) + '</span></div>';
+        }
+      }
+      s += '<div class="saga-row"><button type="button" class="saga-btn saga-dim" data-act="clearlab">Clear my lab</button></div></div>';
+      viewEl.innerHTML = s;
+      var a = doc.getElementById('saga-asc');
+      if (a) a.addEventListener('change', function () {
+        ss('ccs_asc', a.value === '' ? null : +a.value);
+        vLab();
+      });
+    }
+
+    var VIEWS = { today: vToday, path: vPath, index: vIndex, facts: vFacts, puzzle: vPuzzle, lab: vLab };
+    function go(v) {
+      cur = v;
+      setTabs();
+      if (VIEWS[v]) VIEWS[v]();
+    }
+    function renderTodayStrip() {
+      if (!todayEl) return;
+      var tn = todayNums();
+      todayEl.innerHTML = '🌅 ' + tn.date.toDateString() + ' · Moon in <b>' + tn.moon +
+        '</b> · Trial <b>' + tn.t + '</b> · Collective Lesson: <b>House ' + tn.L + ' — ' +
+        HOUSE[tn.L - 1] + '</b>' + (tn.Q ? ' · Your Lesson: <b>House ' + tn.Q + '</b>' : '');
+    }
+
+    /* ---- taps inside the exhibit (the page's global clicks,
+       scoped to this card) ---- */
+    function onTap(e) {
+      var t = e && e.target;
+      if (!t || !t.getAttribute) return;
+      var op = t.getAttribute('data-open');
+      if (op) { openChapter(+op, true); return; }
+      var st = t.getAttribute('data-state');
+      if (st) {
+        var c = route(st);
+        var out = doc.getElementById('saga-pathout');
+        if (c && out) {
+          out.innerHTML = patternCheck() + cardHTML(c, true);
+          curCh = c.n;
+          record(c.n, 'state:' + st);
+          wireCard();
+        } else if (out) {
+          out.innerHTML = '<div class="saga-card"><p>The cards are still loading — one breath.</p></div>';
+        }
+        return;
+      }
+      var act = t.getAttribute('data-act');
+      if (!act) return;
+      var n = +t.getAttribute('data-n');
+      if (act === 'random') {
+        var ks = Object.keys(META);
+        if (ks.length) openChapter(+ks[Math.floor(Math.random() * ks.length)], false);
+      }
+      if (act === 'portal') go('index');
+      if (act === 'hit') {
+        var mk = ls('ccs_marked', []);
+        if (mk.indexOf(n) < 0) { mk.push(n); ss('ccs_marked', mk); }
+        record(n, 'hit');
+        openChapter(n, false);
+      }
+      if (act === 'park') {
+        var pk = ls('ccs_parked', []);
+        if (pk.indexOf(n) < 0) { pk.push(n); ss('ccs_parked', pk); }
+        record(n, 'parked');
+        var nx = routeShared(n, 'hope');
+        if (nx) {
+          whyNow = 'You parked Chapter ' + n + ' — no shame in that; it will wait in your Lab. This page runs warmer, for now.';
+          openChapter(nx.n, true);
+        } else openChapter(n, false);
+      }
+      if (act === 'confront') {
+        var nx2 = routeShared(n, 'confront');
+        if (nx2) {
+          whyNow = 'You chose to confront it. The path moves forward through the pathway — Receiver → Decoder → Reactor → Transmitter — to the next page carrying this same thread.';
+          openChapter(nx2.n, true);
+        }
+      }
+      if (act === 'sit') {
+        var nx3 = routeShared(n, 'sit');
+        if (nx3) {
+          whyNow = 'You chose to sit with it. This page stays in the same weather and goes deeper.';
+          openChapter(nx3.n, true);
+        }
+      }
+      if (act === 'prev' && META[n - 1]) openChapter(n - 1, false);
+      if (act === 'next' && META[n + 1]) openChapter(n + 1, false);
+      if (act === 'clearlab') {
+        ss('ccs_hist', []); ss('ccs_marked', []); ss('ccs_parked', []); ss('ccs_last', null);
+        vLab();
+      }
+    }
+    viewEl.addEventListener('click', onTap);
+    if (tabsEl) {
+      tabsEl.addEventListener('click', function (e) {
+        var v = e && e.target && e.target.getAttribute && e.target.getAttribute('data-v');
+        if (v) go(v);
+      });
+    }
+    function openExhibit() {
+      root.hidden = false;
+      renderTodayStrip();
+      if (metaN) { go(cur === 'card' ? 'today' : cur); return; }
+      viewEl.innerHTML = '<div class="saga-card"><p>Loading chapter cards…</p></div>';
+      loadData().then(function (ok) {
+        if (root.hidden) return;
+        if (ok) go('today');
+        else {
+          viewEl.innerHTML = '<div class="saga-card"><p>The chapter cards could not be loaded just now — check your connection and tap the exhibit book again.</p></div>';
+          onStatus('The Saga exhibit could not load its chapter cards just now.');
+        }
+      });
+    }
+    function closeExhibit() { root.hidden = true; }
+    if (closeBtn) closeBtn.addEventListener('click', closeExhibit);
+    return {
+      element: root,
+      openExhibit: openExhibit, closeExhibit: closeExhibit,
+      exhibitVisible: function () { return !root.hidden; },
+      go: go, view: function () { return cur; },
+      openChapter: openChapter,
+      currentChapter: function () { return curCh; },
+      chapterCount: function () { return metaN; },
+      loaded: function () { return metaN > 0; },
+      todayNums: todayNums,
+      routeForState: function (state) { return route(state); },
+      chapter: function (n) { return META[n] || null; }
+    };
+  };
+
+  /*
    * The Theater's watch experience (2026-11-04 — Jay's spec: sit
    * and watch the movies, expand to full screen, zoom out to the
    * audience; and her standing rule: live art takes the stage).
