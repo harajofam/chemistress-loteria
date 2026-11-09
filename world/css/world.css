@@ -119,7 +119,14 @@ html, body {
   justify-content: center;
   width: 100%;
   max-width: 100%;
-  pointer-events: auto;
+  /* ACCESS PASS (2026-11-09, token -28): the row itself takes NO
+     taps. As a full-width bar with pointer-events: auto it ate
+     every canvas tap that landed in the bottom band between or
+     beside the pills — a pad at the visitor's feet projects
+     exactly there, so entrances read dead up close. Only the
+     buttons (.btn, below) are tappable now; every gap in the
+     bar passes the tap through to the world. */
+  pointer-events: none;
 }
 
 .hud-help {
@@ -159,6 +166,9 @@ html, body {
   padding: 0.34rem 0.72rem;
   min-height: 36px;
   cursor: pointer;
+  /* ACCESS PASS (token -28): the buttons alone carry the taps
+     in the bottom bar — see .hud-controls above. */
+  pointer-events: auto;
 }
 
 .btn:active { transform: scale(0.97); }
