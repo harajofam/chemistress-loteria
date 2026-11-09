@@ -45,20 +45,20 @@ html, body {
   background: rgba(26, 5, 31, 0.72);
   border: 1px solid var(--gold);
   border-radius: 12px;
-  padding: 0.55rem 0.9rem;
+  padding: 0.42rem 0.8rem;
   max-width: min(92vw, 430px);
 }
 
 .hud-top h1 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.02rem;
   color: var(--gold-soft);
   letter-spacing: 0.02em;
 }
 
 .hud-sub {
   margin: 0.15rem 0 0;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   opacity: 0.85;
 }
 
@@ -66,19 +66,31 @@ html, body {
    status, help line and controls share ONE fixed column, so the
    status line can never render behind/through the button rows
    again. The stack is the only fixed element at the bottom of
-   the screen; its children are static inside it. */
+   the screen; its children are static inside it.
+   HUD COMPACT PASS (2026-11-09, token -27 — Jay's iPhone field
+   test): the pills were so large that at 390x844 the stack ate
+   the middle 42% of the screen and covered the world while she
+   navigated ("make em smaller and more to the sides or below so
+   it doesn't block the view"). The stack is now a full-width bar
+   hugging the bottom edge: compact pills (see .btn) pack into
+   fewer, shorter rows across the width, and the whole overlay —
+   status, controls, help — takes roughly the bottom quarter of
+   a portrait phone, leaving the center of the view clear. Every
+   control, label and function is unchanged; only size and
+   placement moved. */
 .hud-bottom {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 0.8rem;
+  bottom: 0.5rem;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
-  width: max-content;
-  max-width: 97vw;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 100vw;
+  padding: 0 0.4rem;
   pointer-events: none;
 }
 
@@ -91,22 +103,22 @@ html, body {
   max-width: 92vw;
   background: rgba(26, 5, 31, 0.72);
   border-radius: 999px;
-  padding: 0.35rem 1rem;
+  padding: 0.24rem 0.8rem;
   text-align: center;
 }
 
 .hud-status p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
 }
 
 .hud-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.35rem;
   justify-content: center;
-  width: max-content;
-  max-width: 96vw;
+  width: 100%;
+  max-width: 100%;
   pointer-events: auto;
 }
 
@@ -114,12 +126,12 @@ html, body {
   margin: 0;
   max-width: 92vw;
   text-align: center;
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 0.7rem;
+  line-height: 1.35;
   color: var(--gold-soft, #ffd873);
   background: rgba(26, 5, 31, 0.55);
   border-radius: 0.6rem;
-  padding: 0.25rem 0.7rem;
+  padding: 0.18rem 0.6rem;
 }
 
 /* On narrow (portrait phone) screens the stack grows tall —
@@ -131,14 +143,21 @@ html, body {
   .theater-bar { bottom: 13.2rem; }
 }
 
+/* Compact pills (HUD COMPACT PASS, 2026-11-09 — see .hud-bottom):
+   ~0.82rem type and slim padding cut each pill's footprint to
+   roughly two-thirds of the old 0.95rem/0.6rem-1.1rem size, while
+   min-height holds every tap target at 36px for thumbs. The
+   identity is unchanged — plum pill, teal outline, gold on the
+   primary (.btn-parlor stays hot pink). */
 .btn {
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   color: var(--cream);
   background: var(--plum-house);
   border: 1px solid var(--teal);
   border-radius: 999px;
-  padding: 0.6rem 1.1rem;
+  padding: 0.34rem 0.72rem;
+  min-height: 36px;
   cursor: pointer;
 }
 
