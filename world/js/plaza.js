@@ -1532,14 +1532,18 @@
    * at life scale, tappable to shop cards).
    *
    * SHOP_LINKS is the ONE place the world's shop URLs live, so a
-   * corrected link is a one-line change. Jay picks her favorite
-   * wallpaper designs later; until a design has its own product,
-   * its card opens the storefront root, and the Chef design —
-   * the family the live peel-and-stick wallpaper product wears —
-   * opens that product's page. Links point at the Shopify
-   * storefront ONLY: the world never links to the game pages from
-   * a wall, and never to the deck game's page at all (the
-   * navigation guard in the smoke enforces the wall side).
+   * corrected link is a one-line change. ACCESS PASS (2026-11-09,
+   * token -28): at Jay's direction the world keeps exactly TWO
+   * shop targets — the Library's Celestial Cards feature wall
+   * (her favorite design; the wallpaper spot — it opens the
+   * storefront root because Celestial Cards has no product page
+   * of its own yet) and the Plaza Shop Window's Emblem Medallion
+   * panel (the one other sales spot, at the world's own shop
+   * window). Every other framed paper/print hangs as plain art.
+   * Links point at the Shopify storefront ONLY: the world never
+   * links to the game pages from a wall, and never to the deck
+   * game's page at all (the navigation guard in the smoke
+   * enforces the wall side).
    *
    * A shop target is { id, name, blurb, url, meshes } — the same
    * shape discipline as the Parlor's game targets. main.js hangs
@@ -5559,8 +5563,11 @@
     // the right. No art hangs on the garden's glass; the back
     // wall is the room's one solid hanging surface, and these
     // fill it the way the botanical prints crown the shelves.
-    // Both panels are shop targets (one-texture swaps, like
-    // every accent wall in this pass).
+    // ACCESS PASS (2026-11-09, token -28): the panels hang as
+    // plain art now — their shop pop-ups are REMOVED at Jay's
+    // direction (sales spots stripped to two world-wide: the
+    // Library's Celestial Cards wall + the Plaza Shop Window
+    // panel). The art stays; the selling goes.
     // ============================================================
     var shopTargets = [];
     [['celestial-muses', -4.75, 1.3, 1.7,
@@ -5586,13 +5593,9 @@
       liner.position.set(px, 3.0, -14.31);
       liner.material = CCW.mat(scene, B, 'garden-int-wallpaper-' + slug + '-liner-mat',
         P.goldSoft);
-      shopTargets.push({
-        id: 'wallpaper-' + slug,
-        name: wp[4],
-        blurb: wp[5],
-        url: CCW.SHOP_LINKS.storefront,
-        meshes: [piece.art]
-      });
+      // ACCESS PASS (token -28): no shop target here any more —
+      // see the section header above. `shopTargets` stays empty
+      // in this room on purpose.
     });
 
     // ============================================================
@@ -6627,8 +6630,13 @@
     // kitchen energy already lives; its card opens the wallpaper
     // product itself. CAFÉ GIRL DENSE — the Heartbreaker Café
     // girl in her brick repeat — hangs as a framed swatch on the
-    // front wall, a sample card at room scale. Both are shop
-    // targets and one-texture swaps.
+    // front wall, a sample card at room scale. Both panels are
+    // one-texture swaps.
+    // ACCESS PASS (2026-11-09, token -28): both panels' shop
+    // pop-ups are REMOVED at Jay's direction (sales spots
+    // stripped to two world-wide: the Library's Celestial Cards
+    // wall + the Plaza Shop Window panel). The papers hang as
+    // plain art; `shopTargets` stays empty in this room.
     // ============================================================
     var shopTargets = [];
     var chefPanel = framedWallpaper(scene, B, add, 'studio-int-wallpaper-chef',
@@ -6637,28 +6645,10 @@
     chefPanel.frame.position.set(6.46, 3.1, -6.7);
     chefPanel.art.rotation.y = Math.PI / 2; // right wall: face -Z -> -X
     chefPanel.art.position.set(6.40, 3.1, -6.7);
-    shopTargets.push({
-      id: 'wallpaper-chef-medallion',
-      name: 'Chef Medallion Scatter — Wallpaper',
-      blurb: 'The Chemistress chef in her medallions, scattered ' +
-        'over polka-dot cream — the design family of the ' +
-        'peel-and-stick wallpaper in the shop.',
-      url: CCW.SHOP_LINKS.wallpaper,
-      meshes: [chefPanel.art]
-    });
     var cafePanel = framedWallpaper(scene, B, add, 'studio-int-wallpaper-cafe',
       'cafe-girl-dense', 1.2, 1.3, 2.14, 2.34, P.plumHouse);
     cafePanel.frame.position.set(4.45, 4.0, -0.80);
     cafePanel.art.position.set(4.45, 4.0, -0.865);
-    shopTargets.push({
-      id: 'wallpaper-cafe-girl',
-      name: 'Café Girl — Wallpaper & Art',
-      blurb: 'The Heartbreaker Café girl, repeated brick by ' +
-        'brick. She sells as wallpaper, prints and tees — the ' +
-        'shop has her whole collection.',
-      url: CCW.SHOP_LINKS.storefront,
-      meshes: [cafePanel.art]
-    });
 
     // ============================================================
     // LIGHT LAB (2026-11-06, token -20) — the Creator Studio is
@@ -7987,7 +7977,14 @@ CCW.LIBRARY_SHELVES = [
     hearthLight.range = 30;
 
     var velvets = [P.velvetMagenta, P.velvetLavender, P.velvetTeal, P.velvetOrange];
-    [30, 120, 210, 300].forEach(function (deg, i) {
+    // ACCESS PASS (2026-11-09, token -28): the benches stand on
+    // the BISECTORS between zone axes (30/150/210/330), never on
+    // an axis — at 120 and 300 they sat squarely in the Theater
+    // and Pen-Pal approach corridors and their sit proxies ate
+    // the pads' taps (measured: a pad-centre tap sat the visitor
+    // on the bench instead of entering). The same angle table
+    // drives the benches' shadows and sit spots below.
+    [30, 150, 210, 330].forEach(function (deg, i) {
       var t = deg * Math.PI / 180;
       var bench = B.MeshBuilder.CreateBox('hearth-bench-' + i,
         { width: 2.4, height: 0.55, depth: 0.85 }, scene);
@@ -8103,8 +8100,10 @@ CCW.LIBRARY_SHELVES = [
       var atex = new B.Texture(fp[2], scene);
       atex.name = 'plaza-shop-' + fp[0] + '-tex';
       art.material = CCW.texMat(scene, B, 'plaza-shop-' + fp[0] + '-mat', atex, {});
-      shopTargets.push({ id: 'art-' + fp[0], name: fp[4], blurb: fp[5],
-        url: fp[6], meshes: [art] });
+      // ACCESS PASS (token -28): the two framed prints hang as
+      // plain art now — their shop pop-ups are REMOVED at Jay's
+      // direction. The Shop Window keeps exactly ONE pop-up:
+      // the Emblem Medallion panel above.
     });
     var shopLabelPost = B.MeshBuilder.CreateBox('plaza-shop-label-post',
       { width: 0.07, height: 0.62, depth: 0.07 }, scene);
@@ -8194,7 +8193,7 @@ CCW.LIBRARY_SHELVES = [
       return s;
     }
     plazaShadowDisc(0, 0, 2.4);                       // the Hearth
-    [30, 120, 210, 300].forEach(function (deg) {
+    [30, 150, 210, 330].forEach(function (deg) {      // benches (ACCESS PASS: bisectors)
       var t = deg * Math.PI / 180;
       plazaShadowDisc(Math.sin(t) * 5.6, Math.cos(t) * 5.6, 1.5);
     });
@@ -8368,9 +8367,14 @@ CCW.LIBRARY_SHELVES = [
       // FIELD-TEST PASS: a pin beside this door's Plaza pad —
       // tapping it rides the pad's own glide (the machinery is
       // extended, never duplicated).
+      // ACCESS PASS (2026-11-09, token -28): the pin stands 3.9 m
+      // to the side, not 2.9 — at 2.9 its ring (r 0.5) sat ON the
+      // pad tap-proxy's rim (proxy r 2.9), crowding the doorway's
+      // own target; at 3.9 the ring's inner edge clears the proxy
+      // by a full half metre and the pin reads as its own marker.
       allPois.push({
         id: 'door-' + zone.id, room: 'plaza', label: zone.name,
-        pinPos: [uv[0] * 8.5 + uv[1] * 2.9, 0, uv[1] * 8.5 - uv[0] * 2.9],
+        pinPos: [uv[0] * 8.5 + uv[1] * 3.9, 0, uv[1] * 8.5 - uv[0] * 3.9],
         viewPos: teleports[teleports.length - 1].destPos.slice(),
         viewTarget: teleports[teleports.length - 1].destTarget.slice(),
         // No featurePos: a door pin's framing IS its pad's landing
@@ -8429,10 +8433,13 @@ CCW.LIBRARY_SHELVES = [
         pinPos: [-3.4, 0, 13.4], viewPos: [0.4, 1.9, 15.3],
         viewTarget: [-4.6, 2.95, 11.5], feature: [-4.6, 3.05, 11.5] },
       { id: 'plaza-shop', room: 'plaza', label: 'The Shop Window',
-        pinPos: [10.6, 0, 0], viewPos: [10.2, 1.7, 0],
+        // ACCESS PASS (token -28): the pin steps toward the
+        // window's chef end (z -2.9) so it stops crowding the
+        // Library door pin, which the same pass moved outward.
+        pinPos: [10.9, 0, -2.9], viewPos: [10.2, 1.7, 0],
         viewTarget: [12.2, 2.4, 0], feature: [12.19, 2.45, 0] }
     );
-    [30, 120, 210, 300].forEach(function (deg, i) {
+    [30, 150, 210, 330].forEach(function (deg, i) {
       var t = deg * Math.PI / 180;
       var bx = Math.sin(t) * 5.6, bz = Math.cos(t) * 5.6;
       allSitSpots.push({
